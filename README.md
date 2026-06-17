@@ -11,6 +11,16 @@ Desktop-Anwendung zur Verwaltung einer Keyboard-Sammlung mit Boards, Komponenten
 - Plattformübergreifende ZIP-Backups mit Manifest und Bilddateien
 - Automatische Migration älterer IndexedDB-Daten
 
+## Screenshots
+
+| Erfassung | Übersicht |
+| --- | --- |
+| <img src="screenshots/001-erfassen.png" alt="Erfassung" width="420"> | <img src="screenshots/002-uebersicht.png" alt="Übersicht" width="420"> |
+
+| Galerie | Spotlight |
+| --- | --- |
+| <img src="screenshots/003-galerie.png" alt="Galerie" width="420"> | <img src="screenshots/004-spotlight.png" alt="Spotlight" width="420"> |
+
 ## Entwicklung
 
 ```bash
