@@ -1,0 +1,2794 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Keyboard Manager – 1.2.6</title>
+  <style>
+    :root{--bg:#070B14;--surface:#0A1222;--txt:#E5E7EB;--muted:#94A3B8;--border:#22304F;--accent:#38BDF8;--accent2:#0EA5E9;--accentSoft:rgba(56,189,248,.18);--accentMain:rgba(56,189,248,.75);--accentStrong:rgba(56,189,248,.90);--pri:var(--accent);--pri2:var(--accent2);--danger:#FB7185;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--txt);background:radial-gradient(1200px 600px at 20% 0%, #16254a 0%, transparent 55%),radial-gradient(1000px 500px at 85% 20%, #1a3c4d 0%, transparent 55%),var(--bg);}
+    .wrap{max-width:min(1600px,92vw);margin:0 auto;padding:22px 16px 50px;}
+    header{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
+    h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.02em}
+    .sub{color:var(--muted);font-size:12.5px;margin-top:4px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    button{border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--txt);padding:10px 12px;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer}
+    button:hover{background:rgba(255,255,255,.07)}
+    button.primary{background:linear-gradient(180deg,var(--pri) 0%, var(--pri2) 100%);border-color:transparent;color:#041018}
+    button.danger{border-color:rgba(251,113,133,.4);color:var(--danger)}
+    button.danger:hover{background:rgba(251,113,133,.08)}
+    button:disabled{opacity:.55;cursor:not-allowed}
+
+    .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.03);margin-bottom:14px}
+    .tabs button{border:none;background:transparent;border-radius:12px;padding:10px 12px;color:var(--muted)}
+    .tabs button.active{background:var(--accentSoft);color:var(--txt)}
+
+    .card{border:1px solid var(--border);background:rgba(255,255,255,.03);border-radius:16px;min-width:0}
+    .pad{padding:14px}
+    .grid{display:grid;gap:12px}
+    .grid > *{min-width:0}
+    @media(min-width:900px){.grid.two{grid-template-columns:2fr 1fr}}
+
+    label{display:block}
+    .lbl{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:12.5px;font-weight:800}
+    .hint{font-weight:600;color:var(--muted);font-size:12px}
+    input,select,textarea{width:100%;border:1px solid var(--border);background:rgba(0,0,0,.16);color:var(--txt);padding:10px 12px;border-radius:12px;outline:none;font-size:13px}
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accentStrong);outline-offset:2px}
+    textarea{min-height:110px;resize:vertical}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    .row .w{flex:0 0 220px}
+    @media(max-width:620px){.row{display:grid;grid-template-columns:1fr}.row .w{width:100%;min-width:0}}
+
+    .pill{display:inline-flex;gap:6px;align-items:center;padding:3px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);font-size:12px;font-weight:800;color:var(--txt)}
+
+    .table{width:100%;border-collapse:separate;border-spacing:0}
+    .table th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:12px;border-bottom:1px solid var(--border);text-align:left}
+    .table td{padding:12px;border-bottom:1px solid rgba(34,48,79,.6);vertical-align:top;font-size:13px;color:#cbd5e1}
+    .table tr:hover td{background:rgba(255,255,255,.02)}
+    @media(max-width:700px){
+      .table th:nth-child(1),.table td:nth-child(1),.table th:nth-child(3),.table td:nth-child(3),.table th:nth-child(5),.table td:nth-child(5),.table th:nth-child(6),.table td:nth-child(6),.table th:nth-child(7),.table td:nth-child(7){display:none}
+      .table th,.table td{padding:9px 7px}
+      .table td:last-child div{flex-direction:column}
+    }
+
+
+    /* Thumbnail in Übersicht (contain, kein Crop) */
+    .miniThumb{width:84px;height:56px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .miniThumb img{width:100%;height:100%;object-fit:contain;display:block;background:rgba(0,0,0,.35)}
+    .miniThumb span{color:var(--muted);font-size:12px}
+
+    .cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(260px,340px));justify-content:start;align-items:start}
+    .gcard{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(255,255,255,.03);cursor:pointer}
+    .thumb{aspect-ratio:4/3;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px}
+    .thumb img{width:100%;height:100%;object-fit:contain;display:block;background:rgba(0,0,0,.35)}
+    .gbody{padding:12px}
+    .gname{font-weight:900}
+    .gmeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+
+    .photoGrid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+    @media(min-width:780px){.photoGrid{grid-template-columns:repeat(4,1fr)}}
+    .pitem{border:1px solid var(--border);border-radius:14px;padding:10px}
+    .pitem.main{border-color:rgba(56,189,248,.75)}
+    .pimg{aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:rgba(0,0,0,.18)}
+    .pimg img{width:100%;height:100%;object-fit:cover}
+    .pbtns{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+    .pbtns button{padding:7px 9px;border-radius:10px;font-size:12px}
+
+    .note{border:1px solid rgba(251,113,133,.35);background:rgba(251,113,133,.07);padding:10px 12px;border-radius:14px;color:#fecdd3;font-size:12.5px;line-height:1.35}
+    .note b{color:#fff}
+
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#020617;color:#e2e8f0;border:1px solid var(--border);padding:10px 12px;border-radius:999px;font-size:12px;display:none;z-index:60}
+    .toast.show{display:block}
+  
+
+    /* Spotlight/Modal */
+    .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+    .modalBack.open{display:flex}
+    .modal{width:100%;max-width:980px;border-radius:18px;overflow:hidden;border:1px solid var(--border);background:#0a1222}
+    .mhead{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border)}
+    .mbody{padding:14px;max-height:75vh;overflow:auto}
+    .mfoot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 14px;border-top:1px solid var(--border)}
+
+    .spotGrid{display:grid;gap:12px;grid-template-columns:1fr}
+    @media(min-width:900px){.spotGrid{grid-template-columns:2fr 1fr}}
+    .spotMain{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(0,0,0,.22)}
+    .spotMain .frame{aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.22);cursor:zoom-in}
+    .spotMain img{width:100%;height:100%;object-fit:contain;background:rgba(0,0,0,.35)}
+    .spotLoading{min-height:240px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+
+    .thumbRow{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
+    @media(max-width:899px){.thumbRow{grid-template-columns:repeat(6,1fr)}}
+    .tmini{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:rgba(0,0,0,.2);cursor:pointer}
+    .tmini.active{border-color:rgba(56,189,248,.9)}
+    .tmini img{width:100%;height:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+
+    .attrList{margin-top:12px;display:grid;gap:8px;font-size:13px}
+    .attrRow{display:flex;justify-content:space-between;gap:12px}
+    .attrRow .k{color:var(--muted)}
+    .attrRow .v{font-weight:800;color:var(--txt);text-align:right}
+
+    .lightboxBack{position:fixed;inset:0;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;z-index:100;padding:18px}
+    .lightboxBack.open{display:flex}
+    .lightboxImage{width:min(1920px,calc(100vw - 36px));height:min(1080px,calc(100vh - 36px));object-fit:contain}
+    .lightboxBar{position:fixed;left:18px;right:18px;top:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:101;pointer-events:none}
+    .lightboxBar > *{pointer-events:auto}
+    .lightboxActions{display:flex;gap:8px}
+    .lightboxMeta{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:rgba(2,6,23,.86);color:#e2e8f0;font-size:12px;font-weight:800}
+
+  
+
+    /* ===== Theme Toggle (Dark default, Light overrides) ===== */
+    html{color-scheme:dark;}
+    html{color-scheme:dark;}
+html[data-theme="light"]{color-scheme:light;}
+
+/* ===== Light Theme: Off-White + Red Accent ===== */
+html[data-theme="light"]{
+  --bg:#FBF7F2;
+  --surface:#FFFFFF;
+  --txt:#0F172A;
+  --muted:#5B5560;
+  --border:#E8DFD5;
+  --accent:#B91C1C;
+  --accent2:#991B1B;
+  --accentSoft:rgba(185,28,28,.08);
+  --accentMain:rgba(185,28,28,.55);
+  --accentStrong:rgba(185,28,28,.70);
+  --pri:var(--accent);
+  --pri2:var(--accent2);
+  --danger:#E11D48;
+}
+
+html[data-theme="light"] body{
+  background:radial-gradient(1200px 600px at 15% 0%, #FDE7D7 0%, transparent 55%),
+             radial-gradient(1000px 500px at 90% 20%, #FEF3C7 0%, transparent 55%),
+             var(--bg);
+  color:var(--txt);
+}
+
+html[data-theme="light"] .sub,
+html[data-theme="light"] .muted,
+html[data-theme="light"] .hint{color:var(--muted);}
+
+html[data-theme="light"] .tabs,
+html[data-theme="light"] .card{
+  background:var(--surface);
+  border-color:var(--border);
+  box-shadow:0 6px 18px rgba(15,23,42,.06);
+}
+
+html[data-theme="light"] .tabs button{color:var(--muted);}
+html[data-theme="light"] .tabs button.active{background:var(--accentSoft);color:var(--txt);}
+
+html[data-theme="light"] button{
+  background:#F6EFE6;
+  border-color:var(--border);
+  color:var(--txt);
+}
+html[data-theme="light"] button:hover{background:#FFFFFF;}
+html[data-theme="light"] button.primary{
+  background:linear-gradient(180deg,var(--pri) 0%, var(--pri2) 100%);
+  border-color:transparent;
+  color:#fff;
+}
+html[data-theme="light"] button.danger{color:var(--danger);border-color:rgba(225,29,72,.35);}
+html[data-theme="light"] button.danger:hover{background:rgba(225,29,72,.08)}
+
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea{
+  background:var(--surface);
+  border-color:var(--border);
+  color:var(--txt);
+}
+
+html[data-theme="light"] .table th{color:var(--muted);border-bottom-color:var(--border);}
+html[data-theme="light"] .table td{color:#334155;}
+html[data-theme="light"] .table tr:hover td{background:var(--accentSoft);}
+html[data-theme="light"] .boardName{color:var(--txt);}
+
+html[data-theme="light"] .pill{background:var(--accentSoft);border-color:var(--border);color:var(--txt);}
+
+html[data-theme="light"] .thumb,
+html[data-theme="light"] .pimg,
+html[data-theme="light"] .miniThumb{
+  background:rgba(15,23,42,.04);
+  border-color:var(--border);
+}
+html[data-theme="light"] .thumb img,
+html[data-theme="light"] .miniThumb img{background:rgba(15,23,42,.06)}
+
+html[data-theme="light"] .note{border:1px solid rgba(225,29,72,.25);background:rgba(225,29,72,.08);color:#9F1239;}
+html[data-theme="light"] .note b{color:#881337;}
+
+html[data-theme="light"] .modalBack{background:rgba(15,23,42,.55)}
+html[data-theme="light"] .modal{background:var(--surface);border-color:var(--border);box-shadow:0 10px 30px rgba(15,23,42,.12)}
+
+/* Theme button: small, consistent */
+#btnTheme{min-width:44px;padding:10px 10px;}
+
+/* ===== macOS Glass Refresh ===== */
+:root{
+  --bg:#07101D;
+  --surface:rgba(10,18,34,.58);
+  --surfaceStrong:rgba(13,24,43,.78);
+  --surfaceSoft:rgba(255,255,255,.055);
+  --txt:#F6F8FB;
+  --muted:#A6B3C7;
+  --border:rgba(159,187,227,.18);
+  --borderStrong:rgba(190,211,244,.32);
+  --accent:#6ED7FF;
+  --accent2:#2AA9F4;
+  --accentSoft:rgba(110,215,255,.16);
+  --accentMain:rgba(110,215,255,.72);
+  --accentStrong:rgba(110,215,255,.95);
+  --danger:#FF6B8A;
+  --glassBlur:blur(26px) saturate(1.35);
+  --shadow:0 24px 80px rgba(0,0,0,.34);
+  --shadowSoft:0 12px 36px rgba(0,0,0,.22);
+  --radius:22px;
+  --radiusSmall:14px;
+}
+
+html{
+  min-height:100%;
+  background:#07101D;
+}
+
+body{
+  min-height:100vh;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",ui-sans-serif,system-ui,sans-serif;
+  background:
+    radial-gradient(900px 520px at 14% -8%, rgba(72,130,255,.34) 0%, transparent 60%),
+    radial-gradient(760px 560px at 86% 2%, rgba(49,213,255,.22) 0%, transparent 58%),
+    linear-gradient(145deg,#050913 0%,#091321 46%,#0B1525 100%);
+  letter-spacing:-.01em;
+  overflow-x:hidden;
+}
+
+body::before,
+body::after{
+  content:"";
+  position:fixed;
+  pointer-events:none;
+  z-index:-1;
+}
+
+body::before{
+  inset:0;
+  background:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.026) 1px, transparent 1px);
+  background-size:48px 48px;
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,.65), transparent 72%);
+}
+
+body::after{
+  width:420px;
+  height:420px;
+  right:-130px;
+  bottom:-150px;
+  border-radius:999px;
+  background:rgba(60,200,255,.16);
+  filter:blur(48px);
+}
+
+.wrap{
+  width:min(1680px,94vw);
+  max-width:none;
+  padding:18px 18px 56px;
+}
+
+header{
+  position:sticky;
+  top:12px;
+  z-index:30;
+  margin:0 0 16px;
+  padding:14px 16px 14px 84px;
+  min-height:70px;
+  border:1px solid var(--border);
+  border-radius:26px;
+  background:linear-gradient(135deg, rgba(15,26,46,.72), rgba(10,18,32,.46));
+  box-shadow:var(--shadowSoft);
+  backdrop-filter:var(--glassBlur);
+  -webkit-backdrop-filter:var(--glassBlur);
+  -webkit-app-region:drag;
+}
+
+header h1{
+  font-size:22px;
+  line-height:1.05;
+  font-weight:800;
+}
+
+.sub{
+  color:var(--muted);
+  font-size:12px;
+  letter-spacing:0;
+}
+
+.actions,
+button,
+input,
+select,
+textarea,
+.tabs,
+.modal,
+.lightboxBack{
+  -webkit-app-region:no-drag;
+}
+
+.actions{
+  gap:10px;
+}
+
+button{
+  min-height:38px;
+  border-color:var(--border);
+  background:linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.055));
+  color:var(--txt);
+  border-radius:999px;
+  padding:9px 14px;
+  box-shadow:inset 0 1px rgba(255,255,255,.09), 0 8px 22px rgba(0,0,0,.10);
+  transition:background .16s ease, border-color .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+
+button:hover{
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.075));
+  border-color:var(--borderStrong);
+  transform:translateY(-1px);
+}
+
+button:active{
+  transform:translateY(0);
+}
+
+button.primary{
+  background:linear-gradient(180deg, #9BE7FF 0%, #48BDF5 47%, #1B85E6 100%);
+  color:#04121F;
+  box-shadow:0 12px 30px rgba(42,169,244,.26), inset 0 1px rgba(255,255,255,.45);
+}
+
+button.primary:hover{
+  background:linear-gradient(180deg, #B4EEFF 0%, #5AC8FA 48%, #248FEA 100%);
+}
+
+button.danger{
+  color:#FFD4DD;
+  border-color:rgba(255,107,138,.34);
+  background:linear-gradient(180deg, rgba(255,107,138,.13), rgba(255,107,138,.06));
+}
+
+button.danger:hover{
+  background:linear-gradient(180deg, rgba(255,107,138,.20), rgba(255,107,138,.10));
+}
+
+#btnTheme{
+  min-width:40px;
+  width:40px;
+  padding:0;
+}
+
+.tabs{
+  display:inline-grid;
+  grid-template-columns:repeat(3,minmax(130px,1fr));
+  width:min(540px,100%);
+  gap:4px;
+  margin:0 0 16px;
+  padding:5px;
+  border-color:var(--border);
+  border-radius:999px;
+  background:rgba(255,255,255,.065);
+  box-shadow:inset 0 1px rgba(255,255,255,.08), 0 12px 34px rgba(0,0,0,.16);
+  backdrop-filter:var(--glassBlur);
+  -webkit-backdrop-filter:var(--glassBlur);
+}
+
+.tabs button{
+  min-height:34px;
+  border-radius:999px;
+  box-shadow:none;
+  background:transparent;
+  color:var(--muted);
+}
+
+.tabs button:hover{
+  transform:none;
+}
+
+.tabs button.active{
+  color:var(--txt);
+  background:linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.09));
+  box-shadow:0 8px 20px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.14);
+}
+
+.card,
+.gcard,
+.modal,
+.pitem,
+.spotMain,
+.toast,
+.lightboxMeta{
+  border-color:var(--border);
+  background:linear-gradient(145deg, rgba(15,26,47,.72), rgba(9,17,31,.48));
+  box-shadow:var(--shadowSoft);
+  backdrop-filter:var(--glassBlur);
+  -webkit-backdrop-filter:var(--glassBlur);
+}
+
+.card,
+.gcard,
+.modal{
+  border-radius:var(--radius);
+}
+
+.pad{
+  padding:18px;
+}
+
+.grid{
+  gap:14px;
+}
+
+@media(min-width:900px){
+  .grid.two{
+    grid-template-columns:minmax(0,2.1fr) minmax(320px,.9fr);
+  }
+}
+
+.lbl{
+  margin-bottom:7px;
+  color:#D9E4F4;
+  font-size:12px;
+  letter-spacing:.01em;
+}
+
+.hint,
+.muted{
+  color:var(--muted);
+}
+
+input,
+select,
+textarea{
+  border-color:var(--border);
+  background:rgba(3,10,20,.40);
+  color:var(--txt);
+  border-radius:var(--radiusSmall);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  transition:border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+input:hover,
+select:hover,
+textarea:hover{
+  border-color:var(--borderStrong);
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:var(--accentMain);
+  background:rgba(3,10,20,.56);
+  box-shadow:0 0 0 4px rgba(110,215,255,.12), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.row{
+  gap:10px;
+}
+
+.pill{
+  border-color:rgba(149,189,235,.22);
+  background:rgba(110,215,255,.10);
+  color:#DDF6FF;
+  box-shadow:inset 0 1px rgba(255,255,255,.06);
+}
+
+.table{
+  overflow:hidden;
+}
+
+.table th{
+  color:#8EA0B9;
+  background:rgba(255,255,255,.035);
+  border-bottom-color:var(--border);
+  font-size:10.5px;
+}
+
+.table td{
+  color:#D4DCEA;
+  border-bottom-color:rgba(159,187,227,.12);
+}
+
+.table tr:hover td{
+  background:rgba(110,215,255,.055);
+}
+
+.miniThumb,
+.thumb,
+.pimg,
+.spotMain .frame{
+  background:linear-gradient(145deg, rgba(0,0,0,.30), rgba(255,255,255,.04));
+}
+
+.miniThumb,
+.thumb,
+.pimg{
+  border-color:rgba(159,187,227,.16);
+}
+
+.miniThumb,
+.gcard,
+.tmini,
+.spotMain .frame{
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.miniThumb:hover,
+.gcard:hover,
+.tmini:hover{
+  transform:translateY(-2px);
+  border-color:var(--borderStrong);
+  box-shadow:0 18px 44px rgba(0,0,0,.24);
+}
+
+.cards{
+  gap:16px;
+  grid-template-columns:repeat(auto-fill,minmax(260px,340px));
+  justify-content:start;
+  align-items:start;
+}
+
+.gcard{
+  overflow:hidden;
+  width:100%;
+  max-width:340px;
+}
+
+.gcard .thumb{
+  aspect-ratio:16/11;
+}
+
+.gbody{
+  padding:15px;
+}
+
+.gname{
+  font-size:16px;
+  letter-spacing:-.02em;
+}
+
+.photoGrid{
+  gap:12px;
+}
+
+.pitem{
+  border-radius:18px;
+  padding:10px;
+}
+
+.pitem.main{
+  border-color:var(--accentMain);
+  box-shadow:0 18px 42px rgba(42,169,244,.18);
+}
+
+.pimg{
+  border-radius:14px;
+}
+
+.note{
+  border-color:rgba(255,211,107,.28);
+  background:rgba(255,211,107,.10);
+  color:#FFE7A9;
+}
+
+.toast{
+  border-radius:999px;
+  background:rgba(5,12,22,.82);
+}
+
+.modalBack{
+  background:rgba(2,8,16,.64);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+
+.modal{
+  max-width:1100px;
+  overflow:hidden;
+}
+
+.mhead,
+.mfoot{
+  border-color:var(--border);
+  background:rgba(255,255,255,.035);
+}
+
+.mbody{
+  padding:16px;
+}
+
+.spotGrid{
+  gap:16px;
+}
+
+@media(min-width:900px){
+  .spotGrid{
+    grid-template-columns:minmax(0,2.2fr) minmax(300px,.8fr);
+  }
+}
+
+.spotMain{
+  border-radius:22px;
+}
+
+.spotMain .frame{
+  min-height:420px;
+}
+
+.thumbRow{
+  gap:8px;
+}
+
+.tmini{
+  border-color:var(--border);
+  border-radius:12px;
+}
+
+.tmini.active{
+  border-color:var(--accentStrong);
+  box-shadow:0 0 0 3px rgba(110,215,255,.14);
+}
+
+.attrList{
+  gap:9px;
+}
+
+.attrRow{
+  padding:7px 0;
+  border-bottom:1px solid rgba(159,187,227,.10);
+}
+
+.attrRow:last-child{
+  border-bottom:none;
+}
+
+.lightboxBack{
+  background:rgba(1,4,9,.84);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+}
+
+.lightboxImage{
+  border-radius:18px;
+  box-shadow:0 30px 100px rgba(0,0,0,.42);
+}
+
+html[data-theme="light"]{
+  --bg:#F4F7FB;
+  --surface:rgba(255,255,255,.62);
+  --surfaceStrong:rgba(255,255,255,.82);
+  --surfaceSoft:rgba(255,255,255,.50);
+  --txt:#101827;
+  --muted:#647084;
+  --border:rgba(84,104,130,.18);
+  --borderStrong:rgba(60,82,110,.30);
+  --accent:#0A84FF;
+  --accent2:#006FE8;
+  --accentSoft:rgba(10,132,255,.10);
+  --accentMain:rgba(10,132,255,.56);
+  --accentStrong:rgba(10,132,255,.78);
+  --danger:#D92D55;
+}
+
+html[data-theme="light"] body{
+  background:
+    radial-gradient(900px 520px at 14% -8%, rgba(10,132,255,.18) 0%, transparent 62%),
+    radial-gradient(760px 560px at 86% 2%, rgba(110,215,255,.18) 0%, transparent 58%),
+    linear-gradient(145deg,#F7FAFF 0%,#EEF4FB 52%,#F9FBFD 100%);
+  color:var(--txt);
+}
+
+html[data-theme="light"] header,
+html[data-theme="light"] .card,
+html[data-theme="light"] .gcard,
+html[data-theme="light"] .modal,
+html[data-theme="light"] .pitem,
+html[data-theme="light"] .spotMain{
+  background:linear-gradient(145deg, rgba(255,255,255,.76), rgba(255,255,255,.48));
+  box-shadow:0 20px 70px rgba(44,62,88,.14);
+}
+
+html[data-theme="light"] body::before{
+  background:
+    linear-gradient(rgba(10,25,45,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10,25,45,.03) 1px, transparent 1px);
+}
+
+html[data-theme="light"] button{
+  background:linear-gradient(180deg, rgba(255,255,255,.88), rgba(241,246,253,.72));
+  color:var(--txt);
+}
+
+html[data-theme="light"] button.primary{
+  background:linear-gradient(180deg, #54B9FF 0%, #0A84FF 100%);
+  color:#fff;
+}
+
+html[data-theme="light"] .tabs{
+  background:rgba(255,255,255,.56);
+}
+
+html[data-theme="light"] .tabs button.active{
+  background:rgba(255,255,255,.86);
+}
+
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea{
+  background:rgba(255,255,255,.66);
+}
+
+html[data-theme="light"] .lbl{
+  color:#172033;
+}
+
+html[data-theme="light"] .pill{
+  background:rgba(10,132,255,.10);
+  color:#0B4F93;
+}
+
+html[data-theme="light"] .table th{
+  background:rgba(10,25,45,.035);
+  color:#6B7585;
+}
+
+html[data-theme="light"] .table td{
+  color:#263244;
+}
+
+html[data-theme="light"] .modalBack{
+  background:rgba(233,240,249,.58);
+}
+
+@media(max-width:760px){
+  .wrap{
+    width:100%;
+    padding:12px 12px 40px;
+  }
+
+  header{
+    top:8px;
+    padding-left:16px;
+    border-radius:22px;
+  }
+
+  .tabs{
+    width:100%;
+    grid-template-columns:1fr;
+    border-radius:20px;
+  }
+
+  .tabs button{
+    border-radius:16px;
+  }
+}
+
+/* ===== Concept implementation: sidebar app shell ===== */
+.wrap{
+  width:100%;
+  min-height:100vh;
+  padding:8px;
+}
+
+.appFrame{
+  display:grid;
+  grid-template-columns:288px minmax(0,1fr);
+  gap:18px;
+  min-height:calc(100vh - 16px);
+  padding:14px;
+  border:1px solid rgba(118,176,223,.42);
+  border-radius:18px;
+  background:
+    linear-gradient(135deg, rgba(17,35,56,.68), rgba(8,20,34,.72)),
+    radial-gradient(850px 520px at 93% 9%, rgba(72,202,255,.18), transparent 60%);
+  box-shadow:0 26px 90px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.08);
+  backdrop-filter:var(--glassBlur);
+  -webkit-backdrop-filter:var(--glassBlur);
+}
+
+.sideRail{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  gap:18px;
+  color:var(--txt);
+}
+
+.sideBrand{
+  display:flex;
+  align-items:center;
+  height:58px;
+  padding:0 12px 0 78px;
+  -webkit-app-region:drag;
+}
+
+.sideTitle{
+  font-weight:850;
+  color:#DFEAF7;
+}
+
+.sideNav,
+.sideCard,
+.sideVersion{
+  border:1px solid var(--border);
+  border-radius:22px;
+  background:linear-gradient(145deg, rgba(28,55,82,.70), rgba(12,30,50,.46));
+  box-shadow:var(--shadowSoft), inset 0 1px rgba(255,255,255,.07);
+  backdrop-filter:var(--glassBlur);
+  -webkit-backdrop-filter:var(--glassBlur);
+}
+
+.sideNav{
+  display:grid;
+  gap:7px;
+  padding:7px;
+}
+
+.sideNav button{
+  justify-content:flex-start;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  min-height:48px;
+  padding:0 16px;
+  border-radius:14px;
+  border:1px solid transparent;
+  background:transparent;
+  box-shadow:none;
+  color:#BECBDD;
+  font-size:15px;
+}
+
+.sideNav button:hover,
+.sideNav button.active{
+  transform:none;
+  color:#F8FBFF;
+  border-color:rgba(105,195,255,.35);
+  background:linear-gradient(180deg, rgba(68,150,217,.34), rgba(40,92,145,.24));
+  box-shadow:inset 0 1px rgba(255,255,255,.10), 0 12px 26px rgba(0,0,0,.16);
+}
+
+.staticPreview .tabs button,
+.staticPreview .sideNav button,
+.staticPreview .topActions button:not(#btnTheme){
+  opacity:.46;
+  cursor:not-allowed;
+  transform:none;
+}
+
+.staticPreview #init{
+  border-style:dashed;
+  border-color:rgba(110,215,255,.28);
+  background:linear-gradient(145deg, rgba(28,55,82,.50), rgba(10,25,42,.38));
+}
+
+.sideIcon{
+  width:22px;
+  text-align:center;
+  opacity:.95;
+}
+
+.sideCard{
+  padding:18px 20px;
+}
+
+.sideCardTitle{
+  margin-bottom:14px;
+  color:#E4EDF8;
+  font-size:15px;
+  font-weight:850;
+}
+
+.sideStat{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:31px;
+  color:#BBC8D8;
+  font-size:13px;
+}
+
+.sideStat b{
+  min-width:30px;
+  padding:3px 9px;
+  border-radius:999px;
+  background:rgba(89,150,220,.20);
+  color:#D8ECFF;
+  text-align:center;
+  font-size:12px;
+}
+
+.sideCardBottom{
+  margin-top:auto;
+}
+
+.sideVersion{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  min-height:48px;
+  padding:0 16px;
+  color:#AFC0D1;
+  font-size:12px;
+}
+
+.contentPane{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  position:relative;
+}
+
+.contentPane > .topBar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  top:0;
+  position:relative;
+  min-height:58px;
+  margin:0 0 16px;
+  padding:0;
+  border:none;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  -webkit-app-region:drag;
+}
+
+.contentPane > .topBar h1,
+.contentPane > .topBar .sub{
+  display:none;
+}
+
+.contentPane > .topBar .topIdentity{
+  display:none;
+}
+
+.contentPane > .topBar .actions{
+  width:auto;
+  margin-left:auto;
+  justify-content:flex-end;
+  -webkit-app-region:no-drag;
+}
+
+.contentPane > .topBar button{
+  min-height:42px;
+  border-radius:13px;
+  padding:0 15px;
+  background:linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.055));
+}
+
+.contentPane > .topBar button.primary{
+  background:linear-gradient(180deg, rgba(80,191,255,.96), rgba(26,132,238,.96));
+}
+
+.titleDragArea{
+  flex:1 1 auto;
+  align-self:stretch;
+  min-width:140px;
+  -webkit-app-region:drag;
+}
+
+.tabs{
+  position:absolute;
+  left:50%;
+  top:0;
+  z-index:2;
+  transform:translateX(-50%);
+  width:min(480px,42vw);
+  margin:0;
+  border-radius:15px;
+  background:linear-gradient(180deg, rgba(32,58,83,.78), rgba(19,38,59,.58));
+}
+
+.tabs button{
+  min-height:39px;
+  border-radius:12px;
+  font-size:13px;
+}
+
+#viewErf > .grid.two{
+  grid-template-columns:minmax(0,1.28fr) minmax(360px,.72fr);
+  gap:18px;
+}
+
+#viewErf > .grid.two > .card,
+#viewErf > .grid.two > .grid > .card,
+#viewUeb .card,
+#viewGal .card,
+.gcard{
+  border-radius:20px;
+  background:linear-gradient(145deg, rgba(27,53,78,.62), rgba(10,25,42,.52));
+  box-shadow:0 20px 60px rgba(0,0,0,.24), inset 0 1px rgba(255,255,255,.07);
+}
+
+#viewErf > .grid.two > .card{
+  padding:28px 26px;
+}
+
+#viewErf > .grid.two > .grid > .card{
+  min-height:100%;
+  padding:24px;
+}
+
+#editorTitle{
+  font-size:24px !important;
+  letter-spacing:-.03em;
+}
+
+#formGrid{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:14px !important;
+}
+
+#formGrid label{
+  padding:14px;
+  border:1px solid rgba(159,187,227,.13);
+  border-radius:16px;
+  background:rgba(255,255,255,.035);
+}
+
+#formGrid .row{
+  align-items:stretch;
+}
+
+#formGrid .row .w{
+  flex:0 0 45px;
+  min-width:45px;
+  padding-inline:0;
+  color:transparent;
+}
+
+#formGrid .row .w::placeholder{
+  color:transparent;
+}
+
+#formGrid .row .w:focus{
+  flex-basis:180px;
+  padding-inline:12px;
+  color:var(--txt);
+}
+
+#formGrid .row .w:focus::placeholder{
+  color:var(--muted);
+}
+
+#formGrid .row .w:not(:focus){
+  cursor:pointer;
+  background-color:rgba(13,27,49,.64);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18'%3E%3Cpath d='M9 3.5v11M3.5 9h11' stroke='%23D8ECFF' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:center;
+}
+
+textarea#f_remark{
+  min-height:72px;
+}
+
+#photosArea > .card{
+  min-height:58px;
+  display:flex;
+  align-items:center;
+  border-style:dashed;
+  border-color:rgba(159,187,227,.28);
+  background:rgba(255,255,255,.025) !important;
+}
+
+.photoGrid{
+  grid-template-columns:repeat(auto-fill,minmax(132px,1fr));
+}
+
+.pimg{
+  aspect-ratio:4/3;
+}
+
+#pv_name{
+  font-size:25px;
+  letter-spacing:-.03em;
+}
+
+#pv_badges .pill{
+  padding:5px 10px;
+}
+
+.attrRow .k,
+.sideStat span{
+  letter-spacing:.01em;
+}
+
+@media(max-width:1120px){
+  .appFrame{
+    grid-template-columns:1fr;
+  }
+
+  .sideRail{
+    display:none;
+  }
+
+  .contentPane > .topBar h1,
+  .contentPane > .topBar .sub{
+    display:block;
+  }
+
+  .contentPane > .topBar .topIdentity{
+    display:block;
+  }
+
+  .contentPane > .topBar{
+    padding:14px 16px;
+    border:1px solid var(--border);
+    border-radius:22px;
+    background:linear-gradient(135deg, rgba(15,26,46,.72), rgba(10,18,32,.46));
+    box-shadow:var(--shadowSoft);
+    backdrop-filter:var(--glassBlur);
+    -webkit-backdrop-filter:var(--glassBlur);
+  }
+
+  .titleDragArea{
+    min-width:24px;
+  }
+
+  .tabs{
+    position:static;
+    transform:none;
+    width:100%;
+    margin:0 0 16px;
+  }
+}
+
+@media(max-width:1500px) and (min-width:1121px){
+  .tabs{
+    position:static;
+    transform:none;
+    width:100%;
+    margin:0 0 16px;
+  }
+}
+
+@media(max-width:900px){
+  #viewErf > .grid.two,
+  #formGrid{
+    grid-template-columns:1fr !important;
+  }
+
+  .cards{
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  }
+
+  .gcard{
+    max-width:none;
+  }
+}
+
+/* ===== Light theme polish for the glass shell ===== */
+html[data-theme="light"]{
+  --bg:#F5F8FC;
+  --surface:rgba(255,255,255,.78);
+  --surfaceStrong:rgba(255,255,255,.92);
+  --surfaceSoft:rgba(248,251,255,.72);
+  --txt:#102033;
+  --muted:#607086;
+  --border:rgba(74,103,136,.20);
+  --borderStrong:rgba(45,91,137,.34);
+  --accent:#147FEA;
+  --accent2:#0A65C8;
+  --accentSoft:rgba(20,127,234,.12);
+  --accentMain:rgba(20,127,234,.56);
+  --accentStrong:rgba(20,127,234,.82);
+  --danger:#C53055;
+  --shadow:0 24px 80px rgba(44,73,108,.20);
+  --shadowSoft:0 14px 38px rgba(44,73,108,.14);
+}
+
+html[data-theme="light"] body{
+  background:
+    radial-gradient(900px 520px at 13% -8%, rgba(76,151,230,.24) 0%, transparent 62%),
+    radial-gradient(760px 560px at 88% 0%, rgba(83,206,236,.20) 0%, transparent 58%),
+    linear-gradient(145deg,#F8FBFF 0%,#EDF4FB 52%,#F6FAFE 100%);
+}
+
+html[data-theme="light"] .appFrame{
+  border-color:rgba(54,101,151,.24);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.76), rgba(235,244,253,.68)),
+    radial-gradient(850px 520px at 93% 9%, rgba(87,181,231,.20), transparent 62%);
+  box-shadow:0 24px 82px rgba(43,69,101,.18), inset 0 1px rgba(255,255,255,.78);
+}
+
+html[data-theme="light"] .sideTitle,
+html[data-theme="light"] .sideCardTitle,
+html[data-theme="light"] #editorTitle,
+html[data-theme="light"] #pv_name,
+html[data-theme="light"] .gname,
+html[data-theme="light"] .boardName{
+  color:#102033;
+}
+
+html[data-theme="light"] .sideNav,
+html[data-theme="light"] .sideCard,
+html[data-theme="light"] .sideVersion,
+html[data-theme="light"] .card,
+html[data-theme="light"] .gcard,
+html[data-theme="light"] .modal,
+html[data-theme="light"] .pitem,
+html[data-theme="light"] .spotMain,
+html[data-theme="light"] #viewErf > .grid.two > .card,
+html[data-theme="light"] #viewErf > .grid.two > .grid > .card,
+html[data-theme="light"] #viewUeb .card,
+html[data-theme="light"] #viewGal .card{
+  border-color:rgba(74,103,136,.20);
+  background:linear-gradient(145deg, rgba(255,255,255,.82), rgba(242,248,254,.64));
+  box-shadow:0 18px 48px rgba(43,69,101,.14), inset 0 1px rgba(255,255,255,.72);
+}
+
+html[data-theme="light"] .sideNav button{
+  color:#496174;
+}
+
+html[data-theme="light"] .sideNav button:hover,
+html[data-theme="light"] .sideNav button.active{
+  color:#0D2946;
+  border-color:rgba(20,127,234,.24);
+  background:linear-gradient(180deg, rgba(218,237,255,.92), rgba(191,221,252,.70));
+  box-shadow:inset 0 1px rgba(255,255,255,.78), 0 12px 26px rgba(71,121,173,.16);
+}
+
+html[data-theme="light"] .sideStat{
+  color:#53677D;
+}
+
+html[data-theme="light"] .sideStat b{
+  background:rgba(20,127,234,.12);
+  color:#125AA0;
+}
+
+html[data-theme="light"] .sideVersion{
+  color:#607086;
+}
+
+html[data-theme="light"] .tabs{
+  border-color:rgba(74,103,136,.18);
+  background:linear-gradient(180deg, rgba(255,255,255,.82), rgba(229,240,252,.68));
+  box-shadow:inset 0 1px rgba(255,255,255,.78), 0 14px 34px rgba(43,69,101,.12);
+}
+
+html[data-theme="light"] .tabs button{
+  color:#607086;
+}
+
+html[data-theme="light"] .tabs button.active{
+  color:#102033;
+  background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(211,231,252,.86));
+  box-shadow:0 9px 22px rgba(43,91,151,.15), inset 0 1px rgba(255,255,255,.86);
+}
+
+html[data-theme="light"] button{
+  border-color:rgba(74,103,136,.22);
+  background:linear-gradient(180deg, rgba(255,255,255,.90), rgba(229,239,250,.78));
+  color:#17314D;
+  box-shadow:inset 0 1px rgba(255,255,255,.82), 0 8px 22px rgba(43,69,101,.10);
+}
+
+html[data-theme="light"] button:hover{
+  background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(218,234,250,.86));
+  border-color:rgba(20,127,234,.30);
+}
+
+html[data-theme="light"] button.primary,
+html[data-theme="light"] .contentPane > .topBar button.primary{
+  background:linear-gradient(180deg, #5DBEFF 0%, #147FEA 100%);
+  color:#fff;
+  box-shadow:0 12px 28px rgba(20,127,234,.22), inset 0 1px rgba(255,255,255,.42);
+}
+
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea{
+  border-color:rgba(74,103,136,.24);
+  background:rgba(255,255,255,.74);
+  color:#102033;
+}
+
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder{
+  color:#7B8DA2;
+}
+
+html[data-theme="light"] #formGrid label{
+  border-color:rgba(74,103,136,.17);
+  background:rgba(255,255,255,.42);
+}
+
+html[data-theme="light"] #formGrid .row .w:not(:focus){
+  background-color:rgba(226,239,252,.78);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18'%3E%3Cpath d='M9 3.5v11M3.5 9h11' stroke='%23147FEA' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+html[data-theme="light"] .lbl{
+  color:#243B55;
+}
+
+html[data-theme="light"] .muted,
+html[data-theme="light"] .hint,
+html[data-theme="light"] .sub{
+  color:#607086;
+}
+
+html[data-theme="light"] .pill{
+  border-color:rgba(20,127,234,.20);
+  background:rgba(20,127,234,.10);
+  color:#125AA0;
+}
+
+html[data-theme="light"] .note{
+  border-color:rgba(197,48,85,.22);
+  background:rgba(255,240,244,.74);
+  color:#9F2342;
+}
+
+html[data-theme="light"] .staticPreview #init,
+html[data-theme="light"] #photosArea > .card{
+  border-color:rgba(20,127,234,.22);
+  background:rgba(255,255,255,.50) !important;
+}
+
+html[data-theme="light"] .contentPane > .topBar{
+  background:transparent;
+}
+
+html[data-theme="light"] .contentPane > .topBar h1,
+html[data-theme="light"] .contentPane > .topBar .sub{
+  color:#102033;
+}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="appFrame">
+      <aside class="sideRail" aria-label="App Navigation">
+        <div class="sideBrand">
+          <div class="sideTitle">Keyboard Manager</div>
+        </div>
+
+        <nav class="sideNav" aria-label="Ansichten">
+          <button id="sideErf" class="active" type="button"><span class="sideIcon">✎</span>Erfassen</button>
+          <button id="sideUeb" type="button"><span class="sideIcon">▤</span>Übersicht</button>
+          <button id="sideGal" type="button"><span class="sideIcon">▦</span>Galerie</button>
+        </nav>
+
+        <div class="sideCard">
+          <div class="sideCardTitle">Bibliotheken</div>
+          <div class="sideStat"><span>Hersteller</span><b id="sideManufacturers">0</b></div>
+          <div class="sideStat"><span>Formate</span><b id="sideFormats">0</b></div>
+          <div class="sideStat"><span>Plates</span><b id="sidePlates">0</b></div>
+          <div class="sideStat"><span>PCBs</span><b id="sidePcbs">0</b></div>
+          <div class="sideStat"><span>Stabilisatoren</span><b id="sideStabs">0</b></div>
+          <div class="sideStat"><span>Keycaps</span><b id="sideKeycaps">0</b></div>
+          <div class="sideStat"><span>Switches</span><b id="sideSwitches">0</b></div>
+        </div>
+
+        <div class="sideCard sideCardBottom">
+          <div class="sideCardTitle">Gesamt</div>
+          <div class="sideStat"><span>Boards</span><b id="sideBoards">0</b></div>
+          <div class="sideStat"><span>Fotos</span><b id="sidePhotos">0</b></div>
+          <div class="sideStat"><span>Letzte Änderung</span><b id="sideUpdated">—</b></div>
+        </div>
+
+        <div class="sideVersion">
+          <span>v<span id="sideVersion">1.2.6</span></span>
+          <span aria-hidden="true">⚙</span>
+        </div>
+      </aside>
+
+      <main class="contentPane">
+        <div class="topBar">
+          <div class="topIdentity">
+            <h1>Keyboard Manager</h1>
+            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.2.6</span></div>
+          </div>
+          <div class="titleDragArea" aria-hidden="true"></div>
+          <div class="actions topActions" role="toolbar" aria-label="Hauptaktionen">
+            <button class="primary" id="btnNew">+ Neues Board</button>
+            <button id="btnExport">ZIP-Backup erstellen</button>
+            <button id="btnImport">Backup importieren</button>
+            <button id="btnTheme" title="Hell/Dunkel umschalten" aria-label="Theme umschalten">☀️</button>
+          </div>
+        </div>
+
+        <div id="warn" class="note" style="display:none"></div>
+
+        <div class="card pad" id="init">Initialisiere Speicher & lade Daten…</div>
+
+        <section id="viewErf" style="display:none">
+      <div class="grid two">
+        <div class="card pad">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+            <div>
+              <div class="muted small">Erfassung</div>
+              <div style="font-weight:900;font-size:16px" id="editorTitle">Neues Board</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button id="btnCancel" style="display:none">Abbrechen</button>
+              <button class="primary" id="btnSave">Speichern</button>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:1fr;gap:12px;margin-top:12px" id="formGrid"></div>
+
+          <label style="margin-top:12px">
+            <div class="lbl">Bemerkung</div>
+            <textarea id="f_remark" placeholder="Notizen, Mods, Lube, Foams…"></textarea>
+          </label>
+
+          <div style="margin-top:12px">
+            <div class="lbl">Fotos <span class="hint" id="photoHint">…</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+              <input id="filePhotos" type="file" accept="image/*" multiple hidden />
+              <button class="primary" id="btnAddPhotos">Fotos hinzufügen</button>
+              <span class="muted small"></span>
+            </div>
+            <div id="photosArea" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:1fr;gap:12px">
+          <div class="card pad">
+            <div style="font-weight:900">Kurzvorschau</div>
+            <div class="card pad" style="margin-top:10px;background:rgba(0,0,0,.12)">
+              <div style="font-weight:900" id="pv_name">(Name)</div>
+              <div class="gmeta" id="pv_badges" style="margin-top:8px"></div>
+              <div class="muted small" id="pv_meta" style="margin-top:10px">PCB: — • Plate: —</div>
+              <div class="muted small" id="pv_photos">Fotos: 0</div>
+              <div id="pv_remark" class="small" style="margin-top:10px"></div>
+            </div>
+            <div class="muted small" style="margin-top:10px">Keycaps: <b id="countKeycaps">0</b> • Switches: <b id="countSwitches">0</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewUeb" style="display:none">
+      <div class="grid" style="grid-template-columns:1fr;gap:12px">
+        <div class="card pad" id="kpi"></div>
+        <div class="card">
+          <div class="pad" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+            <div style="font-weight:900">Gesamtübersicht</div>
+            <div class="muted small"><span id="hitCount">0</span> Treffer</div>
+          </div>
+          <div style="overflow:auto">
+            <table class="table">
+              <thead><tr>
+                <th>Foto</th><th>Board</th><th>Hersteller</th><th>Format</th><th>Switches</th><th>Keycaps</th><th>Fotos</th><th style="text-align:right">Aktionen</th>
+              </tr></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewGal" style="display:none">
+      <div class="grid" style="grid-template-columns:1fr;gap:12px">
+        <div class="card pad" id="galFilters"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="muted"><b id="galCount">0</b> Boards</div>
+          <button id="btnResetFilters">Filter zurücksetzen</button>
+        </div>
+        <div class="cards" id="cards"></div>
+      </div>
+    </section>
+
+        <div class="muted small" style="margin-top:16px">Letzte Änderung: <span id="updated">—</span></div>
+      </main>
+    </div>
+  </div>
+
+
+
+  <!-- Spotlight Modal -->
+  <div class="modalBack" id="spotBack" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="spotTitle">
+      <div class="mhead">
+        <div style="font-weight:900" id="spotTitle">Spotlight</div>
+        <div style="display:flex;gap:8px">
+          <button id="spotPrev" aria-label="Vorheriges Foto">◀</button>
+          <button id="spotNext" aria-label="Nächstes Foto">▶</button>
+          <button class="danger" id="spotClose" aria-label="Dialog schließen">✕</button>
+        </div>
+      </div>
+      <div class="mbody" id="spotBody"></div>
+      <div class="mfoot" id="spotFoot"></div>
+    </div>
+  </div>
+
+  <div class="lightboxBack" id="largeBack" aria-hidden="true">
+    <div class="lightboxBar">
+      <div class="lightboxMeta" id="largeMeta">Foto</div>
+      <div class="lightboxActions">
+        <button id="largePrev" aria-label="Vorheriges Foto">◀</button>
+        <button id="largeNext" aria-label="Nächstes Foto">▶</button>
+        <button class="danger" id="largeClose" aria-label="Großansicht schließen">✕</button>
+      </div>
+    </div>
+    <img class="lightboxImage" id="largeImage" alt="" />
+  </div>
+
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// ====== Storage Adapter (SQLite + Fotoordner; IndexedDB nur für Migration) ======
+const DB_NAME='keyboard_board_manager';
+const DB_VERSION=1;
+const LS_PREFIX='kbm_fallback_v1_';
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+
+// ===== Theme Toggle (Dark default, Light overrides) =====
+const THEME_KEY='kbm_theme_v2';
+function getSavedTheme(){
+  try{ return localStorage.getItem(THEME_KEY); }catch(e){ return null; }
+}
+function getSystemTheme(){
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function applyTheme(mode){
+  const root=document.documentElement;
+  if(mode==='light') root.setAttribute('data-theme','light');
+  else root.removeAttribute('data-theme');
+  const btn=document.getElementById('btnTheme');
+  if(btn) btn.textContent = (mode==='light') ? '☀️' : '🌙';
+}
+function initTheme(){
+  const saved=getSavedTheme();
+  const mode = (saved==='light' || saved==='dark') ? saved : 'dark';
+  applyTheme(mode);
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark';
+  const next = (cur==='light') ? 'dark' : 'light';
+  try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  applyTheme(next);
+}
+
+function openDB(){
+  return new Promise(function(resolve,reject){
+    if(!('indexedDB' in window)){
+      reject(new Error('indexedDB not available'));
+      return;
+    }
+    const req=indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded=function(){
+      const db=req.result;
+      if(!db.objectStoreNames.contains('boards')) db.createObjectStore('boards',{keyPath:'id'});
+      if(!db.objectStoreNames.contains('photos')){
+        const s=db.createObjectStore('photos',{keyPath:'id'});
+        s.createIndex('by_boardId','boardId');
+      }
+      if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta',{keyPath:'key'});
+    };
+    req.onsuccess=function(){resolve(req.result);};
+    req.onerror=function(){reject(req.error||new Error('openDB error'));};
+  });
+}
+
+function reqP(req){
+  return new Promise(function(resolve,reject){
+    req.onsuccess=function(){resolve(req.result);};
+    req.onerror=function(){reject(req.error);};
+  });
+}
+
+async function idbGet(store,key){
+  const db=await openDB();
+  const tx=db.transaction(store,'readonly');
+  const st=tx.objectStore(store);
+  const res=await reqP(st.get(key));
+  db.close && db.close();
+  return res||null;
+}
+async function idbGetAll(store){
+  const db=await openDB();
+  const tx=db.transaction(store,'readonly');
+  const st=tx.objectStore(store);
+  const res=await reqP(st.getAll());
+  db.close && db.close();
+  return res||[];
+}
+async function idbGetAllByIndex(store,indexName,query){
+  const db=await openDB();
+  const tx=db.transaction(store,'readonly');
+  const st=tx.objectStore(store);
+  const idx=st.index(indexName);
+  const res=await reqP(idx.getAll(query));
+  db.close && db.close();
+  return res||[];
+}
+
+// ---- legacy fallback (nur für einmalige Migration) ----
+function lsGet(key, defVal){
+  try{
+    const raw=localStorage.getItem(LS_PREFIX+key);
+    if(!raw) return defVal;
+    return JSON.parse(raw);
+  }catch(e){
+    return defVal;
+  }
+}
+function lsSet(key, obj){
+  localStorage.setItem(LS_PREFIX+key, JSON.stringify(obj));
+}
+function lsDel(key){
+  localStorage.removeItem(LS_PREFIX+key);
+}
+
+async function storeGet(store,key){
+  return window.api.storage.get(store,key);
+}
+
+async function storePut(store,val){
+  return window.api.storage.put(store,val);
+}
+
+async function storeDelete(store,key){
+  return window.api.storage.delete(store,key);
+}
+
+async function storeGetAll(store){
+  return window.api.storage.all(store);
+}
+
+async function storeGetAllByBoardId(boardId){
+  return window.api.storage.photosByBoard(boardId);
+}
+
+// ====== App ======
+const VERSION='1.2.6';
+const FORMAT_DEFAULTS=["40%", "60%", "65%", "FRL TKL", "TKL", "98%", "Sonstige", "NumPads", "Makro Pads"];
+const PLATE_DEFAULTS=["Aluminium", "PC", "POM", "FR4", "Carbon", "Copper", "Stahl", "n/a"];
+const PCB_DEFAULTS=["Hotswap", "Solder", "MillMax"];
+const STAB_DEFAULTS=["Cherry ClipIn/C3 Wire", "Durock V2", "Durock V3", "Maiz x MK ClipIn", "OWLabs", "TX AP/black/1.2", "TX AP/black/1.6", "TX AP/Lila/1.2", "Vortex", "Wooting", "SW Knight Stabs", "Neo Plate Mount", "Nightwalker Lumen", "TX AP/GrünWeiß/1.2/ScrewIn", "8BitDo", "Tex Stabs", "Keycron Stabs", "WS Studio", "n/a"];
+const KEYCAP_DEFAULTS=["Cherry Black&White", "DCS Superweld", "Doys", "Doys black", "Doys clear", "ePBT Ramenstop", "ePBT Soju", "GMK Baltic", "GMK Bingsu", "GMK Blue Alert", "GMK Classic Beige", "GMK Cobalt", "GMK Dandy", "GMK Darling", "GMK Digital Nightmare", "GMK Dualshot", "GMK Earth Tones", "GMK Evil Dolch", "GMK Gateway", "GMK Handarbeige", "GMK Honor dark", "GMK Mictlan", "GMK Minimal", "GMK Modern Dolch light", "GMK Modern Ink", "GMK Monokai Material", "GMK NorDE Beige", "GMK NorDE Dolch", "GMK November Fog", "GMK Nuke Data", "GMK Olivia Dark", "GMK Power 2048", "GMK Red Alert", "GMK Red Dragon", "GMK Redacted", "GMK Redline", "GMK Rubrehose", "GMK Serika 2", "GMK Sixes", "GMK Sloth", "GMK Striker 2", "GMK WoB", "GMK WoB Hangul", "GMK Yeeti", "GMK ZX", "KAM Superuser", "KAT Napoleonic", "KAT Space Cadet", "KAT Spacedust", "Keycron Carbon", "KKB C.O.L", "KKB Nama Chocolate", "KKB Retro Mixed Lights", "KKB Retro Mixed Lights dark", "KKB Signet", "KKB Skidata", "KKB Soju Blue", "MDA Graffiti", "MDA Profil PBT Caps", "PBS Aperture Priority", "PBS MK Retro Beige", "PBS MV Classic", "PBTFans Classic Hangul", "PBTFans Less but better light", "PBTFans Retro Dark Lights (Extra)", "RAMA Dandy", "RAMA Dualshot", "SA ASCII", "SA Ramses light", "SA Tatooine", "TEX Caps", "Wooting BoW Shine", "XDA BoW", "XDA WoB", "XMI Handarbeige", "XMI HHKB Sideprint"];
+const SWITCH_DEFAULTS=["AEBoards Raeds HE", "Aflion Melody", "Cherry MX black Clear Top", "Cherry MX black Hyperglide", "Cherry MX Brown 3Pin", "Cherry MX Brown 5Pin", "CHERRY MX Falcon", "Cherry MX2A orange", "Durock Black Lotus", "Durock Lupine", "Gateron Cap Anniversary", "Gateron Cream Soda", "Gateron Magnetic Jade Pro", "Gateron Milky Yellow Pro", "Gateron Oil King", "Gateron Root Beer Float", "Gateron Type R", "Gateron White Pro", "Gateron Yellow Pro", "Hillstone Heavy Tactile", "HMX Canglan", "HMX FJ400", "HMX Game 1989", "HMX Hyacint", "HMX Joker", "HMX K01", "HMX Macchiato", "HMX Martini V2", "HMX Retro KD200", "HMX Sandstorm", "HMX Sonja", "HMX Sonja HC", "Huano Caramel Latte", "JWK Cupid 55g", "JWK Penguin V2", "KTT Matcha", "KTT Rose", "MMD Princess Tactile 60g", "Nightwalker Solaris", "NK Cream", "NK Cream Clickie", "OWLab London Fog", "Shogoki Tactile Switch", "SW Catmints", "Trash Linear Switches", "Vertex V one", "WS Heavy Tactile", "WS Silent Tactile"];
+
+function uid(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9); }
+function trim(s){ return (s||'').trim(); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(ts){ try{ return new Date(ts).toLocaleString('de-DE'); }catch(e){ return '—'; } }
+function fmtDateOnly(ts){ try{ return new Date(ts).toLocaleDateString('de-DE'); }catch(e){ return '—'; } }
+
+const state={
+  ready:false,
+  tab:'erf',
+  meta:{version:VERSION, createdAt:Date.now(), updatedAt:Date.now()},
+  lists:{formats:[...FORMAT_DEFAULTS], plates:[...PLATE_DEFAULTS], pcbs:[...PCB_DEFAULTS], stabs:[...STAB_DEFAULTS], manufacturers:[], keycaps:[...KEYCAP_DEFAULTS], switches:[...SWITCH_DEFAULTS]},
+  gallery:{showFields:{manufacturer:true, format:true, switches:true, keycaps:false}},
+  boards:[],
+  draft:null,
+  filters:{q:'', man:'', format:'', sort:'updatedAt_desc'},
+  spotlight:{open:false, boardId:'', photoIds:[], index:0, urls:[], previousFocus:null, renderId:0},
+  largePhoto:{open:false, url:'', previousFocus:null},
+  editorSession:{original:null, addedPhotoIds:new Set()}
+};
+
+function showWarn(html){
+  const w=document.getElementById('warn');
+  if(!html){ w.style.display='none'; w.innerHTML=''; return; }
+  w.innerHTML=html; w.style.display='block';
+}
+
+function hasDesktopApi(){
+  return !!(window.api?.storage && window.api?.exportBackup && window.api?.openBackup);
+}
+
+function enterStaticPreviewMode(){
+  document.body.classList.add('staticPreview');
+  document.getElementById('storeMode').textContent = 'Electron erforderlich';
+  document.getElementById('photoHint').textContent = 'Fotos werden in der Desktop-App verarbeitet';
+  document.getElementById('init').textContent = 'Diese Datei ist eine Electron-App. Bitte über npm start oder die installierte App öffnen.';
+  document.getElementById('init').style.display = 'block';
+  document.getElementById('viewErf').style.display = 'none';
+  document.getElementById('viewUeb').style.display = 'none';
+  document.getElementById('viewGal').style.display = 'none';
+  document.getElementById('updated').textContent = '—';
+  for(const id of ['btnNew','btnExport','btnImport','btnSave','btnCancel','btnAddPhotos','sideErf','sideUeb','sideGal']){
+    const el=document.getElementById(id);
+    if(el) el.disabled = true;
+  }
+  showWarn('Direktes Öffnen per file:// ist nur eine statische Vorschau. Speicher, Backup und Import funktionieren erst in der Desktop-App.');
+  updateShellStats();
+}
+
+function switchTab(t){
+  state.tab=t;
+  document.getElementById('sideErf')?.classList.toggle('active', t==='erf');
+  document.getElementById('sideUeb')?.classList.toggle('active', t==='ueb');
+  document.getElementById('sideGal')?.classList.toggle('active', t==='gal');
+  document.getElementById('viewErf').style.display = t==='erf'?'block':'none';
+  document.getElementById('viewUeb').style.display = t==='ueb'?'block':'none';
+  document.getElementById('viewGal').style.display = t==='gal'?'block':'none';
+  if(t==='ueb') renderOverview();
+  if(t==='gal') renderGallery();
+}
+
+async function persistMeta(){
+  state.meta.updatedAt=Date.now();
+  await storePut('meta', {key:'app', value:{meta:state.meta, lists:state.lists, gallery:state.gallery}});
+  document.getElementById('updated').textContent = fmtDate(state.meta.updatedAt);
+  updateShellStats();
+}
+
+function ensureInList(key,val){
+  const v=trim(val);
+  if(!v) return;
+  const arr=state.lists[key]||[];
+  if(arr.includes(v)) return;
+  arr.push(v);
+  arr.sort((a,b)=>a.localeCompare(b,'de'));
+  state.lists[key]=arr;
+  persistMeta();
+  renderSelects();
+}
+
+function fillSelect(sel, options, emptyLabel){
+  sel.innerHTML='';
+  const o0=document.createElement('option');
+  o0.value=''; o0.textContent=emptyLabel;
+  sel.appendChild(o0);
+  for(const v of options){
+    const o=document.createElement('option');
+    o.value=v; o.textContent=v;
+    sel.appendChild(o);
+  }
+}
+
+function renderForm(){
+  const host=document.getElementById('formGrid');
+  host.innerHTML='';
+  host.style.display='grid';
+  host.style.gridTemplateColumns = window.matchMedia('(min-width:780px)').matches ? '1fr 1fr' : '1fr';
+  host.style.gap='12px';
+
+  host.appendChild(fieldText('Name des Boards','Pflicht','f_name','z.B. Neo65, Cycle7…'));
+  host.appendChild(fieldSelectPlus('Hersteller','f_man','f_man_new'));
+  host.appendChild(fieldSelectPlus('Format','f_format','f_format_new'));
+  host.appendChild(fieldSelectPlus('Plate','f_plate','f_plate_new'));
+  host.appendChild(fieldSelectPlus('PCB','f_pcb','f_pcb_new'));
+  host.appendChild(fieldSelectPlus('Stabilisatoren','f_stabs','f_stabs_new'));
+  host.appendChild(fieldSelectPlus('Keycaps','f_keycaps','f_keycaps_new'));
+  host.appendChild(fieldSelectPlus('Switches','f_switches','f_switches_new'));
+}
+
+function fieldText(label,hint,id,ph){
+  const w=document.createElement('label');
+  w.innerHTML='<div class="lbl">'+esc(label)+' <span class="hint">'+esc(hint||'')+'</span></div><input id="'+id+'" placeholder="'+esc(ph||'')+'">';
+  return w;
+}
+function fieldSelectPlus(label, selId, newId){
+  const w=document.createElement('label');
+  w.innerHTML='<div class="lbl">'+esc(label)+'</div><div class="row"><select id="'+selId+'"></select><input id="'+newId+'" class="w" placeholder="+ Neu… (Enter)"></div>';
+  return w;
+}
+
+function setSelectValue(id,val){
+  const sel=document.getElementById(id);
+  const v=trim(val);
+  sel.value=v;
+  if(v && !Array.from(sel.options).some(o=>o.value===v)){
+    const opt=document.createElement('option');
+    opt.value=v; opt.textContent=v;
+    sel.appendChild(opt);
+  }
+}
+
+function renderSelects(){
+  fillSelect(document.getElementById('f_man'), state.lists.manufacturers, 'Hersteller…');
+  fillSelect(document.getElementById('f_format'), state.lists.formats, 'Format wählen…');
+  fillSelect(document.getElementById('f_plate'), state.lists.plates, 'Plate wählen…');
+  fillSelect(document.getElementById('f_pcb'), state.lists.pcbs, 'PCB wählen…');
+  fillSelect(document.getElementById('f_stabs'), state.lists.stabs, 'Stabs wählen…');
+  fillSelect(document.getElementById('f_keycaps'), state.lists.keycaps, 'Keycaps…');
+  fillSelect(document.getElementById('f_switches'), state.lists.switches, 'Switches…');
+
+  const d=state.draft;
+  if(d){
+    setSelectValue('f_man', d.manufacturer);
+    setSelectValue('f_format', d.format);
+    setSelectValue('f_plate', d.plate);
+    setSelectValue('f_pcb', d.pcb);
+    setSelectValue('f_stabs', d.stabs);
+    setSelectValue('f_keycaps', d.keycaps);
+    setSelectValue('f_switches', d.switches);
+  }
+}
+
+function emptyDraft(){
+  return {id:uid(), name:'', manufacturer:'', format:'', plate:'', pcb:'', keycaps:'', stabs:'', switches:'', remark:'', photoIds:[], mainPhotoId:'', createdAt:Date.now(), updatedAt:Date.now()};
+}
+
+function beginDraft(board){
+  state.draft=board ? JSON.parse(JSON.stringify(board)) : emptyDraft();
+  state.editorSession={original:board ? JSON.parse(JSON.stringify(board)) : null, addedPhotoIds:new Set()};
+}
+
+async function discardDraftChanges(){
+  for(const id of state.editorSession.addedPhotoIds) await storeDelete('photos', id);
+  state.editorSession={original:null, addedPhotoIds:new Set()};
+}
+
+function draftIsDirty(){
+  if(!state.draft) return false;
+  if(state.editorSession.addedPhotoIds.size) return true;
+  const original=state.editorSession.original || emptyDraft();
+  const keys=['name','manufacturer','format','plate','pcb','keycaps','stabs','switches','remark','mainPhotoId'];
+  if(keys.some(key=>(state.draft[key]||'')!==(original[key]||''))) return true;
+  return JSON.stringify(state.draft.photoIds||[])!==JSON.stringify(original.photoIds||[]);
+}
+
+async function startNewDraft(){
+  if(draftIsDirty() && !confirm('Ungespeicherte Änderungen verwerfen?')) return false;
+  await discardDraftChanges();
+  newDraft();
+  return true;
+}
+
+function newDraft(){
+  beginDraft(null);
+  document.getElementById('editorTitle').textContent='Neues Board';
+  document.getElementById('btnCancel').style.display='none';
+  fillFormFromDraft();
+}
+
+function fillFormFromDraft(){
+  renderForm();
+  renderSelects();
+  const d=state.draft;
+  document.getElementById('f_name').value=d.name||'';
+  document.getElementById('f_remark').value=d.remark||'';
+  renderPhotosArea();
+  renderPreview();
+  wireDynamic();
+}
+
+function renderPreview(){
+  const d=state.draft;
+  document.getElementById('pv_name').textContent = d.name||'(Name)';
+  const host=document.getElementById('pv_badges');
+  host.innerHTML='';
+  if(d.manufacturer) host.appendChild(pill(d.manufacturer));
+  if(d.format) host.appendChild(pill(d.format));
+  if(d.switches) host.appendChild(pill(d.switches));
+  if(d.keycaps) host.appendChild(pill(d.keycaps));
+  document.getElementById('pv_meta').textContent = 'PCB: '+(d.pcb||'—')+' • Plate: '+(d.plate||'—');
+  document.getElementById('pv_photos').textContent = 'Fotos: '+((d.photoIds||[]).length);
+  document.getElementById('pv_remark').textContent = d.remark||'';
+  document.getElementById('countKeycaps').textContent = String(state.lists.keycaps.length);
+  document.getElementById('countSwitches').textContent = String(state.lists.switches.length);
+  updateShellStats();
+}
+
+function updateShellStats(){
+  const setText=(id,value)=>{ const el=document.getElementById(id); if(el) el.textContent=String(value); };
+  setText('sideVersion', VERSION);
+  setText('sideManufacturers', state.lists.manufacturers?.length||0);
+  setText('sideFormats', state.lists.formats?.length||0);
+  setText('sidePlates', state.lists.plates?.length||0);
+  setText('sidePcbs', state.lists.pcbs?.length||0);
+  setText('sideStabs', state.lists.stabs?.length||0);
+  setText('sideKeycaps', state.lists.keycaps?.length||0);
+  setText('sideSwitches', state.lists.switches?.length||0);
+  setText('sideBoards', state.boards?.length||0);
+  setText('sidePhotos', (state.boards||[]).reduce((sum,board)=>sum+(board.photoIds?.length||0),0));
+  setText('sideUpdated', state.meta?.updatedAt ? fmtDateOnly(state.meta.updatedAt) : '—');
+}
+
+function pill(text){
+  const s=document.createElement('span');
+  s.className='pill';
+  s.textContent=text;
+  return s;
+}
+
+// SQLite speichert Fotos als Dateien; der Renderer erhält sie als DataURL.
+let editorUrls=[];
+function revokeEditorUrls(){
+  for(const u of editorUrls){ try{URL.revokeObjectURL(u);}catch(e){} }
+  editorUrls=[];
+}
+
+async function photoSrc(photoId){
+  const rec = await storeGet('photos', photoId);
+  if(!rec) return {src:'', name:''};
+  return {src:rec.dataUrl||'', name:rec.name||''};
+}
+
+async function renderPhotosArea(){
+  revokeEditorUrls();
+  const host=document.getElementById('photosArea');
+  const ids=state.draft.photoIds||[];
+  if(!ids.length){
+    host.innerHTML='<div class="card pad" style="background:rgba(0,0,0,.12);border-style:dashed">Noch keine Fotos.</div>';
+    return;
+  }
+  host.innerHTML='';
+  const grid=document.createElement('div');
+  grid.className='photoGrid';
+  host.appendChild(grid);
+
+  for(const pid of ids){
+    const item=document.createElement('div');
+    item.className='pitem'+(state.draft.mainPhotoId===pid?' main':'');
+    item.innerHTML='<div class="pimg"><div class="thumb">Lade…</div></div>'+
+      '<div class="pbtns">'+
+        '<button class="primary" type="button">'+(state.draft.mainPhotoId===pid?'Hauptfoto':'Als Hauptfoto')+'</button>'+
+        '<button class="danger" type="button">Entfernen</button>'+
+      '</div>';
+    const btnMain=item.querySelectorAll('button')[0];
+    const btnDel=item.querySelectorAll('button')[1];
+    btnMain.addEventListener('click', ()=>{ state.draft.mainPhotoId=pid; renderPhotosArea(); });
+    btnDel.addEventListener('click', async ()=>{
+      if(state.editorSession.addedPhotoIds.has(pid)){
+        await storeDelete('photos', pid);
+        state.editorSession.addedPhotoIds.delete(pid);
+      }
+      state.draft.photoIds = (state.draft.photoIds||[]).filter(x=>x!==pid);
+      if(state.draft.mainPhotoId===pid) state.draft.mainPhotoId = state.draft.photoIds[0]||'';
+      renderPhotosArea();
+      renderPreview();
+    });
+
+    grid.appendChild(item);
+    const target=item.querySelector('.pimg');
+    const got=await photoSrc(pid);
+    if(got.src){
+      target.innerHTML='<img src="'+got.src+'" alt="'+esc(got.name)+'">';
+    }else{
+      target.innerHTML='<div class="thumb">(Bild fehlt)</div>';
+    }
+  }
+}
+
+async function addPhotos(fileList){
+  const files=Array.from(fileList||[]).filter(f=>f.type && f.type.startsWith('image/'));
+  if(!files.length) return;
+
+  let resized=0;
+  for(const f of files){
+    const normalized=await normalizePhoto(f);
+    if(normalized.resized) resized++;
+    const id=uid();
+    const dataUrl=await blobToDataUrl(normalized.blob);
+    await storePut('photos', {id:id, boardId:state.draft.id, name:f.name, type:normalized.blob.type, dataUrl:dataUrl, width:normalized.width, height:normalized.height, addedAt:Date.now()});
+    state.draft.photoIds.push(id);
+    state.editorSession.addedPhotoIds.add(id);
+  }
+  if(!state.draft.mainPhotoId && state.draft.photoIds.length) state.draft.mainPhotoId=state.draft.photoIds[0];
+  renderPhotosArea();
+  renderPreview();
+  toast(files.length+' Foto'+(files.length===1?'':'s')+' hinzugefügt'+(resized?' • '+resized+' auf 1080p angepasst':''));
+}
+
+async function normalizePhoto(file){
+  const image=await new Promise((resolve,reject)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Bild konnte nicht verarbeitet werden: '+file.name));};
+    img.src=url;
+  });
+  const sourceWidth=image.naturalWidth;
+  const sourceHeight=image.naturalHeight;
+  const scale=Math.min(1,1920/sourceWidth,1080/sourceHeight);
+  if(scale===1) return {blob:file,width:sourceWidth,height:sourceHeight,resized:false};
+
+  const width=Math.max(1,Math.round(sourceWidth*scale));
+  const height=Math.max(1,Math.round(sourceHeight*scale));
+  const canvas=document.createElement('canvas');
+  canvas.width=width;
+  canvas.height=height;
+  canvas.getContext('2d').drawImage(image,0,0,width,height);
+  const outputType=file.type==='image/png'?'image/png':'image/jpeg';
+  const blob=await new Promise((resolve,reject)=>{
+    canvas.toBlob(result=>result?resolve(result):reject(new Error('Bild konnte nicht skaliert werden')),outputType,.9);
+  });
+  return {blob:blob,width:width,height:height,resized:true};
+}
+
+async function saveDraft(){
+  const d=state.draft;
+  d.name=trim(document.getElementById('f_name').value);
+  d.manufacturer=trim(document.getElementById('f_man').value);
+  d.format=trim(document.getElementById('f_format').value);
+  d.plate=trim(document.getElementById('f_plate').value);
+  d.pcb=trim(document.getElementById('f_pcb').value);
+  d.stabs=trim(document.getElementById('f_stabs').value);
+  d.keycaps=trim(document.getElementById('f_keycaps').value);
+  d.switches=trim(document.getElementById('f_switches').value);
+  d.remark=(document.getElementById('f_remark').value||'').trim();
+  d.updatedAt=Date.now();
+
+  if(!d.name){ alert('Bitte mindestens den Namen angeben.'); return; }
+
+  ensureInList('manufacturers', d.manufacturer);
+  ensureInList('formats', d.format);
+  ensureInList('plates', d.plate);
+  ensureInList('pcbs', d.pcb);
+  ensureInList('stabs', d.stabs);
+  ensureInList('keycaps', d.keycaps);
+  ensureInList('switches', d.switches);
+
+  await storePut('boards', d);
+  const originalIds=state.editorSession.original?.photoIds||[];
+  for(const pid of originalIds){
+    if(!(d.photoIds||[]).includes(pid)) await storeDelete('photos', pid);
+  }
+  const idx=state.boards.findIndex(x=>x.id===d.id);
+  if(idx>=0) state.boards[idx]=JSON.parse(JSON.stringify(d)); else state.boards.unshift(JSON.parse(JSON.stringify(d)));
+  state.editorSession={original:JSON.parse(JSON.stringify(d)), addedPhotoIds:new Set()};
+  await persistMeta();
+  toast('Gespeichert');
+  switchTab('ueb');
+  renderOverview();
+}
+
+function applyFilters(arr){
+  const q=trim(state.filters.q).toLowerCase();
+  let out=[...arr];
+  if(q){
+    out=out.filter(b=>[b.name,b.manufacturer,b.format,b.plate,b.pcb,b.keycaps,b.stabs,b.switches,b.remark].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
+  }
+  if(state.filters.man) out=out.filter(b=>(b.manufacturer||'')===state.filters.man);
+  if(state.filters.format) out=out.filter(b=>(b.format||'')===state.filters.format);
+
+  const [key,dir]=(state.filters.sort||'updatedAt_desc').split('_');
+  const mult=dir==='asc'?1:-1;
+  out.sort((a,b)=>{
+    if(key==='name') return mult*(a.name||'').localeCompare(b.name||'','de');
+    if(key==='manufacturer') return mult*(a.manufacturer||'').localeCompare(b.manufacturer||'','de');
+    if(key==='format') return mult*(a.format||'').localeCompare(b.format||'','de');
+    return mult*((Number(a[key]||0))-(Number(b[key]||0)));
+  });
+  return out;
+}
+
+
+// Thumbnail-Helper (Hauptfoto -> erstes Foto)
+async function getBoardThumbSrc(board){
+  const pid = board.mainPhotoId || (board.photoIds?board.photoIds[0]:'') || '';
+  if(!pid) return {src:'', revoke:false};
+  const rec = await storeGet('photos', pid);
+  if(!rec) return {src:'', revoke:false};
+  return {src:rec.dataUrl||'', revoke:false};
+}
+
+function renderOverview(renderFilters=true){
+  const k=document.getElementById('kpi');
+  if(renderFilters){
+    k.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="font-weight:900">Filter</div><button id="btnResetOverviewFilters" type="button">Filter zurücksetzen</button></div>'+
+      '<div style="margin-top:10px;display:grid;gap:8px">'+
+        '<label><div class="lbl">Suche</div><input id="ov_q" value="'+esc(state.filters.q)+'" placeholder="Suchen…"></label>'+
+        '<label><div class="lbl">Hersteller</div><select id="ov_man"></select></label>'+
+        '<label><div class="lbl">Format</div><select id="ov_format"></select></label>'+
+        '<label><div class="lbl">Sortierung</div><select id="ov_sort">'+
+          '<option value="updatedAt_desc">Zuletzt geändert (neu → alt)</option>'+
+          '<option value="name_asc">Name (A → Z)</option>'+
+          '<option value="manufacturer_asc">Hersteller (A → Z)</option>'+
+          '<option value="format_asc">Format (A → Z)</option>'+
+        '</select></label>'+
+      '</div>';
+
+    fillSelect(document.getElementById('ov_man'), state.lists.manufacturers, 'Alle');
+    fillSelect(document.getElementById('ov_format'), state.lists.formats, 'Alle');
+    document.getElementById('ov_man').value=state.filters.man;
+    document.getElementById('ov_format').value=state.filters.format;
+    document.getElementById('ov_sort').value=state.filters.sort;
+
+    document.getElementById('ov_q').addEventListener('input', e=>{state.filters.q=e.target.value; renderOverview(false);});
+    document.getElementById('ov_man').addEventListener('change', e=>{state.filters.man=e.target.value; renderOverview(false);});
+    document.getElementById('ov_format').addEventListener('change', e=>{state.filters.format=e.target.value; renderOverview(false);});
+    document.getElementById('ov_sort').addEventListener('change', e=>{state.filters.sort=e.target.value; renderOverview(false);});
+    document.getElementById('btnResetOverviewFilters').addEventListener('click', ()=>{
+      state.filters={q:'',man:'',format:'',sort:'updatedAt_desc'};
+      renderOverview();
+    });
+  }
+
+  const rows=applyFilters(state.boards);
+  document.getElementById('hitCount').textContent=String(rows.length);
+  const tb=document.getElementById('tbody');
+  tb.innerHTML='';
+  if(!rows.length){
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td colspan="8" class="muted" style="padding:16px;text-align:center">Keine Treffer.</td>';
+    tb.appendChild(tr);
+    return;
+  }
+
+  for(const b of rows){
+    const tr=document.createElement('tr');
+
+    // Thumbnail + Board als erste zwei Spalten
+    tr.innerHTML='<td><div class=\"miniThumb\" title=\"Spotlight öffnen\" role=\"button\" tabindex=\"0\" aria-label=\"Details zu '+esc(b.name)+' öffnen\"><span>—</span></div></td>'+
+      '<td><div class=\"boardName\" style=\"font-weight:900\">'+esc(b.name)+'</div><div class=\"muted small\" style=\"margin-top:6px\">PCB: '+esc(b.pcb||'—')+' • Plate: '+esc(b.plate||'—')+'</div></td>'+
+      '<td>'+esc(b.manufacturer||'—')+'</td><td>'+esc(b.format||'—')+'</td><td>'+esc(b.switches||'—')+'</td><td>'+esc(b.keycaps||'—')+'</td><td>'+(b.photoIds?b.photoIds.length:0)+'</td>'+
+      '<td style=\"text-align:right\"><div style=\"display:flex;gap:8px;justify-content:flex-end\">'+
+        '<button data-a=\"edit\">Bearbeiten</button><button data-a=\"del\" class=\"danger\">Löschen</button>'+
+      '</div></td>';
+
+    tr.querySelector('[data-a=\"edit\"]').addEventListener('click', ()=>{ editExisting(b.id); });
+    tr.querySelector('[data-a=\"del\"]').addEventListener('click', ()=>{ deleteBoard(b.id); });
+
+    // Spotlight auch aus Übersicht-Thumbnail öffnen
+    const thumbEl = tr.querySelector('.miniThumb');
+    if(thumbEl){
+      thumbEl.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); openSpotlight(b.id); });
+      thumbEl.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openSpotlight(b.id);} });
+    }
+
+    tb.appendChild(tr);
+
+    // Thumbnail asynchron nachladen
+    (async ()=>{
+      const el = tr.querySelector('.miniThumb');
+      if(!el) return;
+      const got = await getBoardThumbSrc(b);
+      if(got.src){
+        el.innerHTML = '<img src=\"'+got.src+'\" alt=\"'+esc(b.name)+'\">';
+        if(got.revoke && String(got.src).startsWith('blob:')){
+          setTimeout(()=>{ try{ URL.revokeObjectURL(got.src); }catch(e){} }, 15000);
+        }
+      }
+    })();
+  }
+}
+
+function renderGallery(renderFilters=true){
+  const gf=document.getElementById('galFilters');
+  if(renderFilters){
+    gf.innerHTML='<div style="font-weight:900">Filter</div>'+
+      '<div style="margin-top:10px;display:grid;gap:8px">'+
+        '<label><div class="lbl">Suche</div><input id="g_q" value="'+esc(state.filters.q)+'" placeholder="Galerie durchsuchen…"></label>'+
+        '<label><div class="lbl">Hersteller</div><select id="g_man"></select></label>'+
+        '<label><div class="lbl">Format</div><select id="g_format"></select></label>'+
+      '</div>';
+    fillSelect(document.getElementById('g_man'), state.lists.manufacturers, 'Alle');
+    fillSelect(document.getElementById('g_format'), state.lists.formats, 'Alle');
+    document.getElementById('g_man').value=state.filters.man;
+    document.getElementById('g_format').value=state.filters.format;
+    document.getElementById('g_q').addEventListener('input', e=>{state.filters.q=e.target.value; renderGallery(false);});
+    document.getElementById('g_man').addEventListener('change', e=>{state.filters.man=e.target.value; renderGallery(false);});
+    document.getElementById('g_format').addEventListener('change', e=>{state.filters.format=e.target.value; renderGallery(false);});
+  }
+
+  const rows=applyFilters(state.boards);
+  document.getElementById('galCount').textContent=String(rows.length);
+  const host=document.getElementById('cards');
+  host.innerHTML='';
+  if(!rows.length){
+    host.innerHTML='<div class="card pad muted" style="border-style:dashed;text-align:center">Keine Treffer.</div>';
+    return;
+  }
+  // show thumbnail from main photo
+  (async ()=>{
+    for(const b of rows){
+      const card=document.createElement('div');
+      card.className='gcard';
+      card.tabIndex=0;
+      card.setAttribute('role','button');
+      card.setAttribute('aria-label','Details zu '+b.name+' öffnen');
+      let src='';
+      const pid=b.mainPhotoId || (b.photoIds?b.photoIds[0]:'') || '';
+      if(pid){
+        const rec=await storeGet('photos', pid);
+        if(rec){
+          src = rec.dataUrl||'';
+        }
+      }
+      const badges=[];
+      if(state.gallery.showFields.manufacturer && b.manufacturer) badges.push('<span class="pill">'+esc(b.manufacturer)+'</span>');
+      if(state.gallery.showFields.format && b.format) badges.push('<span class="pill">'+esc(b.format)+'</span>');
+      if(state.gallery.showFields.switches && b.switches) badges.push('<span class="pill">'+esc(b.switches)+'</span>');
+      if(state.gallery.showFields.keycaps && b.keycaps) badges.push('<span class="pill">'+esc(b.keycaps)+'</span>');
+      card.innerHTML='<div class="thumb">'+(src?('<img src="'+src+'" alt="'+esc(b.name)+'">'):'Kein Foto')+'</div>'+
+        '<div class="gbody"><div class="gname">'+esc(b.name)+'</div><div class="gmeta">'+(badges.length?badges.join(''):'<span class="muted small">—</span>')+'</div>'+
+        '<div class="muted small" style="margin-top:8px">Fotos: '+(b.photoIds?b.photoIds.length:0)+' • Geändert: '+fmtDateOnly(b.updatedAt||b.createdAt)+'</div></div>';
+      card.addEventListener('click', ()=>openSpotlight(b.id));
+      card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openSpotlight(b.id);} });
+      host.appendChild(card);
+    }
+  })();
+}
+
+function editExisting(id){
+  const b=state.boards.find(x=>x.id===id);
+  if(!b) return;
+  beginDraft(b);
+  document.getElementById('editorTitle').textContent='Board bearbeiten';
+  document.getElementById('btnCancel').style.display='inline-flex';
+  fillFormFromDraft();
+  switchTab('erf');
+}
+
+async function deleteBoard(id){
+  const b=state.boards.find(x=>x.id===id);
+  if(!confirm('„'+(b?.name||'dieses Board')+'“ wirklich löschen?')) return;
+  await storeDelete('boards', id);
+  const photos = await storeGetAllByBoardId(id);
+  for(const p of photos) await storeDelete('photos', p.id);
+  state.boards = state.boards.filter(x=>x.id!==id);
+  await persistMeta();
+  if(state.spotlight.open && state.spotlight.boardId===id) closeSpotlight();
+  toast('Gelöscht');
+  renderOverview();
+  renderGallery();
+}
+
+function wireDynamic(){
+  document.getElementById('f_name').oninput = e=>{ state.draft.name=trim(e.target.value); renderPreview(); };
+  document.getElementById('f_remark').oninput = e=>{ state.draft.remark=(e.target.value||'').trim(); renderPreview(); };
+
+  const map=[['f_man','manufacturer'],['f_format','format'],['f_plate','plate'],['f_pcb','pcb'],['f_stabs','stabs'],['f_keycaps','keycaps'],['f_switches','switches']];
+  for(const [id,key] of map){
+    document.getElementById(id).onchange = e=>{ state.draft[key]=trim(e.target.value); renderPreview(); };
+  }
+
+  function wireNew(inputId, listKey, selectId, fieldKey){
+    const el=document.getElementById(inputId);
+    el.onkeydown = e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        const v=trim(el.value);
+        if(!v) return;
+        ensureInList(listKey, v);
+        document.getElementById(selectId).value=v;
+        state.draft[fieldKey]=v;
+        el.value='';
+        renderPreview();
+      }
+    };
+  }
+
+  wireNew('f_man_new','manufacturers','f_man','manufacturer');
+  wireNew('f_format_new','formats','f_format','format');
+  wireNew('f_plate_new','plates','f_plate','plate');
+  wireNew('f_pcb_new','pcbs','f_pcb','pcb');
+  wireNew('f_stabs_new','stabs','f_stabs','stabs');
+  wireNew('f_keycaps_new','keycaps','f_keycaps','keycaps');
+  wireNew('f_switches_new','switches','f_switches','switches');
+}
+
+function blobToDataUrl(blob){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(String(reader.result));
+    reader.onerror=()=>reject(reader.error||new Error('Bild konnte nicht gelesen werden'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function dataUrlToBlob(dataUrl){
+  const parts=String(dataUrl||'').split(',');
+  if(parts.length!==2) throw new Error('Ungültige Bilddaten');
+  const match=parts[0].match(/^data:([^;]+);base64$/);
+  if(!match) throw new Error('Ungültiger Bildtyp');
+  const bytes=atob(parts[1]);
+  const array=new Uint8Array(bytes.length);
+  for(let i=0;i<bytes.length;i++) array[i]=bytes.charCodeAt(i);
+  return new Blob([array],{type:match[1]});
+}
+
+async function exportData(){
+  const storedPhotos=await storeGetAll('photos');
+  const referencedPhotoIds=new Set(state.boards.flatMap(board=>board.photoIds||[]));
+  const photos=[];
+  for(const photo of storedPhotos){
+    if(!referencedPhotoIds.has(photo.id)) continue;
+    photos.push({id:photo.id,boardId:photo.boardId,name:photo.name,type:photo.type,width:photo.width,height:photo.height,addedAt:photo.addedAt,dataUrl:photo.dataUrl});
+  }
+  const payload={
+    schemaVersion:3,
+    format:'keyboard-manager-zip',
+    meta:Object.assign({}, state.meta, {exportedAt:Date.now(), note:'ZIP-Backup mit Manifest und Bilddateien.'}),
+    lists:state.lists,
+    gallery:state.gallery,
+    boards:state.boards,
+    photos:photos
+  };
+
+  try{
+    const ok = await window.api.exportBackup(payload);
+    if(ok) toast('ZIP-Backup gespeichert');
+  }catch(e){
+    alert('Backup konnte nicht gespeichert werden: '+(e.message||'Unbekannter Fehler'));
+  }
+}
+
+async function normalizeImport(obj){
+  if(!obj || !Array.isArray(obj.boards) || !obj.lists || typeof obj.lists!=='object') throw new Error('Falsches Format');
+  if(obj.boards.length>10000) throw new Error('Import enthält zu viele Boards');
+  const sourcePhotos=Array.isArray(obj.photos) ? obj.photos : [];
+  if(sourcePhotos.length>50000) throw new Error('Import enthält zu viele Fotos');
+  const lists={
+    formats:Array.from(new Set([...(obj.lists.formats||[]), ...FORMAT_DEFAULTS])),
+    plates:Array.from(new Set([...(obj.lists.plates||[]), ...PLATE_DEFAULTS])),
+    pcbs:Array.from(new Set([...(obj.lists.pcbs||[]), ...PCB_DEFAULTS])),
+    stabs:Array.from(new Set([...(obj.lists.stabs||[]), ...STAB_DEFAULTS])),
+    manufacturers:Array.from(new Set(obj.lists.manufacturers||[])),
+    keycaps:Array.from(new Set([...(obj.lists.keycaps||[]), ...KEYCAP_DEFAULTS])),
+    switches:Array.from(new Set([...(obj.lists.switches||[]), ...SWITCH_DEFAULTS]))
+  };
+  const gallery=obj.gallery || state.gallery;
+  const meta={version: obj.meta?.version || 'import', createdAt: obj.meta?.createdAt || Date.now(), updatedAt: Date.now()};
+  const boards=obj.boards.map(b=>{
+    if(!b || typeof b!=='object') throw new Error('Ungültiger Board-Eintrag');
+    if(b.id && !/^[a-zA-Z0-9_-]+$/.test(b.id)) throw new Error('Ungültige Board-ID');
+    return {
+      id:b.id||uid(), name:trim(b.name), manufacturer:trim(b.manufacturer), format:trim(b.format), plate:trim(b.plate), pcb:trim(b.pcb), keycaps:trim(b.keycaps), stabs:trim(b.stabs), switches:trim(b.switches),
+      remark:trim(b.remark), photoIds:Array.isArray(b.photoIds)?b.photoIds.filter(x=>typeof x==='string'):[], mainPhotoId:typeof b.mainPhotoId==='string'?b.mainPhotoId:'', createdAt:b.createdAt||Date.now(), updatedAt:b.updatedAt||Date.now()
+    };
+  });
+  const boardIds=new Set(boards.map(b=>b.id));
+  if(boardIds.size!==boards.length) throw new Error('Doppelte Board-IDs im Import');
+  const photos=[];
+  for(const p of sourcePhotos){
+    if(!p || typeof p!=='object' || typeof p.id!=='string' || typeof p.boardId!=='string' || typeof p.dataUrl!=='string') throw new Error('Ungültiger Foto-Eintrag');
+    if(!/^[a-zA-Z0-9_-]+$/.test(p.id) || !/^[a-zA-Z0-9_-]+$/.test(p.boardId)) throw new Error('Ungültige Foto-ID');
+    if(!boardIds.has(p.boardId)) throw new Error('Foto ohne zugehöriges Board');
+    const blob=dataUrlToBlob(p.dataUrl);
+    if(blob.size>30*1024*1024) throw new Error('Ein Foto überschreitet 30 MB');
+    const normalized=await normalizePhoto(new File([blob],trim(p.name)||'importiertes-foto',{type:blob.type}));
+    const common={id:p.id,boardId:p.boardId,name:trim(p.name),type:normalized.blob.type,width:normalized.width,height:normalized.height,addedAt:p.addedAt||Date.now()};
+    photos.push({...common,dataUrl:await blobToDataUrl(normalized.blob)});
+  }
+  const photoIds=new Set(photos.map(p=>p.id));
+  if(photoIds.size!==photos.length) throw new Error('Doppelte Foto-IDs im Import');
+  for(const board of boards){
+    board.photoIds=board.photoIds.filter(id=>photoIds.has(id));
+    if(!board.photoIds.includes(board.mainPhotoId)) board.mainPhotoId=board.photoIds[0]||'';
+  }
+  return {meta,lists,gallery,boards,photos};
+}
+
+async function replaceAllData(normalized){
+  const appValue={meta:normalized.meta,lists:normalized.lists,gallery:normalized.gallery};
+  await window.api.storage.replaceAll({appValue,boards:normalized.boards,photos:normalized.photos});
+}
+
+async function importData(){
+  let backup;
+  try{
+    backup=await window.api.openBackup();
+  }catch(e){
+    alert('Backup konnte nicht geöffnet werden: '+(e.message||'Ungültiges Backup'));
+    return;
+  }
+  if(!backup) return;
+  let normalized;
+  try{
+    normalized=await normalizeImport(JSON.parse(backup.content));
+  }catch(e){
+    alert('Import nicht möglich: '+(e.message||'Ungültiges Backup'));
+    return;
+  }
+  const summary=normalized.boards.length+' Boards und '+normalized.photos.length+' Fotos';
+  if(!confirm('Validiertes Backup mit '+summary+' importieren? Der aktuelle Stand wird ersetzt.')) return;
+  try{
+    await replaceAllData(normalized);
+  }catch(e){
+    alert('Import fehlgeschlagen. Der bisherige SQLite-Bestand wurde nicht ersetzt.');
+    return;
+  }
+  state.meta=normalized.meta; state.lists=normalized.lists; state.gallery=normalized.gallery; state.boards=normalized.boards;
+  document.getElementById('updated').textContent = fmtDate(state.meta.updatedAt);
+  newDraft();
+  renderSelects();
+  renderPreview();
+  switchTab('ueb');
+  toast((backup.kind==='zip'?'ZIP-Backup':'Altes JSON-Backup')+' importiert: '+summary);
+}
+
+async function cancelEditing(){
+  if(draftIsDirty() && !confirm('Ungespeicherte Änderungen verwerfen?')) return;
+  await discardDraftChanges();
+  newDraft();
+  switchTab(state.boards.length ? 'ueb' : 'erf');
+}
+
+async function legacySnapshot(){
+  let metaRec=null;
+  let boards=[];
+  let photos=[];
+  try{
+    const db=await openDB();
+    db.close && db.close();
+    metaRec=await idbGet('meta','app');
+    boards=await idbGetAll('boards');
+    photos=await idbGetAll('photos');
+  }catch(e){}
+
+  if(!boards.length && !photos.length && !metaRec){
+    metaRec=lsGet('meta',null);
+    boards=lsGet('boards',[]);
+    photos=Object.values(lsGet('photos',{}));
+  }
+  if(!boards.length && !photos.length && !metaRec) return null;
+
+  const migratedPhotos=[];
+  for(const photo of photos){
+    const dataUrl=photo.dataUrl || (photo.blob ? await blobToDataUrl(photo.blob) : '');
+    if(!dataUrl) continue;
+    const sourceBlob=dataUrlToBlob(dataUrl);
+    const normalized=await normalizePhoto(new File([sourceBlob],photo.name||'migriertes-foto',{type:sourceBlob.type}));
+    migratedPhotos.push({
+      id:photo.id,
+      boardId:photo.boardId,
+      name:photo.name||'',
+      type:normalized.blob.type,
+      width:normalized.width,
+      height:normalized.height,
+      addedAt:photo.addedAt||Date.now(),
+      dataUrl:await blobToDataUrl(normalized.blob)
+    });
+  }
+  const value=metaRec?.value || {};
+  return {
+    appValue:{
+      meta:value.meta||state.meta,
+      lists:value.lists||state.lists,
+      gallery:value.gallery||state.gallery
+    },
+    boards:boards,
+    photos:migratedPhotos
+  };
+}
+
+async function migrateLegacyStorageIfNeeded(force=false){
+  const info=await window.api.storage.info();
+  if(!force && (info.hasMeta || info.boards || info.photos)) return false;
+  const legacy=await legacySnapshot();
+  if(!legacy) return false;
+  await window.api.storage.replaceAll(legacy);
+  toast('Vorhandene Daten wurden nach SQLite migriert');
+  return true;
+}
+
+async function loadAll(){
+  if(!hasDesktopApi()){
+    enterStaticPreviewMode();
+    return;
+  }
+
+  try{
+    await migrateLegacyStorageIfNeeded();
+  }catch(e){
+    showWarn('Die bisherigen Daten konnten nicht automatisch nach SQLite migriert werden. Der alte Datenbestand wurde nicht verändert.');
+  }
+
+  document.getElementById('storeMode').textContent = 'SQLite + Fotoordner';
+  document.getElementById('photoHint').textContent = 'Automatisch max. 1920 × 1080 • als Datei gespeichert';
+
+  const metaRec = await storeGet('meta','app');
+  if(metaRec && metaRec.value){
+    state.meta = metaRec.value.meta || state.meta;
+    state.lists = metaRec.value.lists || state.lists;
+    state.lists.keycaps = Array.from(new Set([...(state.lists.keycaps||[]), ...KEYCAP_DEFAULTS]));
+    state.lists.switches = Array.from(new Set([...(state.lists.switches||[]), ...SWITCH_DEFAULTS]));
+    state.gallery = metaRec.value.gallery || state.gallery;
+  }else{
+    // create default meta
+    await persistMeta();
+  }
+
+  state.boards = await storeGetAll('boards');
+  const referencedPhotoIds=new Set(state.boards.flatMap(board=>board.photoIds||[]));
+  for(const photo of await storeGetAll('photos')){
+    if(!referencedPhotoIds.has(photo.id)) await storeDelete('photos',photo.id);
+  }
+
+  state.ready=true;
+  document.getElementById('init').style.display='none';
+  document.getElementById('viewErf').style.display='block';
+  document.getElementById('updated').textContent = fmtDate(state.meta.updatedAt);
+
+  newDraft();
+  renderSelects();
+  renderPreview();
+}
+
+function wireStatic(){
+  document.title='Keyboard Manager – '+VERSION;
+  document.getElementById('ver').textContent=VERSION;
+  document.getElementById('btnNew').addEventListener('click', async ()=>{
+    if(!hasDesktopApi()) return;
+    if(!await startNewDraft()) return;
+    switchTab('erf');
+    document.getElementById('f_name').focus();
+    toast('Neues Board');
+  });
+  document.getElementById('btnSave').addEventListener('click', ()=>{ if(hasDesktopApi()) saveDraft(); });
+  document.getElementById('btnCancel').addEventListener('click', ()=>{ if(hasDesktopApi()) cancelEditing(); });
+  document.getElementById('btnExport').addEventListener('click', ()=>{ if(hasDesktopApi()) exportData(); });
+  document.getElementById('btnImport').addEventListener('click', ()=>{ if(hasDesktopApi()) importData(); });
+  const tbtn=document.getElementById('btnTheme');
+  if(tbtn) tbtn.addEventListener('click', toggleTheme);
+  document.getElementById('btnAddPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('filePhotos').click(); });
+  document.getElementById('filePhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addPhotos(e.target.files); e.target.value=''; });
+
+  document.getElementById('sideErf')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('erf'); });
+  document.getElementById('sideUeb')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('ueb'); });
+  document.getElementById('sideGal')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('gal'); });
+
+  document.getElementById('btnResetFilters').addEventListener('click', ()=>{ state.filters={q:'',man:'',format:'',sort:'updatedAt_desc'}; renderGallery(); });
+
+
+  // Spotlight Buttons
+  document.getElementById('spotClose').addEventListener('click', closeSpotlight);
+  document.getElementById('spotBack').addEventListener('click', (e)=>{ if(e.target.id==='spotBack') closeSpotlight(); });
+  document.getElementById('spotPrev').addEventListener('click', ()=>spotStep(-1));
+  document.getElementById('spotNext').addEventListener('click', ()=>spotStep(1));
+  document.getElementById('largeClose').addEventListener('click', closeLargePhoto);
+  document.getElementById('largeBack').addEventListener('click', e=>{ if(e.target.id==='largeBack'||e.target.id==='largeImage') closeLargePhoto(); });
+  document.getElementById('largePrev').addEventListener('click', ()=>largeStep(-1));
+  document.getElementById('largeNext').addEventListener('click', ()=>largeStep(1));
+
+  window.addEventListener('keydown', (e)=>{
+    if(state.largePhoto.open){
+      if(e.key==='Escape') closeLargePhoto();
+      if(e.key==='ArrowLeft') largeStep(-1);
+      if(e.key==='ArrowRight') largeStep(1);
+      return;
+    }
+    if(!state.spotlight.open) return;
+    if(e.key==='Escape') closeSpotlight();
+    if(e.key==='ArrowLeft') spotStep(-1);
+    if(e.key==='ArrowRight') spotStep(1);
+  });
+  window.addEventListener('beforeunload', e=>{
+    if(!draftIsDirty()) return;
+    e.preventDefault();
+    e.returnValue='';
+  });
+}
+
+initTheme();
+wireStatic();
+loadAll();
+
+
+// ===== Spotlight (Galerie + Übersicht) =====
+function revokeSpotlightUrls(){
+  for(const u of state.spotlight.urls){ try{URL.revokeObjectURL(u);}catch(e){} }
+  state.spotlight.urls=[];
+}
+
+function openSpotlight(boardId){
+  const b=state.boards.find(x=>x.id===boardId);
+  if(!b) return;
+  state.spotlight.open=true;
+  state.spotlight.previousFocus=document.activeElement;
+  state.spotlight.boardId=boardId;
+  state.spotlight.photoIds = Array.isArray(b.photoIds)?b.photoIds:[];
+  state.spotlight.index = 0;
+
+  document.getElementById('spotTitle').textContent = 'Spotlight: '+b.name;
+  document.getElementById('spotBack').classList.add('open');
+  document.getElementById('spotBack').setAttribute('aria-hidden','false');
+  renderSpotlight();
+  document.getElementById('spotClose').focus();
+}
+
+function closeSpotlight(){
+  if(!state.spotlight.open) return;
+  if(state.largePhoto.open) closeLargePhoto();
+  state.spotlight.renderId++;
+  revokeSpotlightUrls();
+  state.spotlight.open=false;
+  document.getElementById('spotBack').classList.remove('open');
+  document.getElementById('spotBack').setAttribute('aria-hidden','true');
+  if(state.spotlight.previousFocus?.focus) state.spotlight.previousFocus.focus();
+  state.spotlight.previousFocus=null;
+}
+
+async function spotPhotoSrc(pid){
+  const rec = await storeGet('photos', pid);
+  if(!rec) return {src:'', name:''};
+  return {src:rec.dataUrl||'', name:rec.name||''};
+}
+
+async function largePhotoSrc(pid){
+  const rec=await storeGet('photos',pid);
+  if(!rec) return {src:'',name:''};
+  return {src:rec.dataUrl||'',name:rec.name||''};
+}
+
+async function openLargePhoto(){
+  if(!state.spotlight.photoIds.length) return;
+  state.largePhoto.open=true;
+  state.largePhoto.previousFocus=document.activeElement;
+  document.getElementById('largeBack').classList.add('open');
+  document.getElementById('largeBack').setAttribute('aria-hidden','false');
+  await renderLargePhoto();
+  document.getElementById('largeClose').focus();
+}
+
+async function closeLargePhoto(){
+  if(!state.largePhoto.open) return;
+  if(state.largePhoto.url?.startsWith('blob:')) URL.revokeObjectURL(state.largePhoto.url);
+  state.largePhoto.url='';
+  state.largePhoto.open=false;
+  document.getElementById('largeImage').removeAttribute('src');
+  document.getElementById('largeBack').classList.remove('open');
+  document.getElementById('largeBack').setAttribute('aria-hidden','true');
+  state.largePhoto.previousFocus=null;
+  await renderSpotlight();
+  document.getElementById('spotLarge')?.focus();
+}
+
+async function renderLargePhoto(){
+  if(state.largePhoto.url?.startsWith('blob:')) URL.revokeObjectURL(state.largePhoto.url);
+  const ids=state.spotlight.photoIds;
+  state.spotlight.index=Math.max(0,Math.min(state.spotlight.index,ids.length-1));
+  const photo=await largePhotoSrc(ids[state.spotlight.index]);
+  state.largePhoto.url=photo.src;
+  const image=document.getElementById('largeImage');
+  image.src=photo.src;
+  image.alt=photo.name||'Großansicht des Fotos';
+  document.getElementById('largeMeta').textContent=(state.spotlight.index+1)+' / '+ids.length+(photo.name?' • '+photo.name:'');
+  document.getElementById('largePrev').disabled=state.spotlight.index<=0;
+  document.getElementById('largeNext').disabled=state.spotlight.index>=ids.length-1;
+}
+
+function largeStep(dir){
+  if(!state.largePhoto.open) return;
+  const next=state.spotlight.index+dir;
+  if(next<0||next>=state.spotlight.photoIds.length) return;
+  state.spotlight.index=next;
+  renderLargePhoto();
+}
+
+function attrRow(label, value){
+  const v = value ? esc(value) : '—';
+  return '<div class=\"attrRow\"><span class=\"k\">'+esc(label)+'</span><span class=\"v\">'+v+'</span></div>';
+}
+
+async function renderSpotlight(){
+  const body=document.getElementById('spotBody');
+  const foot=document.getElementById('spotFoot');
+  const renderId=++state.spotlight.renderId;
+  const boardId=state.spotlight.boardId;
+
+  revokeSpotlightUrls();
+
+  const b=state.boards.find(x=>x.id===boardId);
+  const ids=[...state.spotlight.photoIds];
+
+  body.innerHTML='<div class="spotLoading">Spotlight wird geladen…</div>';
+  foot.innerHTML='<div class="muted small">Board: <b style="color:var(--txt)">'+esc(b?.name||'')+'</b></div>';
+
+  if(!ids.length){
+    if(renderId!==state.spotlight.renderId || boardId!==state.spotlight.boardId) return;
+    body.innerHTML = '<div class=\"grid\" style=\"grid-template-columns:1fr;gap:12px\">'+
+      '<div class=\"card pad\">Keine Fotos für dieses Board.</div>'+
+      '<div class=\"card pad\"><div style=\"font-weight:900\">Attribute</div><div class=\"attrList\">'+
+        attrRow('Hersteller', b?.manufacturer)+attrRow('Format', b?.format)+attrRow('PCB', b?.pcb)+attrRow('Plate', b?.plate)+attrRow('Stabs', b?.stabs)+attrRow('Switches', b?.switches)+attrRow('Keycaps', b?.keycaps)+
+      '</div><div style=\"margin-top:12px\"><div class=\"muted small\" style=\"margin-bottom:6px\">Bemerkung</div><div class=\"card pad\">'+esc(b?.remark||'—')+'</div></div></div></div>';
+    foot.innerHTML = '<div class=\"muted small\">Board: <b style=\"color:var(--txt)\">'+esc(b?.name||'')+'</b></div>'+
+      '<div style=\"display:flex;gap:8px\"><button id=\"spotEdit\">Bearbeiten</button><button class=\"danger\" id=\"spotDel\">Löschen</button></div>';
+    document.getElementById('spotEdit').onclick=()=>{closeSpotlight();editExisting(state.spotlight.boardId);};
+    document.getElementById('spotDel').onclick=()=>deleteBoard(state.spotlight.boardId);
+    document.getElementById('spotPrev').disabled = true;
+    document.getElementById('spotNext').disabled = true;
+    return;
+  }
+
+  if(state.spotlight.index < 0) state.spotlight.index = 0;
+  if(state.spotlight.index > ids.length-1) state.spotlight.index = ids.length-1;
+
+  const currentId = ids[state.spotlight.index];
+  const main = await spotPhotoSrc(currentId);
+  if(renderId!==state.spotlight.renderId || boardId!==state.spotlight.boardId) return;
+
+  body.innerHTML = '';
+  const grid=document.createElement('div');
+  grid.className='spotGrid';
+
+  const left=document.createElement('div');
+  left.className='spotMain';
+  left.innerHTML = '<div class=\"frame\" role=\"button\" tabindex=\"0\" aria-label=\"Foto in Großansicht öffnen\" title=\"Foto groß ansehen\">'+(main.src?('<img src=\"'+main.src+'\" alt=\"'+esc(main.name)+'\">'):'<span class=\"muted\">Kein Bild</span>')+'</div>';
+  const frame=left.querySelector('.frame');
+  frame.addEventListener('click',openLargePhoto);
+  frame.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLargePhoto();}});
+
+  const right=document.createElement('div');
+  right.className='card pad';
+  right.innerHTML = '<div style=\"font-weight:900\">Bilder</div>' +
+    '<div class=\"muted small\" style=\"margin-top:6px\">'+(state.spotlight.index+1)+' / '+ids.length+'</div>' +
+    '<div class=\"thumbRow\" style=\"margin-top:12px\" id=\"thumbRow\"></div>' +
+    '<div style=\"margin-top:14px;font-weight:900\">Attribute</div>' +
+    '<div class=\"attrList\">'+
+      attrRow('Hersteller', b?.manufacturer)+
+      attrRow('Format', b?.format)+
+      attrRow('PCB', b?.pcb)+
+      attrRow('Plate', b?.plate)+
+      attrRow('Stabs', b?.stabs)+
+      attrRow('Switches', b?.switches)+
+      attrRow('Keycaps', b?.keycaps)+
+    '</div>' +
+    '<div style=\"margin-top:12px\"><div class=\"muted small\" style=\"margin-bottom:6px\">Bemerkung</div><div class=\"card pad\" style=\"background:rgba(0,0,0,.12);white-space:pre-wrap\">'+esc((b?.remark||'—'))+'</div></div>';
+
+  grid.appendChild(left);
+  grid.appendChild(right);
+  body.appendChild(grid);
+
+  const tr = right.querySelector('#thumbRow');
+  const thumbnailLoads=[];
+  for(let i=0;i<ids.length;i++){
+    const pid=ids[i];
+    const mini=document.createElement('div');
+    mini.className='tmini'+(i===state.spotlight.index?' active':'');
+    mini.tabIndex=0;
+    mini.setAttribute('role','button');
+    mini.setAttribute('aria-label','Foto '+(i+1)+' anzeigen');
+    mini.innerHTML = '<div class=\"thumb\">…</div>';
+    mini.addEventListener('click', ()=>{ state.spotlight.index=i; renderSpotlight(); });
+    mini.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();state.spotlight.index=i;renderSpotlight();} });
+    tr.appendChild(mini);
+
+    thumbnailLoads.push(spotPhotoSrc(pid).then(got=>{
+      if(renderId!==state.spotlight.renderId || boardId!==state.spotlight.boardId || !mini.isConnected) return;
+      mini.innerHTML = got.src
+        ? '<img src=\"'+got.src+'\" alt=\"'+esc(got.name)+'\">'
+        : '<div class=\"thumb\">(Bild)</div>';
+    }));
+  }
+  Promise.all(thumbnailLoads).catch(()=>{});
+
+  foot.innerHTML = '<div class=\"muted small\">'+
+    'Board: <b style=\"color:var(--txt)\">'+esc(b?.name||'')+'</b> • Fotos: '+ids.length+' • Geändert: '+fmtDateOnly(b?.updatedAt||b?.createdAt)+
+    '</div>' +
+    '<div style=\"display:flex;gap:8px\">'+
+      '<button id=\"spotLarge\">Groß ansehen</button>' +
+      '<button id=\"spotEdit\">Bearbeiten</button>' +
+      '<button class=\"danger\" id=\"spotDel\">Löschen</button>' +
+    '</div>';
+
+  document.getElementById('spotLarge').onclick = openLargePhoto;
+  document.getElementById('spotEdit').onclick = ()=>{ closeSpotlight(); editExisting(state.spotlight.boardId); };
+  document.getElementById('spotDel').onclick  = ()=>{ deleteBoard(state.spotlight.boardId); };
+
+  document.getElementById('spotPrev').disabled = state.spotlight.index<=0;
+  document.getElementById('spotNext').disabled = state.spotlight.index>=ids.length-1;
+}
+
+function spotStep(dir){
+  if(!state.spotlight.open) return;
+  state.spotlight.index += dir;
+  renderSpotlight();
+}
+
+</script>
+</body>
+</html>

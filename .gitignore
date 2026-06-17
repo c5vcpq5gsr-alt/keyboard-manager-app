@@ -1,0 +1,20 @@
+# Dependencies and build output
+node_modules/
+dist/
+
+# Local application data
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+photos/
+
+# Local backups and OS files
+*.zip
+*.dmg
+.DS_Store
+sicherungskopie/
+
+# Logs and editor files
+*.log
+.idea/
+.vscode/

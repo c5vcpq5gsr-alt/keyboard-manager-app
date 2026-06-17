@@ -1,0 +1,83 @@
+{
+  "name": "keyboard-manager",
+  "version": "1.2.6",
+  "description": "Keyboard Board Manager Desktop App",
+  "main": "main.js",
+  "author": "du",
+  "scripts": {
+    "start": "electron .",
+    "icons:mac": "CLANG_MODULE_CACHE_PATH=/private/tmp/keyboard-manager-swift-cache swift tools/generate-icons.swift assets/app-icon-source.png . && node tools/write-icns.cjs assets/app-icon.iconset icon.icns",
+    "build": "electron-builder",
+    "build:mac": "MAC_ADHOC_SIGN=1 electron-builder --mac dmg --arm64 --publish never",
+    "build:win": "electron-builder --win nsis portable --x64 --publish never",
+    "postinstall": "electron-builder install-app-deps",
+    "test:export": "electron tools/export-integration-test.cjs",
+    "test:photos": "electron tools/photo-large-view-integration-test.cjs",
+    "test:spotlight": "electron tools/spotlight-switch-integration-test.cjs",
+    "test:close": "electron tools/window-close-integration-test.cjs",
+    "test:storage": "electron tools/sqlite-storage-integration-test.cjs",
+    "test:migration": "electron tools/legacy-migration-integration-test.cjs"
+  },
+  "devDependencies": {
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.keyboard.manager",
+    "productName": "Keyboard Manager",
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "storage.js",
+      "package.json",
+      "icon.icns"
+    ],
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*"
+    ],
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.icns"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "afterPack": "tools/after-pack.cjs",
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "uninstallDisplayName": "Keyboard Manager",
+      "installerLanguages": [
+        "de_DE",
+        "en_US"
+      ]
+    }
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.17",
+    "better-sqlite3": "^12.10.1"
+  }
+}
