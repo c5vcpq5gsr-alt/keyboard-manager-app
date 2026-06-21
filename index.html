@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Keyboard Manager – 1.2.6</title>
+  <title>Keyboard Manager – 1.2.7</title>
   <style>
     :root{--bg:#070B14;--surface:#0A1222;--txt:#E5E7EB;--muted:#94A3B8;--border:#22304F;--accent:#38BDF8;--accent2:#0EA5E9;--accentSoft:rgba(56,189,248,.18);--accentMain:rgba(56,189,248,.75);--accentStrong:rgba(56,189,248,.90);--pri:var(--accent);--pri2:var(--accent2);--danger:#FB7185;}
     *{box-sizing:border-box}
@@ -1393,7 +1393,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         </div>
 
         <div class="sideVersion">
-          <span>v<span id="sideVersion">1.2.6</span></span>
+          <span>v<span id="sideVersion">1.2.7</span></span>
           <span aria-hidden="true">⚙</span>
         </div>
       </aside>
@@ -1402,7 +1402,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         <div class="topBar">
           <div class="topIdentity">
             <h1>Keyboard Manager</h1>
-            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.2.6</span></div>
+            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.2.7</span></div>
           </div>
           <div class="titleDragArea" aria-hidden="true"></div>
           <div class="actions topActions" role="toolbar" aria-label="Hauptaktionen">
@@ -1468,10 +1468,13 @@ html[data-theme="light"] .contentPane > .topBar .sub{
     <section id="viewUeb" style="display:none">
       <div class="grid" style="grid-template-columns:1fr;gap:12px">
         <div class="card pad" id="kpi"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="muted"><b id="hitCount">0</b> <span id="hitCountLabel">Boards</span></div>
+          <button id="btnResetOverviewFilters">Filter zurücksetzen</button>
+        </div>
         <div class="card">
           <div class="pad" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
             <div style="font-weight:900">Gesamtübersicht</div>
-            <div class="muted small"><span id="hitCount">0</span> Treffer</div>
           </div>
           <div style="overflow:auto">
             <table class="table">
@@ -1489,7 +1492,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
       <div class="grid" style="grid-template-columns:1fr;gap:12px">
         <div class="card pad" id="galFilters"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div class="muted"><b id="galCount">0</b> Boards</div>
+          <div class="muted"><b id="galCount">0</b> <span id="galCountLabel">Boards</span></div>
           <button id="btnResetFilters">Filter zurücksetzen</button>
         </div>
         <div class="cards" id="cards"></div>
@@ -1666,7 +1669,7 @@ async function storeGetAllByBoardId(boardId){
 }
 
 // ====== App ======
-const VERSION='1.2.6';
+const VERSION='1.2.7';
 const FORMAT_DEFAULTS=["40%", "60%", "65%", "FRL TKL", "TKL", "98%", "Sonstige", "NumPads", "Makro Pads"];
 const PLATE_DEFAULTS=["Aluminium", "PC", "POM", "FR4", "Carbon", "Copper", "Stahl", "n/a"];
 const PCB_DEFAULTS=["Hotswap", "Solder", "MillMax"];
@@ -1688,7 +1691,7 @@ const state={
   gallery:{showFields:{manufacturer:true, format:true, switches:true, keycaps:false}},
   boards:[],
   draft:null,
-  filters:{q:'', man:'', format:'', sort:'updatedAt_desc'},
+  filters:{q:'', man:'', format:'', sort:'format_asc'},
   spotlight:{open:false, boardId:'', photoIds:[], index:0, urls:[], previousFocus:null, renderId:0},
   largePhoto:{open:false, url:'', previousFocus:null},
   editorSession:{original:null, addedPhotoIds:new Set()}
@@ -2049,6 +2052,7 @@ async function saveDraft(){
   if(idx>=0) state.boards[idx]=JSON.parse(JSON.stringify(d)); else state.boards.unshift(JSON.parse(JSON.stringify(d)));
   state.editorSession={original:JSON.parse(JSON.stringify(d)), addedPhotoIds:new Set()};
   await persistMeta();
+  newDraft();
   toast('Gespeichert');
   switchTab('ueb');
   renderOverview();
@@ -2063,7 +2067,7 @@ function applyFilters(arr){
   if(state.filters.man) out=out.filter(b=>(b.manufacturer||'')===state.filters.man);
   if(state.filters.format) out=out.filter(b=>(b.format||'')===state.filters.format);
 
-  const [key,dir]=(state.filters.sort||'updatedAt_desc').split('_');
+  const [key,dir]=(state.filters.sort||'format_asc').split('_');
   const mult=dir==='asc'?1:-1;
   out.sort((a,b)=>{
     if(key==='name') return mult*(a.name||'').localeCompare(b.name||'','de');
@@ -2072,6 +2076,32 @@ function applyFilters(arr){
     return mult*((Number(a[key]||0))-(Number(b[key]||0)));
   });
   return out;
+}
+
+function renderFilterControls(host, prefix, renderResults){
+  host.innerHTML='<div style="font-weight:900">Filter</div>'+
+    '<div style="margin-top:10px;display:grid;gap:8px">'+
+      '<label><div class="lbl">Suche</div><input id="'+prefix+'_q" value="'+esc(state.filters.q)+'" placeholder="Boards durchsuchen…"></label>'+
+      '<label><div class="lbl">Hersteller</div><select id="'+prefix+'_man"></select></label>'+
+      '<label><div class="lbl">Format</div><select id="'+prefix+'_format"></select></label>'+
+      '<label><div class="lbl">Sortierung</div><select id="'+prefix+'_sort">'+
+        '<option value="updatedAt_desc">Zuletzt geändert (neu → alt)</option>'+
+        '<option value="name_asc">Name (A → Z)</option>'+
+        '<option value="manufacturer_asc">Hersteller (A → Z)</option>'+
+        '<option value="format_asc">Format (A → Z)</option>'+
+      '</select></label>'+
+    '</div>';
+
+  fillSelect(document.getElementById(prefix+'_man'), state.lists.manufacturers, 'Alle');
+  fillSelect(document.getElementById(prefix+'_format'), state.lists.formats, 'Alle');
+  document.getElementById(prefix+'_man').value=state.filters.man;
+  document.getElementById(prefix+'_format').value=state.filters.format;
+  document.getElementById(prefix+'_sort').value=state.filters.sort;
+
+  document.getElementById(prefix+'_q').addEventListener('input', e=>{state.filters.q=e.target.value; renderResults(false);});
+  document.getElementById(prefix+'_man').addEventListener('change', e=>{state.filters.man=e.target.value; renderResults(false);});
+  document.getElementById(prefix+'_format').addEventListener('change', e=>{state.filters.format=e.target.value; renderResults(false);});
+  document.getElementById(prefix+'_sort').addEventListener('change', e=>{state.filters.sort=e.target.value; renderResults(false);});
 }
 
 
@@ -2087,37 +2117,12 @@ async function getBoardThumbSrc(board){
 function renderOverview(renderFilters=true){
   const k=document.getElementById('kpi');
   if(renderFilters){
-    k.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="font-weight:900">Filter</div><button id="btnResetOverviewFilters" type="button">Filter zurücksetzen</button></div>'+
-      '<div style="margin-top:10px;display:grid;gap:8px">'+
-        '<label><div class="lbl">Suche</div><input id="ov_q" value="'+esc(state.filters.q)+'" placeholder="Suchen…"></label>'+
-        '<label><div class="lbl">Hersteller</div><select id="ov_man"></select></label>'+
-        '<label><div class="lbl">Format</div><select id="ov_format"></select></label>'+
-        '<label><div class="lbl">Sortierung</div><select id="ov_sort">'+
-          '<option value="updatedAt_desc">Zuletzt geändert (neu → alt)</option>'+
-          '<option value="name_asc">Name (A → Z)</option>'+
-          '<option value="manufacturer_asc">Hersteller (A → Z)</option>'+
-          '<option value="format_asc">Format (A → Z)</option>'+
-        '</select></label>'+
-      '</div>';
-
-    fillSelect(document.getElementById('ov_man'), state.lists.manufacturers, 'Alle');
-    fillSelect(document.getElementById('ov_format'), state.lists.formats, 'Alle');
-    document.getElementById('ov_man').value=state.filters.man;
-    document.getElementById('ov_format').value=state.filters.format;
-    document.getElementById('ov_sort').value=state.filters.sort;
-
-    document.getElementById('ov_q').addEventListener('input', e=>{state.filters.q=e.target.value; renderOverview(false);});
-    document.getElementById('ov_man').addEventListener('change', e=>{state.filters.man=e.target.value; renderOverview(false);});
-    document.getElementById('ov_format').addEventListener('change', e=>{state.filters.format=e.target.value; renderOverview(false);});
-    document.getElementById('ov_sort').addEventListener('change', e=>{state.filters.sort=e.target.value; renderOverview(false);});
-    document.getElementById('btnResetOverviewFilters').addEventListener('click', ()=>{
-      state.filters={q:'',man:'',format:'',sort:'updatedAt_desc'};
-      renderOverview();
-    });
+    renderFilterControls(k, 'ov', renderOverview);
   }
 
   const rows=applyFilters(state.boards);
   document.getElementById('hitCount').textContent=String(rows.length);
+  document.getElementById('hitCountLabel').textContent=rows.length===1?'Board':'Boards';
   const tb=document.getElementById('tbody');
   tb.innerHTML='';
   if(!rows.length){
@@ -2168,23 +2173,12 @@ function renderOverview(renderFilters=true){
 function renderGallery(renderFilters=true){
   const gf=document.getElementById('galFilters');
   if(renderFilters){
-    gf.innerHTML='<div style="font-weight:900">Filter</div>'+
-      '<div style="margin-top:10px;display:grid;gap:8px">'+
-        '<label><div class="lbl">Suche</div><input id="g_q" value="'+esc(state.filters.q)+'" placeholder="Galerie durchsuchen…"></label>'+
-        '<label><div class="lbl">Hersteller</div><select id="g_man"></select></label>'+
-        '<label><div class="lbl">Format</div><select id="g_format"></select></label>'+
-      '</div>';
-    fillSelect(document.getElementById('g_man'), state.lists.manufacturers, 'Alle');
-    fillSelect(document.getElementById('g_format'), state.lists.formats, 'Alle');
-    document.getElementById('g_man').value=state.filters.man;
-    document.getElementById('g_format').value=state.filters.format;
-    document.getElementById('g_q').addEventListener('input', e=>{state.filters.q=e.target.value; renderGallery(false);});
-    document.getElementById('g_man').addEventListener('change', e=>{state.filters.man=e.target.value; renderGallery(false);});
-    document.getElementById('g_format').addEventListener('change', e=>{state.filters.format=e.target.value; renderGallery(false);});
+    renderFilterControls(gf, 'g', renderGallery);
   }
 
   const rows=applyFilters(state.boards);
   document.getElementById('galCount').textContent=String(rows.length);
+  document.getElementById('galCountLabel').textContent=rows.length===1?'Board':'Boards';
   const host=document.getElementById('cards');
   host.innerHTML='';
   if(!rows.length){
@@ -2541,7 +2535,8 @@ function wireStatic(){
   document.getElementById('sideUeb')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('ueb'); });
   document.getElementById('sideGal')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('gal'); });
 
-  document.getElementById('btnResetFilters').addEventListener('click', ()=>{ state.filters={q:'',man:'',format:'',sort:'updatedAt_desc'}; renderGallery(); });
+  document.getElementById('btnResetOverviewFilters').addEventListener('click', ()=>{ state.filters={q:'',man:'',format:'',sort:'format_asc'}; renderOverview(); });
+  document.getElementById('btnResetFilters').addEventListener('click', ()=>{ state.filters={q:'',man:'',format:'',sort:'format_asc'}; renderGallery(); });
 
 
   // Spotlight Buttons

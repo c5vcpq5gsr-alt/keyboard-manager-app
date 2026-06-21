@@ -46,7 +46,7 @@ npm run build:mac
 npm run build:win
 ```
 
-Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag wie `v1.2.6` erzeugt automatisch ein GitHub Release mit ARM-macOS-DMG, Windows-Installer und portabler Windows-App.
+Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag wie `v1.2.7` erzeugt automatisch ein GitHub Release mit ARM-macOS-DMG, Windows-Installer und portabler Windows-App.
 
 Da die Builds nicht signiert sind, können macOS Gatekeeper beziehungsweise Windows SmartScreen beim ersten Start eine Warnung anzeigen.
 
