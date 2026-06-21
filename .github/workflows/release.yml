@@ -4,15 +4,46 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing version tag to publish
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
 
 jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; reusing it."
+            exit 0
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft \
+            --generate-notes \
+            --notes "### macOS-Installation
+
+          Die macOS-App ist nicht mit einer kostenpflichtigen Apple Developer ID signiert. Nach dem Kopieren in den Programme-Ordner die App mit Rechtsklick → Öffnen starten. Falls sie weiterhin blockiert wird: Systemeinstellungen → Datenschutz & Sicherheit → Dennoch öffnen." \
+            --verify-tag \
+            --title "Keyboard Manager $RELEASE_TAG"
+
   build-macos:
+    needs: prepare-release
     runs-on: macos-14
 
     steps:
@@ -31,14 +62,13 @@ jobs:
       - name: Build macOS DMG
         run: npm run build:mac
 
-      - name: Upload macOS build
-        uses: actions/upload-artifact@v4
-        with:
-          name: keyboard-manager-macos-arm64
-          path: dist/*.dmg
-          if-no-files-found: error
+      - name: Upload macOS build to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$RELEASE_TAG" dist/*.dmg --repo "$GITHUB_REPOSITORY" --clobber
 
   build-windows:
+    needs: prepare-release
     runs-on: windows-latest
 
     steps:
@@ -82,12 +112,11 @@ jobs:
         shell: pwsh
         run: ./tools/windows-installer-smoke.ps1 -PreviousInstaller ((Get-ChildItem previous-release -Filter "*Setup*.exe").FullName)
 
-      - name: Upload Windows builds
-        uses: actions/upload-artifact@v4
-        with:
-          name: keyboard-manager-windows-x64
-          path: dist/*.exe
-          if-no-files-found: error
+      - name: Upload Windows builds to release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$env:RELEASE_TAG" (Get-ChildItem dist -Filter "*.exe").FullName --repo "$env:GITHUB_REPOSITORY" --clobber
 
   publish:
     needs:
@@ -96,21 +125,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download release builds
-        uses: actions/download-artifact@v4
-        with:
-          path: release-assets
-          merge-multiple: true
-
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create "$GITHUB_REF_NAME" release-assets/*
-          --repo "$GITHUB_REPOSITORY"
-          --generate-notes
-          --notes "### macOS-Installation
-
-          Die macOS-App ist nicht mit einer kostenpflichtigen Apple Developer ID signiert. Nach dem Kopieren in den Programme-Ordner die App mit Rechtsklick → Öffnen starten. Falls sie weiterhin blockiert wird: Systemeinstellungen → Datenschutz & Sicherheit → Dennoch öffnen."
-          --verify-tag
-          --title "Keyboard Manager $GITHUB_REF_NAME"
+        run: gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
