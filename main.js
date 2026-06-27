@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
 const AdmZip = require('adm-zip');
@@ -16,13 +16,8 @@ function createWindow () {
   const win = new BrowserWindow({
     width: 1800,
     height: 1200,
+    title: 'Keyboard Manager',
     backgroundColor: '#070b14',
-    ...(process.platform === 'darwin' ? {
-      titleBarStyle: 'hiddenInset',
-      trafficLightPosition: { x: 18, y: 18 },
-      vibrancy: 'under-window',
-      visualEffectState: 'active'
-    } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -77,8 +72,15 @@ trustedHandler('storage:put', (store, value) => storage.put(store, value));
 trustedHandler('storage:delete', (store, key) => storage.remove(store, key));
 trustedHandler('storage:all', store => storage.all(store));
 trustedHandler('storage:photos-by-board', boardId => storage.photosByBoard(boardId));
-trustedHandler('storage:replace-all', payload => storage.replaceAll(payload.appValue, payload.boards, payload.photos));
+trustedHandler('storage:photos-by-owner', (ownerType, ownerId) => storage.photosByOwner(ownerType, ownerId));
+trustedHandler('storage:replace-all', payload => storage.replaceAll(payload.appValue, payload.boards, payload.photos, payload.keycapSets || [], payload.artisanSets || []));
 trustedHandler('storage:info', () => storage.counts());
+trustedHandler('shell:open-external', async url => {
+  const parsed = new URL(String(url || ''));
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Unsupported external URL');
+  await shell.openExternal(parsed.toString());
+  return true;
+});
 
 function safePhotoName(photo) {
   const extension = ({ 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' })[photo.type];
@@ -95,12 +97,14 @@ function photoBuffer(dataUrl, expectedType) {
 trustedHandler('backup:export', async data => {
   const zip = new AdmZip();
   const manifest = {
-    schemaVersion: 3,
+    schemaVersion: 5,
     format: 'keyboard-manager-zip',
     meta: data.meta,
     lists: data.lists,
     gallery: data.gallery,
     boards: data.boards,
+    keycapSets: data.keycapSets || [],
+    artisanSets: data.artisanSets || [],
     photos: []
   };
   let totalSize = 0;
@@ -110,7 +114,18 @@ trustedHandler('backup:export', async data => {
     totalSize += buffer.length;
     if (buffer.length > 30 * 1024 * 1024 || totalSize > 500 * 1024 * 1024) throw new Error('Backup exceeds size limits');
     zip.addFile(file, buffer);
-    manifest.photos.push({ id: photo.id, boardId: photo.boardId, name: photo.name, type: photo.type, width: photo.width, height: photo.height, addedAt: photo.addedAt, file });
+    manifest.photos.push({
+      id: photo.id,
+      boardId: photo.boardId,
+      ownerType: photo.ownerType || 'board',
+      ownerId: photo.ownerId || photo.boardId,
+      name: photo.name,
+      type: photo.type,
+      width: photo.width,
+      height: photo.height,
+      addedAt: photo.addedAt,
+      file
+    });
   }
   zip.addFile('manifest.json', Buffer.from(JSON.stringify(manifest, null, 2), 'utf8'));
   const { filePath } = await dialog.showSaveDialog({
@@ -144,7 +159,7 @@ trustedHandler('backup:open', async () => {
   const manifestEntry = entries.find(entry => entry.entryName === 'manifest.json');
   if (!manifestEntry || manifestEntry.header.size > 10 * 1024 * 1024) throw new Error('ZIP manifest missing or too large');
   const manifest = JSON.parse(manifestEntry.getData().toString('utf8'));
-  if (manifest.schemaVersion !== 3 || manifest.format !== 'keyboard-manager-zip' || !Array.isArray(manifest.photos)) throw new Error('Unsupported ZIP backup');
+  if (![3, 4, 5].includes(manifest.schemaVersion) || manifest.format !== 'keyboard-manager-zip' || !Array.isArray(manifest.photos)) throw new Error('Unsupported ZIP backup');
   const entryMap = new Map(entries.map(entry => [entry.entryName, entry]));
   let totalSize = 0;
   const photos = manifest.photos.map(photo => {

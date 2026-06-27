@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Keyboard Manager – 1.2.7</title>
+  <title>Keyboard Manager – 1.2.8</title>
   <style>
     :root{--bg:#070B14;--surface:#0A1222;--txt:#E5E7EB;--muted:#94A3B8;--border:#22304F;--accent:#38BDF8;--accent2:#0EA5E9;--accentSoft:rgba(56,189,248,.18);--accentMain:rgba(56,189,248,.75);--accentStrong:rgba(56,189,248,.90);--pri:var(--accent);--pri2:var(--accent2);--danger:#FB7185;}
     *{box-sizing:border-box}
@@ -286,7 +286,7 @@ header{
   top:12px;
   z-index:30;
   margin:0 0 16px;
-  padding:14px 16px 14px 84px;
+  padding:14px 16px;
   min-height:70px;
   border:1px solid var(--border);
   border-radius:26px;
@@ -294,7 +294,6 @@ header{
   box-shadow:var(--shadowSoft);
   backdrop-filter:var(--glassBlur);
   -webkit-backdrop-filter:var(--glassBlur);
-  -webkit-app-region:drag;
 }
 
 header h1{
@@ -539,6 +538,111 @@ textarea:focus{
   grid-template-columns:repeat(auto-fill,minmax(260px,340px));
   justify-content:start;
   align-items:start;
+}
+
+.keycapSplit{
+  align-items:start;
+}
+
+.entityToggle{
+  display:inline-flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:0 0 12px;
+  padding:8px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:rgba(255,255,255,.035);
+}
+
+.entityToggle button{
+  border-radius:12px;
+  min-height:34px;
+}
+
+.entityToggle button.active{
+  background:var(--accentSoft);
+  border-color:var(--accentMain);
+  color:var(--txt);
+}
+
+.keycapSide{
+  min-height:0;
+}
+
+.keycapRow{
+  cursor:pointer;
+}
+
+.keycapRow .boardName{
+  text-decoration-thickness:1px;
+  text-underline-offset:3px;
+}
+
+.keycapRow:hover .boardName{
+  color:var(--accent);
+  text-decoration:underline;
+}
+
+.keycapViewToggle{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.keycapViewToggle button.active{
+  background:var(--accentSoft);
+  border-color:var(--accentMain);
+  color:var(--txt);
+}
+
+.keycapGallery{
+  display:grid;
+  gap:16px;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  align-items:stretch;
+  padding:2px 0 8px;
+}
+
+.keycapCard{
+  max-width:none;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+
+.keycapCard .thumb{
+  aspect-ratio:16/9;
+  min-height:0;
+  overflow:hidden;
+  border-bottom:1px solid rgba(159,187,227,.14);
+}
+
+.keycapCard .thumb img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+
+.keycapCard .gbody{
+  flex:1;
+  min-height:132px;
+}
+
+.keycapCard .gname{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.keycapCard .gmeta{
+  min-height:28px;
+}
+
+.keycapCard .muted.small{
+  line-height:1.35;
 }
 
 .gcard{
@@ -811,8 +915,7 @@ html[data-theme="light"] .modalBack{
   display:flex;
   align-items:center;
   height:58px;
-  padding:0 12px 0 78px;
-  -webkit-app-region:drag;
+  padding:0 12px;
 }
 
 .sideTitle{
@@ -950,7 +1053,6 @@ html[data-theme="light"] .modalBack{
   box-shadow:none;
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
-  -webkit-app-region:drag;
 }
 
 .contentPane > .topBar h1,
@@ -980,11 +1082,10 @@ html[data-theme="light"] .modalBack{
   background:linear-gradient(180deg, rgba(80,191,255,.96), rgba(26,132,238,.96));
 }
 
-.titleDragArea{
+.topSpacer{
   flex:1 1 auto;
   align-self:stretch;
   min-width:140px;
-  -webkit-app-region:drag;
 }
 
 .tabs{
@@ -1142,7 +1243,7 @@ textarea#f_remark{
     -webkit-backdrop-filter:var(--glassBlur);
   }
 
-  .titleDragArea{
+  .topSpacer{
     min-width:24px;
   }
 
@@ -1382,6 +1483,8 @@ html[data-theme="light"] .contentPane > .topBar .sub{
           <div class="sideStat"><span>PCBs</span><b id="sidePcbs">0</b></div>
           <div class="sideStat"><span>Stabilisatoren</span><b id="sideStabs">0</b></div>
           <div class="sideStat"><span>Keycaps</span><b id="sideKeycaps">0</b></div>
+          <div class="sideStat"><span>Keycap-Sets</span><b id="sideKeycapSets">0</b></div>
+          <div class="sideStat"><span>Artisans</span><b id="sideArtisanSets">0</b></div>
           <div class="sideStat"><span>Switches</span><b id="sideSwitches">0</b></div>
         </div>
 
@@ -1393,7 +1496,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         </div>
 
         <div class="sideVersion">
-          <span>v<span id="sideVersion">1.2.7</span></span>
+          <span>v<span id="sideVersion">1.2.8</span></span>
           <span aria-hidden="true">⚙</span>
         </div>
       </aside>
@@ -1402,13 +1505,14 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         <div class="topBar">
           <div class="topIdentity">
             <h1>Keyboard Manager</h1>
-            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.2.7</span></div>
+            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.2.8</span></div>
           </div>
-          <div class="titleDragArea" aria-hidden="true"></div>
+          <div class="topSpacer" aria-hidden="true"></div>
           <div class="actions topActions" role="toolbar" aria-label="Hauptaktionen">
             <button class="primary" id="btnNew">+ Neues Board</button>
             <button id="btnExport">ZIP-Backup erstellen</button>
             <button id="btnImport">Backup importieren</button>
+            <button id="btnLanguage" title="Sprache umschalten" aria-label="Sprache umschalten">DE</button>
             <button id="btnTheme" title="Hell/Dunkel umschalten" aria-label="Theme umschalten">☀️</button>
           </div>
         </div>
@@ -1418,7 +1522,13 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         <div class="card pad" id="init">Initialisiere Speicher & lade Daten…</div>
 
         <section id="viewErf" style="display:none">
-      <div class="grid two">
+      <div class="entityToggle" role="tablist" aria-label="Erfassungstyp">
+        <button id="btnErfBoards" type="button" class="active">Keyboards</button>
+        <button id="btnErfKeycaps" type="button">Keycaps</button>
+        <button id="btnErfArtisans" type="button">Artisans</button>
+      </div>
+
+      <div class="grid two" id="boardEditorPanel">
         <div class="card pad">
           <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
             <div>
@@ -1463,10 +1573,116 @@ html[data-theme="light"] .contentPane > .topBar .sub{
           </div>
         </div>
       </div>
+
+      <div class="grid two" id="keycapEditorPanel" style="display:none">
+        <div class="card pad">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+            <div>
+              <div class="muted small">Keycap-Erfassung</div>
+              <div style="font-weight:900;font-size:16px" id="keycapEditorTitle">Neues Keycap-Set</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button id="btnNewKeycap">Neu</button>
+              <button id="btnCancelKeycap" style="display:none">Abbrechen</button>
+              <button class="primary" id="btnSaveKeycap">Speichern</button>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:1fr;gap:12px;margin-top:12px" id="keycapFormGrid"></div>
+
+          <label style="margin-top:12px">
+            <div class="lbl">Kits <span class="hint">eine Zeile pro Kit</span></div>
+            <textarea id="kc_kits" placeholder="Base&#10;Spacebars&#10;Novelties"></textarea>
+          </label>
+
+          <label style="margin-top:12px">
+            <div class="lbl">Notizen</div>
+            <textarea id="kc_notes" placeholder="Zustand, Besonderheiten, fehlende Kits…"></textarea>
+          </label>
+
+          <div style="margin-top:12px">
+            <div class="lbl">Fotos <span class="hint">Render, Kit-Bilder, eigene Fotos</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+              <input id="fileKeycapPhotos" type="file" accept="image/*" multiple hidden />
+              <button class="primary" id="btnAddKeycapPhotos">Fotos hinzufügen</button>
+            </div>
+            <div id="keycapPhotosArea" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:1fr;gap:12px">
+          <div class="card pad">
+            <div style="font-weight:900">Kurzvorschau</div>
+            <div class="card pad" style="margin-top:10px;background:rgba(0,0,0,.12)">
+              <div style="font-weight:900" id="kc_pv_name">(Name)</div>
+              <div class="gmeta" id="kc_pv_badges" style="margin-top:8px"></div>
+              <div class="muted small" id="kc_pv_meta" style="margin-top:10px">Kits: —</div>
+              <div class="muted small" id="kc_pv_photos">Fotos: 0</div>
+              <div id="kc_pv_notes" class="small" style="margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid two" id="artisanEditorPanel" style="display:none">
+        <div class="card pad">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+            <div>
+              <div class="muted small">Artisan-Erfassung</div>
+              <div style="font-weight:900;font-size:16px" id="artisanEditorTitle">Neuer Artisan</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button id="btnNewArtisan">Neu</button>
+              <button id="btnCancelArtisan" style="display:none">Abbrechen</button>
+              <button class="primary" id="btnSaveArtisan">Speichern</button>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:1fr;gap:12px;margin-top:12px" id="artisanFormGrid"></div>
+
+          <label style="margin-top:12px">
+            <div class="lbl">Tags <span class="hint">eine Zeile pro Tag</span></div>
+            <textarea id="art_tags" placeholder="Sculpt&#10;Colorway&#10;Row"></textarea>
+          </label>
+
+          <label style="margin-top:12px">
+            <div class="lbl">Notizen</div>
+            <textarea id="art_notes" placeholder="Zustand, Besonderheiten, Herkunft…"></textarea>
+          </label>
+
+          <div style="margin-top:12px">
+            <div class="lbl">Fotos <span class="hint">Coverlinks, eigene Fotos, Detailbilder</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+              <input id="fileArtisanPhotos" type="file" accept="image/*" multiple hidden />
+              <button class="primary" id="btnAddArtisanPhotos">Fotos hinzufügen</button>
+            </div>
+            <div id="artisanPhotosArea" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:1fr;gap:12px">
+          <div class="card pad">
+            <div style="font-weight:900">Kurzvorschau</div>
+            <div class="card pad" style="margin-top:10px;background:rgba(0,0,0,.12)">
+              <div style="font-weight:900" id="art_pv_name">(Name)</div>
+              <div class="gmeta" id="art_pv_badges" style="margin-top:8px"></div>
+              <div class="muted small" id="art_pv_meta" style="margin-top:10px">Tags: —</div>
+              <div class="muted small" id="art_pv_photos">Fotos: 0</div>
+              <div id="art_pv_notes" class="small" style="margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="viewUeb" style="display:none">
-      <div class="grid" style="grid-template-columns:1fr;gap:12px">
+      <div class="entityToggle" role="tablist" aria-label="Übersichtstyp">
+        <button id="btnOverviewBoards" type="button" class="active">Keyboards</button>
+        <button id="btnOverviewKeycaps" type="button">Keycaps</button>
+        <button id="btnOverviewArtisans" type="button">Artisans</button>
+      </div>
+
+      <div class="grid" id="boardOverviewPanel" style="grid-template-columns:1fr;gap:12px">
         <div class="card pad" id="kpi"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div class="muted"><b id="hitCount">0</b> <span id="hitCountLabel">Boards</span></div>
@@ -1486,16 +1702,80 @@ html[data-theme="light"] .contentPane > .topBar .sub{
           </div>
         </div>
       </div>
+
+      <div class="grid" id="keycapOverviewPanel" style="grid-template-columns:1fr;gap:12px;display:none">
+          <div class="card pad" id="keycapFilters"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="muted"><b id="keycapHitCount">0</b> <span id="keycapHitCountLabel">Sets</span></div>
+            <button id="btnResetKeycapFilters">Filter zurücksetzen</button>
+          </div>
+          <div class="card" id="keycapTablePanel">
+            <div class="pad" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+              <div style="font-weight:900">Keycap-Sets</div>
+            </div>
+            <div style="overflow:auto">
+              <table class="table">
+                <thead><tr>
+                  <th>Foto</th><th>Set</th><th>Hersteller</th><th>Profil</th><th>Kits</th><th>Board</th><th style="text-align:right">Aktionen</th>
+                </tr></thead>
+                <tbody id="keycapTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <div class="grid" id="artisanOverviewPanel" style="grid-template-columns:1fr;gap:12px;display:none">
+          <div class="card pad" id="artisanFilters"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="muted"><b id="artisanHitCount">0</b> <span id="artisanHitCountLabel">Artisans</span></div>
+            <button id="btnResetArtisanFilters">Filter zurücksetzen</button>
+          </div>
+          <div class="card" id="artisanTablePanel">
+            <div class="pad" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+              <div style="font-weight:900">Artisans</div>
+            </div>
+            <div style="overflow:auto">
+              <table class="table">
+                <thead><tr>
+                  <th>Foto</th><th>Artisan</th><th>Hersteller</th><th>Profil</th><th>Tags</th><th>Board</th><th style="text-align:right">Aktionen</th>
+                </tr></thead>
+                <tbody id="artisanTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
     </section>
 
     <section id="viewGal" style="display:none">
-      <div class="grid" style="grid-template-columns:1fr;gap:12px">
+      <div class="entityToggle" role="tablist" aria-label="Galerietyp">
+        <button id="btnGalleryBoards" type="button" class="active">Keyboards</button>
+        <button id="btnGalleryKeycaps" type="button">Keycaps</button>
+        <button id="btnGalleryArtisans" type="button">Artisans</button>
+      </div>
+
+      <div class="grid" id="boardGalleryPanel" style="grid-template-columns:1fr;gap:12px">
         <div class="card pad" id="galFilters"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div class="muted"><b id="galCount">0</b> <span id="galCountLabel">Boards</span></div>
           <button id="btnResetFilters">Filter zurücksetzen</button>
         </div>
         <div class="cards" id="cards"></div>
+      </div>
+
+      <div class="grid" id="keycapGalleryPanel" style="grid-template-columns:1fr;gap:12px;display:none">
+        <div class="card pad" id="keycapGalFilters"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="muted"><b id="keycapGalCount">0</b> <span id="keycapGalCountLabel">Sets</span></div>
+          <button id="btnResetKeycapGalleryFilters">Filter zurücksetzen</button>
+        </div>
+        <div class="keycapGallery" id="keycapCards"></div>
+      </div>
+      <div class="grid" id="artisanGalleryPanel" style="grid-template-columns:1fr;gap:12px;display:none">
+        <div class="card pad" id="artisanGalFilters"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="muted"><b id="artisanGalCount">0</b> <span id="artisanGalCountLabel">Artisans</span></div>
+          <button id="btnResetArtisanGalleryFilters">Filter zurücksetzen</button>
+        </div>
+        <div class="keycapGallery" id="artisanCards"></div>
       </div>
     </section>
 
@@ -1668,14 +1948,27 @@ async function storeGetAllByBoardId(boardId){
   return window.api.storage.photosByBoard(boardId);
 }
 
+async function storeGetAllByOwner(ownerType, ownerId){
+  if(window.api.storage.photosByOwner) return window.api.storage.photosByOwner(ownerType, ownerId);
+  if(ownerType==='board') return storeGetAllByBoardId(ownerId);
+  return [];
+}
+
 // ====== App ======
-const VERSION='1.2.7';
+const VERSION='1.2.8';
 const FORMAT_DEFAULTS=["40%", "60%", "65%", "FRL TKL", "TKL", "98%", "Sonstige", "NumPads", "Makro Pads"];
 const PLATE_DEFAULTS=["Aluminium", "PC", "POM", "FR4", "Carbon", "Copper", "Stahl", "n/a"];
 const PCB_DEFAULTS=["Hotswap", "Solder", "MillMax"];
 const STAB_DEFAULTS=["Cherry ClipIn/C3 Wire", "Durock V2", "Durock V3", "Maiz x MK ClipIn", "OWLabs", "TX AP/black/1.2", "TX AP/black/1.6", "TX AP/Lila/1.2", "Vortex", "Wooting", "SW Knight Stabs", "Neo Plate Mount", "Nightwalker Lumen", "TX AP/GrünWeiß/1.2/ScrewIn", "8BitDo", "Tex Stabs", "Keycron Stabs", "WS Studio", "n/a"];
 const KEYCAP_DEFAULTS=["Cherry Black&White", "DCS Superweld", "Doys", "Doys black", "Doys clear", "ePBT Ramenstop", "ePBT Soju", "GMK Baltic", "GMK Bingsu", "GMK Blue Alert", "GMK Classic Beige", "GMK Cobalt", "GMK Dandy", "GMK Darling", "GMK Digital Nightmare", "GMK Dualshot", "GMK Earth Tones", "GMK Evil Dolch", "GMK Gateway", "GMK Handarbeige", "GMK Honor dark", "GMK Mictlan", "GMK Minimal", "GMK Modern Dolch light", "GMK Modern Ink", "GMK Monokai Material", "GMK NorDE Beige", "GMK NorDE Dolch", "GMK November Fog", "GMK Nuke Data", "GMK Olivia Dark", "GMK Power 2048", "GMK Red Alert", "GMK Red Dragon", "GMK Redacted", "GMK Redline", "GMK Rubrehose", "GMK Serika 2", "GMK Sixes", "GMK Sloth", "GMK Striker 2", "GMK WoB", "GMK WoB Hangul", "GMK Yeeti", "GMK ZX", "KAM Superuser", "KAT Napoleonic", "KAT Space Cadet", "KAT Spacedust", "Keycron Carbon", "KKB C.O.L", "KKB Nama Chocolate", "KKB Retro Mixed Lights", "KKB Retro Mixed Lights dark", "KKB Signet", "KKB Skidata", "KKB Soju Blue", "MDA Graffiti", "MDA Profil PBT Caps", "PBS Aperture Priority", "PBS MK Retro Beige", "PBS MV Classic", "PBTFans Classic Hangul", "PBTFans Less but better light", "PBTFans Retro Dark Lights (Extra)", "RAMA Dandy", "RAMA Dualshot", "SA ASCII", "SA Ramses light", "SA Tatooine", "TEX Caps", "Wooting BoW Shine", "XDA BoW", "XDA WoB", "XMI Handarbeige", "XMI HHKB Sideprint"];
 const SWITCH_DEFAULTS=["AEBoards Raeds HE", "Aflion Melody", "Cherry MX black Clear Top", "Cherry MX black Hyperglide", "Cherry MX Brown 3Pin", "Cherry MX Brown 5Pin", "CHERRY MX Falcon", "Cherry MX2A orange", "Durock Black Lotus", "Durock Lupine", "Gateron Cap Anniversary", "Gateron Cream Soda", "Gateron Magnetic Jade Pro", "Gateron Milky Yellow Pro", "Gateron Oil King", "Gateron Root Beer Float", "Gateron Type R", "Gateron White Pro", "Gateron Yellow Pro", "Hillstone Heavy Tactile", "HMX Canglan", "HMX FJ400", "HMX Game 1989", "HMX Hyacint", "HMX Joker", "HMX K01", "HMX Macchiato", "HMX Martini V2", "HMX Retro KD200", "HMX Sandstorm", "HMX Sonja", "HMX Sonja HC", "Huano Caramel Latte", "JWK Cupid 55g", "JWK Penguin V2", "KTT Matcha", "KTT Rose", "MMD Princess Tactile 60g", "Nightwalker Solaris", "NK Cream", "NK Cream Clickie", "OWLab London Fog", "Shogoki Tactile Switch", "SW Catmints", "Trash Linear Switches", "Vertex V one", "WS Heavy Tactile", "WS Silent Tactile"];
+const KEYCAP_MANUFACTURER_DEFAULTS=["GMK", "Keykobo", "KKB", "PBTFans", "XMI", "ePBT", "SA", "DCS", "KAT", "KAM", "PBS", "Wooting", "MW", "QPBT", "Drop"];
+const KEYCAP_PROFILE_DEFAULTS=["Cherry/CYL", "SA", "DCS", "KAT", "KAM", "PBS", "XDA", "MT3", "MDA"];
+const KEYCAP_MATERIAL_DEFAULTS=["ABS", "PBT", "PBT Blend"];
+const KEYCAP_STATUS_DEFAULTS=["owned", "ordered", "wishlist", "sold"];
+const ARTISAN_MANUFACTURER_DEFAULTS=["Alpha Keycaps", "Archetype", "Gothcaps", "Mr Maw"];
+const ARTISAN_PROFILE_DEFAULTS=["MX", "Topre", "Choc"];
+const ARTISAN_MATERIAL_DEFAULTS=["Resin", "Metal", "PBT", "ABS"];
 
 function uid(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9); }
 function trim(s){ return (s||'').trim(); }
@@ -1683,18 +1976,323 @@ function esc(s){ return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<'
 function fmtDate(ts){ try{ return new Date(ts).toLocaleString('de-DE'); }catch(e){ return '—'; } }
 function fmtDateOnly(ts){ try{ return new Date(ts).toLocaleDateString('de-DE'); }catch(e){ return '—'; } }
 
+const GUI_DE_EN={
+  'Initialisiere Speicher & lade Daten…':'Initializing storage and loading data…',
+  'Diese Datei ist eine Electron-App. Bitte über npm start oder die installierte App öffnen.':'This file is an Electron app. Please open it via npm start or the installed app.',
+  'Direktes Öffnen per file:// ist nur eine statische Vorschau. Speicher, Backup und Import funktionieren erst in der Desktop-App.':'Opening via file:// is only a static preview. Storage, backup, and import work in the desktop app.',
+  'Fotos werden in der Desktop-App verarbeitet':'Photos are processed in the desktop app',
+  'Automatisch max. 1920 × 1080 • als Datei gespeichert':'Automatically max. 1920 x 1080 • saved as file',
+  'Erfassen':'Capture',
+  'Erfassung':'Capture',
+  'Übersicht':'Overview',
+  'Galerie':'Gallery',
+  'Ansichten':'Views',
+  'App Navigation':'App navigation',
+  'Bibliotheken':'Libraries',
+  'Gesamt':'Total',
+  'Gesamtübersicht':'Full overview',
+  'Letzte Änderung':'Last change',
+  'Speicher':'Storage',
+  'Version':'Version',
+  'Hauptaktionen':'Main actions',
+  '+ Neues Board':'+ New Board',
+  'Neues Board':'New Board',
+  'Board bearbeiten':'Edit Board',
+  'Neues Keycap-Set':'New Keycap Set',
+  'Keycap-Set bearbeiten':'Edit Keycap Set',
+  'Keycap-Erfassung':'Keycap capture',
+  'Neuer Artisan':'New Artisan',
+  'Artisan bearbeiten':'Edit Artisan',
+  'Artisan-Erfassung':'Artisan capture',
+  'ZIP-Backup erstellen':'Create ZIP backup',
+  'Backup importieren':'Import backup',
+  'ZIP-Backup gespeichert':'ZIP backup saved',
+  'Backup konnte nicht gespeichert werden:':'Could not save backup:',
+  'Backup konnte nicht geöffnet werden:':'Could not open backup:',
+  'Import nicht möglich:':'Import not possible:',
+  'Import fehlgeschlagen. Der bisherige SQLite-Bestand wurde nicht ersetzt.':'Import failed. The existing SQLite data was not replaced.',
+  'Validiertes Backup mit':'Validated backup with',
+  'importieren? Der aktuelle Stand wird ersetzt.':'import? The current state will be replaced.',
+  'Altes JSON-Backup':'Old JSON backup',
+  'importiert':'imported',
+  'Vorhandene Daten wurden nach SQLite migriert':'Existing data was migrated to SQLite',
+  'Hell/Dunkel umschalten':'Toggle light/dark',
+  'Theme umschalten':'Toggle theme',
+  'Sprache umschalten':'Toggle language',
+  'Erfassungstyp':'Capture type',
+  'Übersichtstyp':'Overview type',
+  'Galerietyp':'Gallery type',
+  'Speichern':'Save',
+  'Abbrechen':'Cancel',
+  'Neu':'New',
+  'Bearbeiten':'Edit',
+  'Löschen':'Delete',
+  'Gelöscht':'Deleted',
+  'Gespeichert':'Saved',
+  'Neues Board':'New Board',
+  'Filter zurücksetzen':'Reset filters',
+  'Filter':'Filters',
+  'Suche':'Search',
+  'Sortierung':'Sort',
+  'Name des Boards':'Board name',
+  'Name des Sets':'Set name',
+  'Name des Artisans':'Artisan name',
+  'Pflicht':'Required',
+  'Hersteller':'Manufacturer',
+  'Formate':'Formats',
+  'Stabilisatoren':'Stabilizers',
+  'Foto':'Photo',
+  'Fotos':'Photos',
+  'Fotos hinzufügen':'Add photos',
+  'Noch keine Fotos.':'No photos yet.',
+  'Keycap-Sets':'Keycap Sets',
+  'Keycap-Set':'Keycap Set',
+  'Profil':'Profile',
+  'Material':'Material',
+  'Status':'Status',
+  'Quelle':'Source',
+  'Shop / Quelle':'Shop / source',
+  'Shoplink':'Shop link',
+  'Aktuell auf Board':'Currently on board',
+  'Nicht montiert…':'Not mounted…',
+  'Kein Set verknüpft…':'No set linked…',
+  '(ohne Name)':'(no name)',
+  'Bemerkung':'Notes',
+  'Notizen':'Notes',
+  'Zustand, Besonderheiten, fehlende Kits…':'Condition, details, missing kits…',
+  'Zustand, Besonderheiten, Herkunft…':'Condition, details, source…',
+  'Notizen, Mods, Lube, Foams…':'Notes, mods, lube, foams…',
+  'Kurzvorschau':'Preview',
+  'eine Zeile pro Kit':'one line per kit',
+  'eine Zeile pro Tag':'one line per tag',
+  'eigene Fotos':'own photos',
+  'Detailbilder':'detail images',
+  'Aktionen':'Actions',
+  'Keine Treffer.':'No matches.',
+  'Keine Keycap-Sets.':'No keycap sets.',
+  'Keine Artisans.':'No artisans.',
+  'Keine Kits':'No kits',
+  'Keine Tags':'No tags',
+  'Keine Kits erfasst.':'No kits recorded.',
+  'Keine Tags erfasst.':'No tags recorded.',
+  'Keine Bilder':'No images',
+  'Keine Fotos für dieses Board.':'No photos for this board.',
+  'Kein Foto':'No photo',
+  'Kein Bild':'No image',
+  '(Bild fehlt)':'(image missing)',
+  'Lade…':'Loading…',
+  'Spotlight wird geladen…':'Loading spotlight…',
+  'Spotlight öffnen':'Open spotlight',
+  'Details zu':'Details for',
+  'öffnen':'open',
+  'Dialog schließen':'Close dialog',
+  'Vorheriges Foto':'Previous photo',
+  'Nächstes Foto':'Next photo',
+  'Großansicht schließen':'Close large view',
+  'Großansicht des Fotos':'Large photo view',
+  'Groß ansehen':'View large',
+  'Foto groß ansehen':'View photo large',
+  'Foto in Großansicht öffnen':'Open photo in large view',
+  'Keycap-Foto in Großansicht öffnen':'Open keycap photo in large view',
+  'Artisan-Foto in Großansicht öffnen':'Open artisan photo in large view',
+  'Bild anzeigen':'Show image',
+  'anzeigen':'show',
+  'Bilder':'Images',
+  'Attribute':'Attributes',
+  'Geändert':'Changed',
+  'Zuletzt geändert':'Last changed',
+  'Name (A → Z)':'Name (A to Z)',
+  'Hersteller (A → Z)':'Manufacturer (A to Z)',
+  'Format (A → Z)':'Format (A to Z)',
+  'Profil (A → Z)':'Profile (A to Z)',
+  'Zuletzt geändert (neu → alt)':'Last changed (new to old)',
+  'Boards durchsuchen…':'Search boards…',
+  'Keycap-Sets durchsuchen…':'Search keycap sets…',
+  'Artisans durchsuchen…':'Search artisans…',
+  'Hersteller…':'Manufacturer…',
+  'Profil…':'Profile…',
+  'Material…':'Material…',
+  'Status…':'Status…',
+  '+ Neu… (Enter)':'+ New… (Enter)',
+  'Bitte mindestens den Namen angeben.':'Please enter at least the name.',
+  'Bitte mindestens den Namen des Keycap-Sets angeben.':'Please enter at least the keycap set name.',
+  'Bitte mindestens den Namen des Artisans angeben.':'Please enter at least the artisan name.',
+  'Ungespeicherte Änderungen verwerfen?':'Discard unsaved changes?',
+  'Ungespeicherte Keycap-Änderungen verwerfen?':'Discard unsaved keycap changes?',
+  'Ungespeicherte Artisan-Änderungen verwerfen?':'Discard unsaved artisan changes?',
+  'wirklich löschen?':'really delete?',
+  'dieses Board':'this board',
+  'dieses Keycap-Set':'this keycap set',
+  'diesen Artisan':'this artisan',
+  'Keycap-Set gespeichert':'Keycap set saved',
+  'Keycap-Set gelöscht':'Keycap set deleted',
+  'Artisan gespeichert':'Artisan saved',
+  'Artisan gelöscht':'Artisan deleted',
+  'Link konnte nicht geöffnet werden':'Could not open link',
+  'Foto hinzugefügt':'photo added',
+  'Fotos hinzugefügt':'photos added',
+  'auf 1080p angepasst':'resized to 1080p',
+  'Bild konnte nicht verarbeitet werden:':'Could not process image:',
+  'Bild konnte nicht skaliert werden':'Could not scale image',
+  'Bild konnte nicht gelesen werden':'Could not read image',
+  'Ungültiges Backup':'Invalid backup',
+  'Falsches Format':'Wrong format',
+  'Import enthält zu viele Boards':'Import contains too many boards',
+  'Import enthält zu viele Keycap-Sets':'Import contains too many keycap sets',
+  'Import enthält zu viele Artisans':'Import contains too many artisans',
+  'Import enthält zu viele Fotos':'Import contains too many photos',
+  'Ungültiger Board-Eintrag':'Invalid board entry',
+  'Ungültige Board-ID':'Invalid board ID',
+  'Doppelte Board-IDs im Import':'Duplicate board IDs in import',
+  'Ungültiger Keycap-Set-Eintrag':'Invalid keycap set entry',
+  'Ungültige Keycap-Set-ID':'Invalid keycap set ID',
+  'Doppelte Keycap-Set-IDs im Import':'Duplicate keycap set IDs in import',
+  'Ungültiger Artisan-Eintrag':'Invalid artisan entry',
+  'Ungültige Artisan-ID':'Invalid artisan ID',
+  'Doppelte Artisan-IDs im Import':'Duplicate artisan IDs in import',
+  'Ungültiger Foto-Eintrag':'Invalid photo entry',
+  'Ungültiger Foto-Besitzer':'Invalid photo owner',
+  'Ungültige Foto-ID':'Invalid photo ID',
+  'Foto ohne zugehöriges Board':'Photo without matching board',
+  'Foto ohne zugehöriges Keycap-Set':'Photo without matching keycap set',
+  'Foto ohne zugehörigen Artisan':'Photo without matching artisan',
+  'Ein Foto überschreitet 30 MB':'A photo exceeds 30 MB',
+  'Doppelte Foto-IDs im Import':'Duplicate photo IDs in import',
+  'importiertes-foto':'imported-photo',
+  'und':'and',
+  'oder':'or'
+};
+const GUI_EN_DE=Object.fromEntries(Object.entries(GUI_DE_EN).map(([de,en])=>[en,de]));
+const guiTextOriginals=new WeakMap();
+const guiAttrOriginals=new WeakMap();
+let languageObserver=null;
+let applyingLanguage=false;
+let languageFrame=0;
+
+function currentLanguage(){
+  return state.language === 'en' ? 'en' : 'de';
+}
+
+function translateGuiText(value){
+  if(!value || typeof value!=='string') return value;
+  let out=value;
+  const keys=Object.keys(GUI_DE_EN).sort((a,b)=>b.length-a.length);
+  for(const key of keys){
+    if(out.includes(key)) out=out.split(key).join(GUI_DE_EN[key]);
+  }
+  return currentLanguage()==='en' ? out : value;
+}
+
+function applyLanguage(root=document){
+  if(applyingLanguage) return;
+  applyingLanguage=true;
+  try{
+    document.documentElement.lang=currentLanguage();
+    const walker=document.createTreeWalker(root.body||root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const parent=node.parentElement;
+        if(!parent || ['SCRIPT','STYLE','TEXTAREA'].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
+        if(parent.closest('input,textarea')) return NodeFilter.FILTER_REJECT;
+        if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    for(const node of nodes){
+      let record=guiTextOriginals.get(node);
+      if(!record){
+        record={source:node.nodeValue,last:node.nodeValue};
+        guiTextOriginals.set(node, record);
+      }else if(node.nodeValue!==record.last){
+        record.source=node.nodeValue;
+      }
+      const original=record.source;
+      const next=currentLanguage()==='en' ? translateGuiText(original) : original;
+      record.last=next;
+      if(next!==node.nodeValue) node.nodeValue=next;
+    }
+    for(const el of (root.querySelectorAll ? root : document).querySelectorAll('[placeholder],[title],[aria-label]')){
+      if(el.id==='btnLanguage') continue;
+      for(const attr of ['placeholder','title','aria-label']){
+        if(!el.hasAttribute(attr)) continue;
+        let originals=guiAttrOriginals.get(el);
+        if(!originals){
+          originals={};
+          guiAttrOriginals.set(el, originals);
+        }
+        const current=el.getAttribute(attr);
+        if(!(attr in originals)) originals[attr]={source:current,last:current};
+        else if(current!==originals[attr].last) originals[attr].source=current;
+        const value=el.getAttribute(attr);
+        const original=originals[attr].source;
+        const next=currentLanguage()==='en' ? translateGuiText(original) : original;
+        originals[attr].last=next;
+        if(next!==value) el.setAttribute(attr,next);
+      }
+    }
+    const btn=document.getElementById('btnLanguage');
+    if(btn){
+      btn.textContent=currentLanguage()==='en'?'EN':'DE';
+      btn.title=currentLanguage()==='en' ? GUI_DE_EN['Sprache umschalten'] : 'Sprache umschalten';
+      btn.setAttribute('aria-label', btn.title);
+    }
+  }finally{
+    applyingLanguage=false;
+  }
+}
+
+function initLanguageObserver(){
+  if(languageObserver) return;
+  languageObserver=new MutationObserver(()=>{
+    if(applyingLanguage) return;
+    if(languageFrame) return;
+    languageFrame=window.requestAnimationFrame(()=>{
+      languageFrame=0;
+      applyLanguage();
+    });
+  });
+  languageObserver.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']});
+}
+
 const state={
   ready:false,
   tab:'erf',
+  language:'de',
   meta:{version:VERSION, createdAt:Date.now(), updatedAt:Date.now()},
-  lists:{formats:[...FORMAT_DEFAULTS], plates:[...PLATE_DEFAULTS], pcbs:[...PCB_DEFAULTS], stabs:[...STAB_DEFAULTS], manufacturers:[], keycaps:[...KEYCAP_DEFAULTS], switches:[...SWITCH_DEFAULTS]},
+  lists:{
+    formats:[...FORMAT_DEFAULTS],
+    plates:[...PLATE_DEFAULTS],
+    pcbs:[...PCB_DEFAULTS],
+    stabs:[...STAB_DEFAULTS],
+    manufacturers:[],
+    keycaps:[...KEYCAP_DEFAULTS],
+    keycapManufacturers:[...KEYCAP_MANUFACTURER_DEFAULTS],
+    keycapProfiles:[...KEYCAP_PROFILE_DEFAULTS],
+    keycapMaterials:[...KEYCAP_MATERIAL_DEFAULTS],
+    keycapStatuses:[...KEYCAP_STATUS_DEFAULTS],
+    artisanManufacturers:[...ARTISAN_MANUFACTURER_DEFAULTS],
+    artisanProfiles:[...ARTISAN_PROFILE_DEFAULTS],
+    artisanMaterials:[...ARTISAN_MATERIAL_DEFAULTS],
+    artisanStatuses:[...KEYCAP_STATUS_DEFAULTS],
+    switches:[...SWITCH_DEFAULTS]
+  },
   gallery:{showFields:{manufacturer:true, format:true, switches:true, keycaps:false}},
   boards:[],
+  keycapSets:[],
+  artisanSets:[],
   draft:null,
+  keycapDraft:null,
+  artisanDraft:null,
   filters:{q:'', man:'', format:'', sort:'format_asc'},
-  spotlight:{open:false, boardId:'', photoIds:[], index:0, urls:[], previousFocus:null, renderId:0},
+  keycapFilters:{q:'', manufacturer:'', profile:'', status:'', sort:'manufacturer_asc'},
+  artisanFilters:{q:'', manufacturer:'', profile:'', status:'', sort:'manufacturer_asc'},
+  viewEntities:{erf:'boards', ueb:'boards', gal:'boards'},
+  spotlight:{open:false, kind:'board', boardId:'', keycapSetId:'', artisanSetId:'', photoIds:[], images:[], index:0, urls:[], previousFocus:null, renderId:0},
   largePhoto:{open:false, url:'', previousFocus:null},
-  editorSession:{original:null, addedPhotoIds:new Set()}
+  editorSession:{original:null, addedPhotoIds:new Set()},
+  keycapEditorSession:{original:null, addedPhotoIds:new Set()},
+  artisanEditorSession:{original:null, addedPhotoIds:new Set()}
 };
 
 function showWarn(html){
@@ -1717,12 +2315,13 @@ function enterStaticPreviewMode(){
   document.getElementById('viewUeb').style.display = 'none';
   document.getElementById('viewGal').style.display = 'none';
   document.getElementById('updated').textContent = '—';
-  for(const id of ['btnNew','btnExport','btnImport','btnSave','btnCancel','btnAddPhotos','sideErf','sideUeb','sideGal']){
+  for(const id of ['btnNew','btnExport','btnImport','btnSave','btnCancel','btnAddPhotos','sideErf','sideUeb','sideGal','btnSaveKeycap','btnCancelKeycap','btnNewKeycap','btnAddKeycapPhotos','btnSaveArtisan','btnCancelArtisan','btnNewArtisan','btnAddArtisanPhotos']){
     const el=document.getElementById(id);
     if(el) el.disabled = true;
   }
   showWarn('Direktes Öffnen per file:// ist nur eine statische Vorschau. Speicher, Backup und Import funktionieren erst in der Desktop-App.');
   updateShellStats();
+  applyLanguage();
 }
 
 function switchTab(t){
@@ -1733,15 +2332,68 @@ function switchTab(t){
   document.getElementById('viewErf').style.display = t==='erf'?'block':'none';
   document.getElementById('viewUeb').style.display = t==='ueb'?'block':'none';
   document.getElementById('viewGal').style.display = t==='gal'?'block':'none';
+  if(t==='erf') renderEntityPanels('erf');
   if(t==='ueb') renderOverview();
   if(t==='gal') renderGallery();
 }
 
+function setEntityView(view, entity){
+  state.viewEntities[view]=entity;
+  renderEntityPanels(view);
+  if(view==='ueb') renderOverview();
+  if(view==='gal') renderGallery();
+}
+
+function renderEntityPanels(view){
+  const entity=state.viewEntities[view]||'boards';
+  const toggle=(id,on)=>{ const el=document.getElementById(id); if(el) el.classList.toggle('active', on); };
+  const display=(id,on,mode='block')=>{ const el=document.getElementById(id); if(el) el.style.display=on?mode:'none'; };
+  if(view==='erf'){
+    toggle('btnErfBoards', entity==='boards');
+    toggle('btnErfKeycaps', entity==='keycaps');
+    toggle('btnErfArtisans', entity==='artisans');
+    display('boardEditorPanel', entity==='boards', 'grid');
+    display('keycapEditorPanel', entity==='keycaps', 'grid');
+    display('artisanEditorPanel', entity==='artisans', 'grid');
+  }
+  if(view==='ueb'){
+    toggle('btnOverviewBoards', entity==='boards');
+    toggle('btnOverviewKeycaps', entity==='keycaps');
+    toggle('btnOverviewArtisans', entity==='artisans');
+    display('boardOverviewPanel', entity==='boards', 'grid');
+    display('keycapOverviewPanel', entity==='keycaps', 'grid');
+    display('artisanOverviewPanel', entity==='artisans', 'grid');
+  }
+  if(view==='gal'){
+    toggle('btnGalleryBoards', entity==='boards');
+    toggle('btnGalleryKeycaps', entity==='keycaps');
+    toggle('btnGalleryArtisans', entity==='artisans');
+    display('boardGalleryPanel', entity==='boards', 'grid');
+    display('keycapGalleryPanel', entity==='keycaps', 'grid');
+    display('artisanGalleryPanel', entity==='artisans', 'grid');
+  }
+}
+
 async function persistMeta(){
   state.meta.updatedAt=Date.now();
+  state.meta.language=currentLanguage();
   await storePut('meta', {key:'app', value:{meta:state.meta, lists:state.lists, gallery:state.gallery}});
   document.getElementById('updated').textContent = fmtDate(state.meta.updatedAt);
   updateShellStats();
+}
+
+async function setLanguage(lang, persist=true){
+  state.language=lang==='en'?'en':'de';
+  state.meta.language=state.language;
+  if(state.draft) renderPreview();
+  if(state.keycapDraft) renderKeycapPreview();
+  if(state.artisanDraft) renderArtisanPreview();
+  renderEntityPanels(state.tab);
+  if(state.tab==='ueb') renderOverview();
+  if(state.tab==='gal') renderGallery();
+  if(state.spotlight.open) await renderSpotlight();
+  applyLanguage();
+  if(persist && hasDesktopApi()) await persistMeta();
 }
 
 function ensureInList(key,val){
@@ -1756,6 +2408,39 @@ function ensureInList(key,val){
   renderSelects();
 }
 
+function ensureDefaultLists(){
+  const merge=(key, defaults)=>{
+    state.lists[key]=Array.from(new Set([...(state.lists[key]||[]), ...defaults])).sort((a,b)=>String(a).localeCompare(String(b),'de'));
+  };
+  merge('formats', FORMAT_DEFAULTS);
+  merge('plates', PLATE_DEFAULTS);
+  merge('pcbs', PCB_DEFAULTS);
+  merge('stabs', STAB_DEFAULTS);
+  merge('keycaps', KEYCAP_DEFAULTS);
+  merge('switches', SWITCH_DEFAULTS);
+  merge('keycapManufacturers', KEYCAP_MANUFACTURER_DEFAULTS);
+  merge('keycapProfiles', KEYCAP_PROFILE_DEFAULTS);
+  merge('keycapMaterials', KEYCAP_MATERIAL_DEFAULTS);
+  merge('keycapStatuses', KEYCAP_STATUS_DEFAULTS);
+  merge('artisanManufacturers', ARTISAN_MANUFACTURER_DEFAULTS);
+  merge('artisanProfiles', ARTISAN_PROFILE_DEFAULTS);
+  merge('artisanMaterials', ARTISAN_MATERIAL_DEFAULTS);
+  merge('artisanStatuses', KEYCAP_STATUS_DEFAULTS);
+  state.lists.manufacturers=state.lists.manufacturers||[];
+}
+
+function keycapSetName(id){
+  return state.keycapSets.find(set=>set.id===id)?.name || '';
+}
+
+function displayBoardKeycaps(board){
+  return keycapSetName(board.keycapSetId) || board.keycaps || '';
+}
+
+function boardName(id){
+  return state.boards.find(board=>board.id===id)?.name || '';
+}
+
 function fillSelect(sel, options, emptyLabel){
   sel.innerHTML='';
   const o0=document.createElement('option');
@@ -1764,6 +2449,18 @@ function fillSelect(sel, options, emptyLabel){
   for(const v of options){
     const o=document.createElement('option');
     o.value=v; o.textContent=v;
+    sel.appendChild(o);
+  }
+}
+
+function fillKeycapSetSelect(sel){
+  sel.innerHTML='';
+  const o0=document.createElement('option');
+  o0.value=''; o0.textContent='Kein Set verknüpft…';
+  sel.appendChild(o0);
+  for(const set of [...state.keycapSets].sort((a,b)=>(a.name||'').localeCompare(b.name||'','de'))){
+    const o=document.createElement('option');
+    o.value=set.id; o.textContent=set.name || '(ohne Name)';
     sel.appendChild(o);
   }
 }
@@ -1782,6 +2479,7 @@ function renderForm(){
   host.appendChild(fieldSelectPlus('PCB','f_pcb','f_pcb_new'));
   host.appendChild(fieldSelectPlus('Stabilisatoren','f_stabs','f_stabs_new'));
   host.appendChild(fieldSelectPlus('Keycaps','f_keycaps','f_keycaps_new'));
+  host.appendChild(fieldSelectOnly('Keycap-Set','f_keycapSetId'));
   host.appendChild(fieldSelectPlus('Switches','f_switches','f_switches_new'));
 }
 
@@ -1796,6 +2494,12 @@ function fieldSelectPlus(label, selId, newId){
   return w;
 }
 
+function fieldSelectOnly(label, selId){
+  const w=document.createElement('label');
+  w.innerHTML='<div class="lbl">'+esc(label)+'</div><select id="'+selId+'"></select>';
+  return w;
+}
+
 function setSelectValue(id,val){
   const sel=document.getElementById(id);
   const v=trim(val);
@@ -1804,6 +2508,7 @@ function setSelectValue(id,val){
     const opt=document.createElement('option');
     opt.value=v; opt.textContent=v;
     sel.appendChild(opt);
+    sel.value=v;
   }
 }
 
@@ -1814,6 +2519,7 @@ function renderSelects(){
   fillSelect(document.getElementById('f_pcb'), state.lists.pcbs, 'PCB wählen…');
   fillSelect(document.getElementById('f_stabs'), state.lists.stabs, 'Stabs wählen…');
   fillSelect(document.getElementById('f_keycaps'), state.lists.keycaps, 'Keycaps…');
+  fillKeycapSetSelect(document.getElementById('f_keycapSetId'));
   fillSelect(document.getElementById('f_switches'), state.lists.switches, 'Switches…');
 
   const d=state.draft;
@@ -1824,12 +2530,13 @@ function renderSelects(){
     setSelectValue('f_pcb', d.pcb);
     setSelectValue('f_stabs', d.stabs);
     setSelectValue('f_keycaps', d.keycaps);
+    document.getElementById('f_keycapSetId').value=d.keycapSetId || '';
     setSelectValue('f_switches', d.switches);
   }
 }
 
 function emptyDraft(){
-  return {id:uid(), name:'', manufacturer:'', format:'', plate:'', pcb:'', keycaps:'', stabs:'', switches:'', remark:'', photoIds:[], mainPhotoId:'', createdAt:Date.now(), updatedAt:Date.now()};
+  return {id:uid(), name:'', manufacturer:'', format:'', plate:'', pcb:'', keycaps:'', keycapSetId:'', stabs:'', switches:'', remark:'', photoIds:[], mainPhotoId:'', createdAt:Date.now(), updatedAt:Date.now()};
 }
 
 function beginDraft(board){
@@ -1846,7 +2553,7 @@ function draftIsDirty(){
   if(!state.draft) return false;
   if(state.editorSession.addedPhotoIds.size) return true;
   const original=state.editorSession.original || emptyDraft();
-  const keys=['name','manufacturer','format','plate','pcb','keycaps','stabs','switches','remark','mainPhotoId'];
+  const keys=['name','manufacturer','format','plate','pcb','keycaps','keycapSetId','stabs','switches','remark','mainPhotoId'];
   if(keys.some(key=>(state.draft[key]||'')!==(original[key]||''))) return true;
   return JSON.stringify(state.draft.photoIds||[])!==JSON.stringify(original.photoIds||[]);
 }
@@ -1884,7 +2591,8 @@ function renderPreview(){
   if(d.manufacturer) host.appendChild(pill(d.manufacturer));
   if(d.format) host.appendChild(pill(d.format));
   if(d.switches) host.appendChild(pill(d.switches));
-  if(d.keycaps) host.appendChild(pill(d.keycaps));
+  const keycapLabel=displayBoardKeycaps(d);
+  if(keycapLabel) host.appendChild(pill(keycapLabel));
   document.getElementById('pv_meta').textContent = 'PCB: '+(d.pcb||'—')+' • Plate: '+(d.plate||'—');
   document.getElementById('pv_photos').textContent = 'Fotos: '+((d.photoIds||[]).length);
   document.getElementById('pv_remark').textContent = d.remark||'';
@@ -1902,9 +2610,15 @@ function updateShellStats(){
   setText('sidePcbs', state.lists.pcbs?.length||0);
   setText('sideStabs', state.lists.stabs?.length||0);
   setText('sideKeycaps', state.lists.keycaps?.length||0);
+  setText('sideKeycapSets', state.keycapSets?.length||0);
+  setText('sideArtisanSets', state.artisanSets?.length||0);
   setText('sideSwitches', state.lists.switches?.length||0);
   setText('sideBoards', state.boards?.length||0);
-  setText('sidePhotos', (state.boards||[]).reduce((sum,board)=>sum+(board.photoIds?.length||0),0));
+  setText('sidePhotos',
+    (state.boards||[]).reduce((sum,board)=>sum+(board.photoIds?.length||0),0) +
+    (state.keycapSets||[]).reduce((sum,set)=>sum+(set.photoIds?.length||0),0) +
+    (state.artisanSets||[]).reduce((sum,set)=>sum+(set.photoIds?.length||0),0)
+  );
   setText('sideUpdated', state.meta?.updatedAt ? fmtDateOnly(state.meta.updatedAt) : '—');
 }
 
@@ -2029,6 +2743,7 @@ async function saveDraft(){
   d.pcb=trim(document.getElementById('f_pcb').value);
   d.stabs=trim(document.getElementById('f_stabs').value);
   d.keycaps=trim(document.getElementById('f_keycaps').value);
+  d.keycapSetId=trim(document.getElementById('f_keycapSetId').value);
   d.switches=trim(document.getElementById('f_switches').value);
   d.remark=(document.getElementById('f_remark').value||'').trim();
   d.updatedAt=Date.now();
@@ -2050,6 +2765,7 @@ async function saveDraft(){
   }
   const idx=state.boards.findIndex(x=>x.id===d.id);
   if(idx>=0) state.boards[idx]=JSON.parse(JSON.stringify(d)); else state.boards.unshift(JSON.parse(JSON.stringify(d)));
+  await syncBoardKeycapLink(d);
   state.editorSession={original:JSON.parse(JSON.stringify(d)), addedPhotoIds:new Set()};
   await persistMeta();
   newDraft();
@@ -2058,11 +2774,31 @@ async function saveDraft(){
   renderOverview();
 }
 
+async function syncBoardKeycapLink(board){
+  let changed=false;
+  for(const set of state.keycapSets){
+    const shouldLink=set.id===board.keycapSetId;
+    const isLinked=set.mountedBoardId===board.id;
+    if(shouldLink && !isLinked){
+      set.mountedBoardId=board.id;
+      set.updatedAt=Date.now();
+      await storePut('keycapSets', set);
+      changed=true;
+    }else if(!shouldLink && isLinked){
+      set.mountedBoardId='';
+      set.updatedAt=Date.now();
+      await storePut('keycapSets', set);
+      changed=true;
+    }
+  }
+  if(changed) state.keycapSets=await storeGetAll('keycapSets');
+}
+
 function applyFilters(arr){
   const q=trim(state.filters.q).toLowerCase();
   let out=[...arr];
   if(q){
-    out=out.filter(b=>[b.name,b.manufacturer,b.format,b.plate,b.pcb,b.keycaps,b.stabs,b.switches,b.remark].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
+    out=out.filter(b=>[b.name,b.manufacturer,b.format,b.plate,b.pcb,displayBoardKeycaps(b),b.stabs,b.switches,b.remark].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
   }
   if(state.filters.man) out=out.filter(b=>(b.manufacturer||'')===state.filters.man);
   if(state.filters.format) out=out.filter(b=>(b.format||'')===state.filters.format);
@@ -2115,6 +2851,15 @@ async function getBoardThumbSrc(board){
 }
 
 function renderOverview(renderFilters=true){
+  renderEntityPanels('ueb');
+  if(state.viewEntities.ueb==='keycaps'){
+    renderKeycaps(renderFilters);
+    return;
+  }
+  if(state.viewEntities.ueb==='artisans'){
+    renderArtisans(renderFilters);
+    return;
+  }
   const k=document.getElementById('kpi');
   if(renderFilters){
     renderFilterControls(k, 'ov', renderOverview);
@@ -2138,7 +2883,7 @@ function renderOverview(renderFilters=true){
     // Thumbnail + Board als erste zwei Spalten
     tr.innerHTML='<td><div class=\"miniThumb\" title=\"Spotlight öffnen\" role=\"button\" tabindex=\"0\" aria-label=\"Details zu '+esc(b.name)+' öffnen\"><span>—</span></div></td>'+
       '<td><div class=\"boardName\" style=\"font-weight:900\">'+esc(b.name)+'</div><div class=\"muted small\" style=\"margin-top:6px\">PCB: '+esc(b.pcb||'—')+' • Plate: '+esc(b.plate||'—')+'</div></td>'+
-      '<td>'+esc(b.manufacturer||'—')+'</td><td>'+esc(b.format||'—')+'</td><td>'+esc(b.switches||'—')+'</td><td>'+esc(b.keycaps||'—')+'</td><td>'+(b.photoIds?b.photoIds.length:0)+'</td>'+
+      '<td>'+esc(b.manufacturer||'—')+'</td><td>'+esc(b.format||'—')+'</td><td>'+esc(b.switches||'—')+'</td><td>'+esc(displayBoardKeycaps(b)||'—')+'</td><td>'+(b.photoIds?b.photoIds.length:0)+'</td>'+
       '<td style=\"text-align:right\"><div style=\"display:flex;gap:8px;justify-content:flex-end\">'+
         '<button data-a=\"edit\">Bearbeiten</button><button data-a=\"del\" class=\"danger\">Löschen</button>'+
       '</div></td>';
@@ -2171,6 +2916,15 @@ function renderOverview(renderFilters=true){
 }
 
 function renderGallery(renderFilters=true){
+  renderEntityPanels('gal');
+  if(state.viewEntities.gal==='keycaps'){
+    renderKeycapGallery(renderFilters);
+    return;
+  }
+  if(state.viewEntities.gal==='artisans'){
+    renderArtisanGallery(renderFilters);
+    return;
+  }
   const gf=document.getElementById('galFilters');
   if(renderFilters){
     renderFilterControls(gf, 'g', renderGallery);
@@ -2205,7 +2959,8 @@ function renderGallery(renderFilters=true){
       if(state.gallery.showFields.manufacturer && b.manufacturer) badges.push('<span class="pill">'+esc(b.manufacturer)+'</span>');
       if(state.gallery.showFields.format && b.format) badges.push('<span class="pill">'+esc(b.format)+'</span>');
       if(state.gallery.showFields.switches && b.switches) badges.push('<span class="pill">'+esc(b.switches)+'</span>');
-      if(state.gallery.showFields.keycaps && b.keycaps) badges.push('<span class="pill">'+esc(b.keycaps)+'</span>');
+      const boardKeycaps=displayBoardKeycaps(b);
+      if(state.gallery.showFields.keycaps && boardKeycaps) badges.push('<span class="pill">'+esc(boardKeycaps)+'</span>');
       card.innerHTML='<div class="thumb">'+(src?('<img src="'+src+'" alt="'+esc(b.name)+'">'):'Kein Foto')+'</div>'+
         '<div class="gbody"><div class="gname">'+esc(b.name)+'</div><div class="gmeta">'+(badges.length?badges.join(''):'<span class="muted small">—</span>')+'</div>'+
         '<div class="muted small" style="margin-top:8px">Fotos: '+(b.photoIds?b.photoIds.length:0)+' • Geändert: '+fmtDateOnly(b.updatedAt||b.createdAt)+'</div></div>';
@@ -2244,7 +2999,7 @@ function wireDynamic(){
   document.getElementById('f_name').oninput = e=>{ state.draft.name=trim(e.target.value); renderPreview(); };
   document.getElementById('f_remark').oninput = e=>{ state.draft.remark=(e.target.value||'').trim(); renderPreview(); };
 
-  const map=[['f_man','manufacturer'],['f_format','format'],['f_plate','plate'],['f_pcb','pcb'],['f_stabs','stabs'],['f_keycaps','keycaps'],['f_switches','switches']];
+  const map=[['f_man','manufacturer'],['f_format','format'],['f_plate','plate'],['f_pcb','pcb'],['f_stabs','stabs'],['f_keycaps','keycaps'],['f_keycapSetId','keycapSetId'],['f_switches','switches']];
   for(const [id,key] of map){
     document.getElementById(id).onchange = e=>{ state.draft[key]=trim(e.target.value); renderPreview(); };
   }
@@ -2294,21 +3049,863 @@ function dataUrlToBlob(dataUrl){
   return new Blob([array],{type:match[1]});
 }
 
+function emptyKeycapDraft(){
+  return {id:uid(), name:'', manufacturer:'', profile:'', material:'', status:'owned', kits:[], sourceUrl:'', sourceShop:'', mountedBoardId:'', notes:'', photoIds:[], mainPhotoId:'', coverUrl:'', externalImageUrls:[], trelloCardId:'', trelloListName:'', createdAt:Date.now(), updatedAt:Date.now()};
+}
+
+function beginKeycapDraft(set){
+  state.keycapDraft=set ? JSON.parse(JSON.stringify(set)) : emptyKeycapDraft();
+  state.keycapEditorSession={original:set ? JSON.parse(JSON.stringify(set)) : null, addedPhotoIds:new Set()};
+}
+
+function keycapDraftIsDirty(){
+  if(!state.keycapDraft) return false;
+  if(state.keycapEditorSession.addedPhotoIds.size) return true;
+  const original=state.keycapEditorSession.original || emptyKeycapDraft();
+  const keys=['name','manufacturer','profile','material','status','sourceUrl','sourceShop','mountedBoardId','notes','mainPhotoId','coverUrl'];
+  if(keys.some(key=>(state.keycapDraft[key]||'')!==(original[key]||''))) return true;
+  return JSON.stringify(state.keycapDraft.kits||[])!==JSON.stringify(original.kits||[]) ||
+    JSON.stringify(state.keycapDraft.photoIds||[])!==JSON.stringify(original.photoIds||[]);
+}
+
+async function discardKeycapDraftChanges(){
+  for(const id of state.keycapEditorSession.addedPhotoIds) await storeDelete('photos', id);
+  state.keycapEditorSession={original:null, addedPhotoIds:new Set()};
+}
+
+function newKeycapDraft(){
+  beginKeycapDraft(null);
+  document.getElementById('keycapEditorTitle').textContent='Neues Keycap-Set';
+  document.getElementById('btnCancelKeycap').style.display='none';
+  fillKeycapFormFromDraft();
+}
+
+function renderKeycapForm(){
+  const host=document.getElementById('keycapFormGrid');
+  host.innerHTML='';
+  host.style.display='grid';
+  host.style.gridTemplateColumns = window.matchMedia('(min-width:780px)').matches ? '1fr 1fr' : '1fr';
+  host.style.gap='12px';
+  host.appendChild(fieldText('Name des Sets','Pflicht','kc_name','z.B. GMK Sloth'));
+  host.appendChild(fieldSelectPlus('Hersteller','kc_manufacturer','kc_manufacturer_new'));
+  host.appendChild(fieldSelectPlus('Profil','kc_profile','kc_profile_new'));
+  host.appendChild(fieldSelectPlus('Material','kc_material','kc_material_new'));
+  host.appendChild(fieldSelectOnly('Status','kc_status'));
+  host.appendChild(fieldSelectOnly('Aktuell auf Board','kc_mountedBoardId'));
+  host.appendChild(fieldText('Shop / Quelle','','kc_sourceShop','z.B. Oblotzky, Keygem'));
+  host.appendChild(fieldText('Shoplink','','kc_sourceUrl','https://…'));
+}
+
+function renderKeycapSelects(){
+  fillSelect(document.getElementById('kc_manufacturer'), state.lists.keycapManufacturers, 'Hersteller…');
+  fillSelect(document.getElementById('kc_profile'), state.lists.keycapProfiles, 'Profil…');
+  fillSelect(document.getElementById('kc_material'), state.lists.keycapMaterials, 'Material…');
+  fillSelect(document.getElementById('kc_status'), state.lists.keycapStatuses, 'Status…');
+  const boardSelect=document.getElementById('kc_mountedBoardId');
+  boardSelect.innerHTML='<option value="">Nicht montiert…</option>';
+  for(const board of [...state.boards].sort((a,b)=>(a.name||'').localeCompare(b.name||'','de'))){
+    const o=document.createElement('option');
+    o.value=board.id; o.textContent=board.name || '(ohne Name)';
+    boardSelect.appendChild(o);
+  }
+}
+
+function fillKeycapFormFromDraft(){
+  renderKeycapForm();
+  renderKeycapSelects();
+  const d=state.keycapDraft;
+  document.getElementById('kc_name').value=d.name||'';
+  setSelectValue('kc_manufacturer', d.manufacturer);
+  setSelectValue('kc_profile', d.profile);
+  setSelectValue('kc_material', d.material);
+  document.getElementById('kc_status').value=d.status||'owned';
+  document.getElementById('kc_mountedBoardId').value=d.mountedBoardId||'';
+  document.getElementById('kc_sourceShop').value=d.sourceShop||'';
+  document.getElementById('kc_sourceUrl').value=d.sourceUrl||'';
+  document.getElementById('kc_kits').value=(d.kits||[]).join('\n');
+  document.getElementById('kc_notes').value=d.notes||'';
+  renderKeycapPhotosArea();
+  renderKeycapPreview();
+  wireKeycapDynamic();
+}
+
+function wireKeycapDynamic(){
+  const textMap=[['kc_name','name'],['kc_sourceShop','sourceShop'],['kc_sourceUrl','sourceUrl'],['kc_notes','notes']];
+  for(const [id,key] of textMap) document.getElementById(id).oninput=e=>{ state.keycapDraft[key]=key==='notes' ? (e.target.value||'') : trim(e.target.value); renderKeycapPreview(); };
+  const selectMap=[['kc_manufacturer','manufacturer'],['kc_profile','profile'],['kc_material','material'],['kc_status','status'],['kc_mountedBoardId','mountedBoardId']];
+  for(const [id,key] of selectMap) document.getElementById(id).onchange=e=>{ state.keycapDraft[key]=trim(e.target.value); renderKeycapPreview(); };
+  document.getElementById('kc_kits').oninput=e=>{ state.keycapDraft.kits=linesToKits(e.target.value); renderKeycapPreview(); };
+  function wireNew(inputId, listKey, selectId, fieldKey){
+    const el=document.getElementById(inputId);
+    el.onkeydown=e=>{
+      if(e.key!=='Enter') return;
+      e.preventDefault();
+      const v=trim(el.value);
+      if(!v) return;
+      ensureInList(listKey, v);
+      renderKeycapSelects();
+      document.getElementById(selectId).value=v;
+      state.keycapDraft[fieldKey]=v;
+      el.value='';
+      renderKeycapPreview();
+    };
+  }
+  wireNew('kc_manufacturer_new','keycapManufacturers','kc_manufacturer','manufacturer');
+  wireNew('kc_profile_new','keycapProfiles','kc_profile','profile');
+  wireNew('kc_material_new','keycapMaterials','kc_material','material');
+}
+
+function linesToKits(value){
+  return String(value||'').split(/\r?\n/).map(line=>trim(line.replace(/^[-*•]\s*/,''))).filter(Boolean);
+}
+
+function renderKeycapPreview(){
+  const d=state.keycapDraft;
+  if(!d || !document.getElementById('kc_pv_name')) return;
+  document.getElementById('kc_pv_name').textContent=d.name||'(Name)';
+  const badges=document.getElementById('kc_pv_badges');
+  badges.innerHTML='';
+  if(d.manufacturer) badges.appendChild(pill(d.manufacturer));
+  if(d.profile) badges.appendChild(pill(d.profile));
+  if(d.material) badges.appendChild(pill(d.material));
+  if(d.status) badges.appendChild(pill(d.status));
+  document.getElementById('kc_pv_meta').textContent='Kits: '+((d.kits||[]).slice(0,4).join(', ')||'—');
+  document.getElementById('kc_pv_photos').textContent='Fotos: '+((d.photoIds||[]).length);
+  document.getElementById('kc_pv_notes').textContent=d.notes||'';
+}
+
+async function keycapPhotoSrc(photoId){
+  const rec=await storeGet('photos', photoId);
+  if(!rec) return {src:'', name:''};
+  return {src:rec.dataUrl||'', name:rec.name||''};
+}
+
+async function renderKeycapPhotosArea(){
+  const host=document.getElementById('keycapPhotosArea');
+  const ids=state.keycapDraft.photoIds||[];
+  if(!ids.length){
+    host.innerHTML='<div class="card pad" style="background:rgba(0,0,0,.12);border-style:dashed">Noch keine Fotos.</div>';
+    return;
+  }
+  host.innerHTML='';
+  const grid=document.createElement('div');
+  grid.className='photoGrid';
+  host.appendChild(grid);
+  for(const pid of ids){
+    const item=document.createElement('div');
+    item.className='pitem'+(state.keycapDraft.mainPhotoId===pid?' main':'');
+    item.innerHTML='<div class="pimg"><div class="thumb">Lade…</div></div><div class="pbtns"><button class="primary" type="button">'+(state.keycapDraft.mainPhotoId===pid?'Hauptfoto':'Als Hauptfoto')+'</button><button class="danger" type="button">Entfernen</button></div>';
+    const btnMain=item.querySelectorAll('button')[0];
+    const btnDel=item.querySelectorAll('button')[1];
+    btnMain.addEventListener('click', ()=>{ state.keycapDraft.mainPhotoId=pid; renderKeycapPhotosArea(); });
+    btnDel.addEventListener('click', async ()=>{
+      if(state.keycapEditorSession.addedPhotoIds.has(pid)){
+        await storeDelete('photos', pid);
+        state.keycapEditorSession.addedPhotoIds.delete(pid);
+      }
+      state.keycapDraft.photoIds=(state.keycapDraft.photoIds||[]).filter(x=>x!==pid);
+      if(state.keycapDraft.mainPhotoId===pid) state.keycapDraft.mainPhotoId=state.keycapDraft.photoIds[0]||'';
+      renderKeycapPhotosArea();
+    });
+    grid.appendChild(item);
+    const got=await keycapPhotoSrc(pid);
+    item.querySelector('.pimg').innerHTML=got.src ? '<img src="'+got.src+'" alt="'+esc(got.name)+'">' : '<div class="thumb">(Bild fehlt)</div>';
+  }
+}
+
+async function addKeycapPhotos(fileList){
+  const files=Array.from(fileList||[]).filter(f=>f.type && f.type.startsWith('image/'));
+  if(!files.length) return;
+  let resized=0;
+  for(const f of files){
+    const normalized=await normalizePhoto(f);
+    if(normalized.resized) resized++;
+    const id=uid();
+    const dataUrl=await blobToDataUrl(normalized.blob);
+    await storePut('photos', {id, ownerType:'keycapSet', ownerId:state.keycapDraft.id, boardId:'', name:f.name, type:normalized.blob.type, dataUrl, width:normalized.width, height:normalized.height, addedAt:Date.now()});
+    state.keycapDraft.photoIds.push(id);
+    state.keycapEditorSession.addedPhotoIds.add(id);
+  }
+  if(state.keycapDraft.photoIds.length){
+    state.keycapDraft.coverUrl='';
+    state.keycapDraft.externalImageUrls=[];
+  }
+  if(!state.keycapDraft.mainPhotoId && state.keycapDraft.photoIds.length) state.keycapDraft.mainPhotoId=state.keycapDraft.photoIds[0];
+  renderKeycapPhotosArea();
+  renderKeycapPreview();
+  toast(files.length+' Foto'+(files.length===1?'':'s')+' hinzugefügt'+(resized?' • '+resized+' auf 1080p angepasst':''));
+}
+
+async function syncMountedBoardLinks(set){
+  let changed=false;
+  for(const board of state.boards){
+    const shouldLink=board.id===set.mountedBoardId;
+    const isLinked=board.keycapSetId===set.id;
+    if(shouldLink && !isLinked){
+      board.keycapSetId=set.id;
+      board.keycaps=set.name;
+      board.updatedAt=Date.now();
+      await storePut('boards', board);
+      changed=true;
+    }else if(!shouldLink && isLinked){
+      board.keycapSetId='';
+      board.updatedAt=Date.now();
+      await storePut('boards', board);
+      changed=true;
+    }
+  }
+  if(changed) state.boards=await storeGetAll('boards');
+}
+
+async function saveKeycapDraft(){
+  const d=state.keycapDraft;
+  d.name=trim(document.getElementById('kc_name').value);
+  d.manufacturer=trim(document.getElementById('kc_manufacturer').value);
+  d.profile=trim(document.getElementById('kc_profile').value);
+  d.material=trim(document.getElementById('kc_material').value);
+  d.status=trim(document.getElementById('kc_status').value)||'owned';
+  d.mountedBoardId=trim(document.getElementById('kc_mountedBoardId').value);
+  d.sourceShop=trim(document.getElementById('kc_sourceShop').value);
+  d.sourceUrl=trim(document.getElementById('kc_sourceUrl').value);
+  d.kits=linesToKits(document.getElementById('kc_kits').value);
+  d.notes=(document.getElementById('kc_notes').value||'').trim();
+  d.updatedAt=Date.now();
+  if((d.photoIds||[]).length){
+    d.coverUrl='';
+    d.externalImageUrls=[];
+  }
+  if(!d.name){ alert('Bitte mindestens den Namen des Keycap-Sets angeben.'); return; }
+  ensureInList('keycapManufacturers', d.manufacturer);
+  ensureInList('keycapProfiles', d.profile);
+  ensureInList('keycapMaterials', d.material);
+  ensureInList('keycapStatuses', d.status);
+  ensureInList('keycaps', d.name);
+  await storePut('keycapSets', d);
+  const originalIds=state.keycapEditorSession.original?.photoIds||[];
+  for(const pid of originalIds){
+    if(!(d.photoIds||[]).includes(pid)) await storeDelete('photos', pid);
+  }
+  const idx=state.keycapSets.findIndex(x=>x.id===d.id);
+  if(idx>=0) state.keycapSets[idx]=JSON.parse(JSON.stringify(d)); else state.keycapSets.unshift(JSON.parse(JSON.stringify(d)));
+  state.keycapEditorSession={original:JSON.parse(JSON.stringify(d)), addedPhotoIds:new Set()};
+  await syncMountedBoardLinks(d);
+  await persistMeta();
+  renderSelects();
+  newKeycapDraft();
+  renderKeycaps();
+  renderOverview();
+  renderGallery();
+  toast('Keycap-Set gespeichert');
+}
+
+function editKeycapSet(id){
+  const set=state.keycapSets.find(x=>x.id===id);
+  if(!set) return;
+  beginKeycapDraft(set);
+  document.getElementById('keycapEditorTitle').textContent='Keycap-Set bearbeiten';
+  document.getElementById('btnCancelKeycap').style.display='inline-flex';
+  fillKeycapFormFromDraft();
+  state.viewEntities.erf='keycaps';
+  switchTab('erf');
+}
+
+async function deleteKeycapSet(id){
+  const set=state.keycapSets.find(x=>x.id===id);
+  if(!confirm('„'+(set?.name||'dieses Keycap-Set')+'“ wirklich löschen?')) return;
+  await storeDelete('keycapSets', id);
+  const photos=await storeGetAllByOwner('keycapSet', id);
+  for(const p of photos) await storeDelete('photos', p.id);
+  for(const board of state.boards){
+    if(board.keycapSetId===id){
+      board.keycapSetId='';
+      board.updatedAt=Date.now();
+      await storePut('boards', board);
+    }
+  }
+  state.boards=await storeGetAll('boards');
+  state.keycapSets=state.keycapSets.filter(x=>x.id!==id);
+  await persistMeta();
+  newKeycapDraft();
+  renderKeycaps();
+  renderOverview();
+  renderGallery();
+  toast('Keycap-Set gelöscht');
+}
+
+function applyKeycapFilters(arr){
+  const f=state.keycapFilters;
+  const q=trim(f.q).toLowerCase();
+  let out=[...arr];
+  if(q){
+    out=out.filter(set=>[set.name,set.manufacturer,set.profile,set.material,set.status,set.sourceShop,set.sourceUrl,set.notes,(set.kits||[]).join(' '),boardName(set.mountedBoardId)].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
+  }
+  if(f.manufacturer) out=out.filter(set=>(set.manufacturer||'')===f.manufacturer);
+  if(f.profile) out=out.filter(set=>(set.profile||'')===f.profile);
+  if(f.status) out=out.filter(set=>(set.status||'')===f.status);
+  const [key,dir]=(f.sort||'name_asc').split('_');
+  const mult=dir==='asc'?1:-1;
+  out.sort((a,b)=>{
+    if(['name','manufacturer','profile','status'].includes(key)) return mult*(a[key]||'').localeCompare(b[key]||'','de');
+    return mult*((Number(a[key]||0))-(Number(b[key]||0)));
+  });
+  return out;
+}
+
+function renderKeycapFilters(hostId='keycapFilters', prefix='kcFilter', renderResults=renderKeycaps){
+  const host=document.getElementById(hostId);
+  if(!host) return;
+  host.innerHTML='<div style="font-weight:900">Filter</div><div style="margin-top:10px;display:grid;gap:8px">'+
+    '<label><div class="lbl">Suche</div><input id="'+prefix+'_q" value="'+esc(state.keycapFilters.q)+'" placeholder="Keycap-Sets durchsuchen…"></label>'+
+    '<label><div class="lbl">Hersteller</div><select id="'+prefix+'_manufacturer"></select></label>'+
+    '<label><div class="lbl">Profil</div><select id="'+prefix+'_profile"></select></label>'+
+    '<label><div class="lbl">Status</div><select id="'+prefix+'_status"></select></label>'+
+    '<label><div class="lbl">Sortierung</div><select id="'+prefix+'_sort"><option value="name_asc">Name (A → Z)</option><option value="manufacturer_asc">Hersteller (A → Z)</option><option value="profile_asc">Profil (A → Z)</option><option value="updatedAt_desc">Zuletzt geändert (neu → alt)</option></select></label>'+
+    '</div>';
+  fillSelect(document.getElementById(prefix+'_manufacturer'), state.lists.keycapManufacturers, 'Alle');
+  fillSelect(document.getElementById(prefix+'_profile'), state.lists.keycapProfiles, 'Alle');
+  fillSelect(document.getElementById(prefix+'_status'), state.lists.keycapStatuses, 'Alle');
+  document.getElementById(prefix+'_manufacturer').value=state.keycapFilters.manufacturer;
+  document.getElementById(prefix+'_profile').value=state.keycapFilters.profile;
+  document.getElementById(prefix+'_status').value=state.keycapFilters.status;
+  document.getElementById(prefix+'_sort').value=state.keycapFilters.sort;
+  document.getElementById(prefix+'_q').addEventListener('input', e=>{ state.keycapFilters.q=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_manufacturer').addEventListener('change', e=>{ state.keycapFilters.manufacturer=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_profile').addEventListener('change', e=>{ state.keycapFilters.profile=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_status').addEventListener('change', e=>{ state.keycapFilters.status=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_sort').addEventListener('change', e=>{ state.keycapFilters.sort=e.target.value; renderResults(false); });
+}
+
+async function getKeycapThumbSrc(set){
+  const ids=set.photoIds||[];
+  const ordered=[set.mainPhotoId, ...ids].filter(Boolean);
+  for(const pid of ordered){
+    const rec=await storeGet('photos', pid);
+    if(rec?.dataUrl) return rec.dataUrl;
+  }
+  if(ids.length) return '';
+  return set.coverUrl || '';
+}
+
+async function keycapImageSources(set){
+  const images=[];
+  const seen=new Set();
+  for(const pid of set.photoIds||[]){
+    const rec=await storeGet('photos', pid);
+    if(rec?.dataUrl && !seen.has(rec.dataUrl)){
+      seen.add(rec.dataUrl);
+      images.push({src:rec.dataUrl, name:rec.name||set.name, kind:'local'});
+    }
+  }
+  if(images.length) return images;
+  for(const url of [set.coverUrl, ...(set.externalImageUrls||[])]){
+    if(url && !seen.has(url)){
+      seen.add(url);
+      images.push({src:url, name:set.name, kind:'external'});
+    }
+  }
+  return images;
+}
+
+function renderKeycapViewMode(){
+}
+
+function renderKeycaps(renderFilters=true){
+  if(renderFilters) renderKeycapFilters('keycapFilters','kcFilter',renderKeycaps);
+  const rows=applyKeycapFilters(state.keycapSets);
+  document.getElementById('keycapHitCount').textContent=String(rows.length);
+  document.getElementById('keycapHitCountLabel').textContent=rows.length===1?'Set':'Sets';
+  const tb=document.getElementById('keycapTbody');
+  tb.innerHTML='';
+  if(!rows.length){
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td colspan="7" class="muted" style="padding:16px;text-align:center">Keine Keycap-Sets.</td>';
+    tb.appendChild(tr);
+    return;
+  }
+  for(const set of rows){
+    const tr=document.createElement('tr');
+    const kits=(set.kits||[]).slice(0,3).join(', ')+((set.kits||[]).length>3?' …':'');
+    const source=set.sourceUrl ? '<a href="#" data-source-url="'+esc(set.sourceUrl)+'" style="color:var(--accent)">'+esc(set.sourceShop||'Quelle')+'</a>' : esc(set.sourceShop||'—');
+    tr.innerHTML='<td><div class="miniThumb" title="Spotlight öffnen" role="button" tabindex="0" aria-label="Spotlight zu '+esc(set.name)+' öffnen"><span>—</span></div></td>'+
+      '<td><div class="boardName" style="font-weight:900">'+esc(set.name)+'</div><div class="muted small" style="margin-top:6px">'+source+' • '+esc(set.status||'owned')+'</div></td>'+
+      '<td>'+esc(set.manufacturer||'—')+'</td><td>'+esc(set.profile||'—')+'</td><td>'+esc(kits||'—')+'</td><td>'+esc(boardName(set.mountedBoardId)||'—')+'</td>'+
+      '<td style="text-align:right"><div style="display:flex;gap:8px;justify-content:flex-end"><button data-a="edit">Bearbeiten</button><button data-a="del" class="danger">Löschen</button></div></td>';
+    tr.querySelector('[data-a="edit"]').addEventListener('click', ()=>editKeycapSet(set.id));
+    tr.querySelector('[data-a="del"]').addEventListener('click', ()=>deleteKeycapSet(set.id));
+    const sourceLink=tr.querySelector('[data-source-url]');
+    if(sourceLink){
+      sourceLink.addEventListener('click', e=>{
+        e.preventDefault();
+        window.api.openExternal(sourceLink.dataset.sourceUrl).catch(()=>toast('Link konnte nicht geöffnet werden'));
+      });
+    }
+    const thumbEl=tr.querySelector('.miniThumb');
+    thumbEl.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openKeycapSpotlight(set.id); });
+    thumbEl.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openKeycapSpotlight(set.id);} });
+    tb.appendChild(tr);
+    (async()=>{ const src=await getKeycapThumbSrc(set); if(src && thumbEl.isConnected) thumbEl.innerHTML='<img src="'+src+'" alt="'+esc(set.name)+'">'; })();
+  }
+  updateShellStats();
+}
+
+function renderKeycapGallery(renderFilters=true){
+  if(renderFilters) renderKeycapFilters('keycapGalFilters','kcGalFilter',renderKeycapGallery);
+  const rows=applyKeycapFilters(state.keycapSets);
+  document.getElementById('keycapGalCount').textContent=String(rows.length);
+  document.getElementById('keycapGalCountLabel').textContent=rows.length===1?'Set':'Sets';
+  const cards=document.getElementById('keycapCards');
+  cards.innerHTML='';
+  if(!rows.length){
+    cards.innerHTML='<div class="card pad muted" style="border-style:dashed;text-align:center">Keine Keycap-Sets.</div>';
+    return;
+  }
+  for(const set of rows){
+    const card=document.createElement('div');
+    card.className='gcard keycapCard';
+    card.tabIndex=0;
+    card.setAttribute('role','button');
+    card.setAttribute('aria-label','Spotlight zu '+set.name+' öffnen');
+    const badges=[];
+    if(set.manufacturer) badges.push('<span class="pill">'+esc(set.manufacturer)+'</span>');
+    if(set.profile) badges.push('<span class="pill">'+esc(set.profile)+'</span>');
+    if(set.material) badges.push('<span class="pill">'+esc(set.material)+'</span>');
+    const kitText=(set.kits||[]).slice(0,3).join(', ')||'Keine Kits';
+    card.innerHTML='<div class="thumb"><span>Lade…</span></div>'+
+      '<div class="gbody"><div class="gname">'+esc(set.name)+'</div><div class="gmeta">'+(badges.length?badges.join(''):'<span class="muted small">—</span>')+'</div>'+
+      '<div class="muted small" style="margin-top:8px">'+esc(kitText)+' • '+esc(set.status||'owned')+'</div></div>';
+    card.addEventListener('click', ()=>openKeycapSpotlight(set.id));
+    card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openKeycapSpotlight(set.id);} });
+    cards.appendChild(card);
+    (async()=>{
+      const src=await getKeycapThumbSrc(set);
+      const thumb=card.querySelector('.thumb');
+      if(!thumb || !card.isConnected) return;
+      thumb.innerHTML=src?'<img src="'+src+'" alt="'+esc(set.name)+'">':'Kein Foto';
+    })();
+  }
+}
+
+function emptyArtisanDraft(){
+  return {id:uid(), name:'', manufacturer:'', profile:'', material:'', status:'owned', tags:[], sourceUrl:'', sourceShop:'', mountedBoardId:'', notes:'', photoIds:[], mainPhotoId:'', coverUrl:'', externalImageUrls:[], trelloCardId:'', trelloListName:'', createdAt:Date.now(), updatedAt:Date.now()};
+}
+
+function beginArtisanDraft(set){
+  state.artisanDraft=set ? JSON.parse(JSON.stringify(set)) : emptyArtisanDraft();
+  state.artisanEditorSession={original:set ? JSON.parse(JSON.stringify(set)) : null, addedPhotoIds:new Set()};
+}
+
+function artisanDraftIsDirty(){
+  if(!state.artisanDraft) return false;
+  if(state.artisanEditorSession.addedPhotoIds.size) return true;
+  const original=state.artisanEditorSession.original || emptyArtisanDraft();
+  const keys=['name','manufacturer','profile','material','status','sourceUrl','sourceShop','mountedBoardId','notes','mainPhotoId','coverUrl'];
+  if(keys.some(key=>(state.artisanDraft[key]||'')!==(original[key]||''))) return true;
+  return JSON.stringify(state.artisanDraft.tags||[])!==JSON.stringify(original.tags||[]) ||
+    JSON.stringify(state.artisanDraft.photoIds||[])!==JSON.stringify(original.photoIds||[]);
+}
+
+async function discardArtisanDraftChanges(){
+  for(const id of state.artisanEditorSession.addedPhotoIds) await storeDelete('photos', id);
+  state.artisanEditorSession={original:null, addedPhotoIds:new Set()};
+}
+
+function newArtisanDraft(){
+  beginArtisanDraft(null);
+  document.getElementById('artisanEditorTitle').textContent='Neuer Artisan';
+  document.getElementById('btnCancelArtisan').style.display='none';
+  fillArtisanFormFromDraft();
+}
+
+function renderArtisanForm(){
+  const host=document.getElementById('artisanFormGrid');
+  host.innerHTML='';
+  host.style.display='grid';
+  host.style.gridTemplateColumns = window.matchMedia('(min-width:780px)').matches ? '1fr 1fr' : '1fr';
+  host.style.gap='12px';
+  host.appendChild(fieldText('Name des Artisans','Pflicht','art_name','z.B. Happy Feet Devoura'));
+  host.appendChild(fieldSelectPlus('Hersteller','art_manufacturer','art_manufacturer_new'));
+  host.appendChild(fieldSelectPlus('Profil','art_profile','art_profile_new'));
+  host.appendChild(fieldSelectPlus('Material','art_material','art_material_new'));
+  host.appendChild(fieldSelectOnly('Status','art_status'));
+  host.appendChild(fieldSelectOnly('Aktuell auf Board','art_mountedBoardId'));
+  host.appendChild(fieldText('Shop / Quelle','','art_sourceShop','z.B. Raffle, Discord, Marketplace'));
+  host.appendChild(fieldText('Shoplink','','art_sourceUrl','https://…'));
+}
+
+function renderArtisanSelects(){
+  fillSelect(document.getElementById('art_manufacturer'), state.lists.artisanManufacturers, 'Hersteller…');
+  fillSelect(document.getElementById('art_profile'), state.lists.artisanProfiles, 'Profil…');
+  fillSelect(document.getElementById('art_material'), state.lists.artisanMaterials, 'Material…');
+  fillSelect(document.getElementById('art_status'), state.lists.artisanStatuses, 'Status…');
+  const boardSelect=document.getElementById('art_mountedBoardId');
+  boardSelect.innerHTML='<option value="">Nicht montiert…</option>';
+  for(const board of [...state.boards].sort((a,b)=>(a.name||'').localeCompare(b.name||'','de'))){
+    const o=document.createElement('option');
+    o.value=board.id; o.textContent=board.name || '(ohne Name)';
+    boardSelect.appendChild(o);
+  }
+}
+
+function fillArtisanFormFromDraft(){
+  renderArtisanForm();
+  renderArtisanSelects();
+  const d=state.artisanDraft;
+  document.getElementById('art_name').value=d.name||'';
+  setSelectValue('art_manufacturer', d.manufacturer);
+  setSelectValue('art_profile', d.profile);
+  setSelectValue('art_material', d.material);
+  document.getElementById('art_status').value=d.status||'owned';
+  document.getElementById('art_mountedBoardId').value=d.mountedBoardId||'';
+  document.getElementById('art_sourceShop').value=d.sourceShop||'';
+  document.getElementById('art_sourceUrl').value=d.sourceUrl||'';
+  document.getElementById('art_tags').value=(d.tags||[]).join('\n');
+  document.getElementById('art_notes').value=d.notes||'';
+  renderArtisanPhotosArea();
+  renderArtisanPreview();
+  wireArtisanDynamic();
+}
+
+function wireArtisanDynamic(){
+  const textMap=[['art_name','name'],['art_sourceShop','sourceShop'],['art_sourceUrl','sourceUrl'],['art_notes','notes']];
+  for(const [id,key] of textMap) document.getElementById(id).oninput=e=>{ state.artisanDraft[key]=key==='notes' ? (e.target.value||'') : trim(e.target.value); renderArtisanPreview(); };
+  const selectMap=[['art_manufacturer','manufacturer'],['art_profile','profile'],['art_material','material'],['art_status','status'],['art_mountedBoardId','mountedBoardId']];
+  for(const [id,key] of selectMap) document.getElementById(id).onchange=e=>{ state.artisanDraft[key]=trim(e.target.value); renderArtisanPreview(); };
+  document.getElementById('art_tags').oninput=e=>{ state.artisanDraft.tags=linesToKits(e.target.value); renderArtisanPreview(); };
+  function wireNew(inputId, listKey, selectId, fieldKey){
+    const el=document.getElementById(inputId);
+    el.onkeydown=e=>{
+      if(e.key!=='Enter') return;
+      e.preventDefault();
+      const v=trim(el.value);
+      if(!v) return;
+      ensureInList(listKey, v);
+      renderArtisanSelects();
+      document.getElementById(selectId).value=v;
+      state.artisanDraft[fieldKey]=v;
+      el.value='';
+      renderArtisanPreview();
+    };
+  }
+  wireNew('art_manufacturer_new','artisanManufacturers','art_manufacturer','manufacturer');
+  wireNew('art_profile_new','artisanProfiles','art_profile','profile');
+  wireNew('art_material_new','artisanMaterials','art_material','material');
+}
+
+function renderArtisanPreview(){
+  const d=state.artisanDraft;
+  if(!d || !document.getElementById('art_pv_name')) return;
+  document.getElementById('art_pv_name').textContent=d.name||'(Name)';
+  const badges=document.getElementById('art_pv_badges');
+  badges.innerHTML='';
+  if(d.manufacturer) badges.appendChild(pill(d.manufacturer));
+  if(d.profile) badges.appendChild(pill(d.profile));
+  if(d.material) badges.appendChild(pill(d.material));
+  if(d.status) badges.appendChild(pill(d.status));
+  document.getElementById('art_pv_meta').textContent='Tags: '+((d.tags||[]).slice(0,4).join(', ')||'—');
+  document.getElementById('art_pv_photos').textContent='Fotos: '+((d.photoIds||[]).length);
+  document.getElementById('art_pv_notes').textContent=d.notes||'';
+}
+
+async function artisanPhotoSrc(photoId){
+  const rec=await storeGet('photos', photoId);
+  if(!rec) return {src:'', name:''};
+  return {src:rec.dataUrl||'', name:rec.name||''};
+}
+
+async function renderArtisanPhotosArea(){
+  const host=document.getElementById('artisanPhotosArea');
+  const ids=state.artisanDraft.photoIds||[];
+  if(!ids.length){
+    host.innerHTML='<div class="card pad" style="background:rgba(0,0,0,.12);border-style:dashed">Noch keine Fotos.</div>';
+    return;
+  }
+  host.innerHTML='';
+  const grid=document.createElement('div');
+  grid.className='photoGrid';
+  host.appendChild(grid);
+  for(const pid of ids){
+    const item=document.createElement('div');
+    item.className='pitem'+(state.artisanDraft.mainPhotoId===pid?' main':'');
+    item.innerHTML='<div class="pimg"><div class="thumb">Lade…</div></div><div class="pbtns"><button class="primary" type="button">'+(state.artisanDraft.mainPhotoId===pid?'Hauptfoto':'Als Hauptfoto')+'</button><button class="danger" type="button">Entfernen</button></div>';
+    const btnMain=item.querySelectorAll('button')[0];
+    const btnDel=item.querySelectorAll('button')[1];
+    btnMain.addEventListener('click', ()=>{ state.artisanDraft.mainPhotoId=pid; renderArtisanPhotosArea(); });
+    btnDel.addEventListener('click', async ()=>{
+      if(state.artisanEditorSession.addedPhotoIds.has(pid)){
+        await storeDelete('photos', pid);
+        state.artisanEditorSession.addedPhotoIds.delete(pid);
+      }
+      state.artisanDraft.photoIds=(state.artisanDraft.photoIds||[]).filter(x=>x!==pid);
+      if(state.artisanDraft.mainPhotoId===pid) state.artisanDraft.mainPhotoId=state.artisanDraft.photoIds[0]||'';
+      renderArtisanPhotosArea();
+      renderArtisanPreview();
+    });
+    grid.appendChild(item);
+    const got=await artisanPhotoSrc(pid);
+    item.querySelector('.pimg').innerHTML=got.src ? '<img src="'+got.src+'" alt="'+esc(got.name)+'">' : '<div class="thumb">(Bild fehlt)</div>';
+  }
+}
+
+async function addArtisanPhotos(fileList){
+  const files=Array.from(fileList||[]).filter(f=>f.type && f.type.startsWith('image/'));
+  if(!files.length) return;
+  let resized=0;
+  for(const f of files){
+    const normalized=await normalizePhoto(f);
+    if(normalized.resized) resized++;
+    const id=uid();
+    const dataUrl=await blobToDataUrl(normalized.blob);
+    await storePut('photos', {id, ownerType:'artisanSet', ownerId:state.artisanDraft.id, boardId:'', name:f.name, type:normalized.blob.type, dataUrl, width:normalized.width, height:normalized.height, addedAt:Date.now()});
+    state.artisanDraft.photoIds.push(id);
+    state.artisanEditorSession.addedPhotoIds.add(id);
+  }
+  if(state.artisanDraft.photoIds.length){
+    state.artisanDraft.coverUrl='';
+    state.artisanDraft.externalImageUrls=[];
+  }
+  if(!state.artisanDraft.mainPhotoId && state.artisanDraft.photoIds.length) state.artisanDraft.mainPhotoId=state.artisanDraft.photoIds[0];
+  renderArtisanPhotosArea();
+  renderArtisanPreview();
+  toast(files.length+' Foto'+(files.length===1?'':'s')+' hinzugefügt'+(resized?' • '+resized+' auf 1080p angepasst':''));
+}
+
+async function saveArtisanDraft(){
+  const d=state.artisanDraft;
+  d.name=trim(document.getElementById('art_name').value);
+  d.manufacturer=trim(document.getElementById('art_manufacturer').value);
+  d.profile=trim(document.getElementById('art_profile').value);
+  d.material=trim(document.getElementById('art_material').value);
+  d.status=trim(document.getElementById('art_status').value)||'owned';
+  d.mountedBoardId=trim(document.getElementById('art_mountedBoardId').value);
+  d.sourceShop=trim(document.getElementById('art_sourceShop').value);
+  d.sourceUrl=trim(document.getElementById('art_sourceUrl').value);
+  d.tags=linesToKits(document.getElementById('art_tags').value);
+  d.notes=(document.getElementById('art_notes').value||'').trim();
+  d.updatedAt=Date.now();
+  if((d.photoIds||[]).length){
+    d.coverUrl='';
+    d.externalImageUrls=[];
+  }
+  if(!d.name){ alert('Bitte mindestens den Namen des Artisans angeben.'); return; }
+  ensureInList('artisanManufacturers', d.manufacturer);
+  ensureInList('artisanProfiles', d.profile);
+  ensureInList('artisanMaterials', d.material);
+  ensureInList('artisanStatuses', d.status);
+  await storePut('artisanSets', d);
+  const originalIds=state.artisanEditorSession.original?.photoIds||[];
+  for(const pid of originalIds){
+    if(!(d.photoIds||[]).includes(pid)) await storeDelete('photos', pid);
+  }
+  const idx=state.artisanSets.findIndex(x=>x.id===d.id);
+  if(idx>=0) state.artisanSets[idx]=JSON.parse(JSON.stringify(d)); else state.artisanSets.unshift(JSON.parse(JSON.stringify(d)));
+  state.artisanEditorSession={original:JSON.parse(JSON.stringify(d)), addedPhotoIds:new Set()};
+  await persistMeta();
+  renderSelects();
+  newArtisanDraft();
+  renderArtisans();
+  renderOverview();
+  renderGallery();
+  toast('Artisan gespeichert');
+}
+
+function editArtisanSet(id){
+  const set=state.artisanSets.find(x=>x.id===id);
+  if(!set) return;
+  beginArtisanDraft(set);
+  document.getElementById('artisanEditorTitle').textContent='Artisan bearbeiten';
+  document.getElementById('btnCancelArtisan').style.display='inline-flex';
+  fillArtisanFormFromDraft();
+  state.viewEntities.erf='artisans';
+  switchTab('erf');
+}
+
+async function deleteArtisanSet(id){
+  const set=state.artisanSets.find(x=>x.id===id);
+  if(!confirm('„'+(set?.name||'diesen Artisan')+'“ wirklich löschen?')) return;
+  await storeDelete('artisanSets', id);
+  const photos=await storeGetAllByOwner('artisanSet', id);
+  for(const p of photos) await storeDelete('photos', p.id);
+  state.artisanSets=state.artisanSets.filter(x=>x.id!==id);
+  await persistMeta();
+  newArtisanDraft();
+  renderArtisans();
+  renderOverview();
+  renderGallery();
+  toast('Artisan gelöscht');
+}
+
+function applyArtisanFilters(arr){
+  const f=state.artisanFilters;
+  const q=trim(f.q).toLowerCase();
+  let out=[...arr];
+  if(q){
+    out=out.filter(set=>[set.name,set.manufacturer,set.profile,set.material,set.status,set.sourceShop,set.sourceUrl,set.notes,(set.tags||[]).join(' '),boardName(set.mountedBoardId)].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
+  }
+  if(f.manufacturer) out=out.filter(set=>(set.manufacturer||'')===f.manufacturer);
+  if(f.profile) out=out.filter(set=>(set.profile||'')===f.profile);
+  if(f.status) out=out.filter(set=>(set.status||'')===f.status);
+  const [key,dir]=(f.sort||'name_asc').split('_');
+  const mult=dir==='asc'?1:-1;
+  out.sort((a,b)=>{
+    if(['name','manufacturer','profile','status'].includes(key)) return mult*(a[key]||'').localeCompare(b[key]||'','de');
+    return mult*((Number(a[key]||0))-(Number(b[key]||0)));
+  });
+  return out;
+}
+
+function renderArtisanFilters(hostId='artisanFilters', prefix='artFilter', renderResults=renderArtisans){
+  const host=document.getElementById(hostId);
+  if(!host) return;
+  host.innerHTML='<div style="font-weight:900">Filter</div><div style="margin-top:10px;display:grid;gap:8px">'+
+    '<label><div class="lbl">Suche</div><input id="'+prefix+'_q" value="'+esc(state.artisanFilters.q)+'" placeholder="Artisans durchsuchen…"></label>'+
+    '<label><div class="lbl">Hersteller</div><select id="'+prefix+'_manufacturer"></select></label>'+
+    '<label><div class="lbl">Profil</div><select id="'+prefix+'_profile"></select></label>'+
+    '<label><div class="lbl">Status</div><select id="'+prefix+'_status"></select></label>'+
+    '<label><div class="lbl">Sortierung</div><select id="'+prefix+'_sort"><option value="name_asc">Name (A → Z)</option><option value="manufacturer_asc">Hersteller (A → Z)</option><option value="profile_asc">Profil (A → Z)</option><option value="updatedAt_desc">Zuletzt geändert (neu → alt)</option></select></label>'+
+    '</div>';
+  fillSelect(document.getElementById(prefix+'_manufacturer'), state.lists.artisanManufacturers, 'Alle');
+  fillSelect(document.getElementById(prefix+'_profile'), state.lists.artisanProfiles, 'Alle');
+  fillSelect(document.getElementById(prefix+'_status'), state.lists.artisanStatuses, 'Alle');
+  document.getElementById(prefix+'_manufacturer').value=state.artisanFilters.manufacturer;
+  document.getElementById(prefix+'_profile').value=state.artisanFilters.profile;
+  document.getElementById(prefix+'_status').value=state.artisanFilters.status;
+  document.getElementById(prefix+'_sort').value=state.artisanFilters.sort;
+  document.getElementById(prefix+'_q').addEventListener('input', e=>{ state.artisanFilters.q=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_manufacturer').addEventListener('change', e=>{ state.artisanFilters.manufacturer=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_profile').addEventListener('change', e=>{ state.artisanFilters.profile=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_status').addEventListener('change', e=>{ state.artisanFilters.status=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_sort').addEventListener('change', e=>{ state.artisanFilters.sort=e.target.value; renderResults(false); });
+}
+
+async function getArtisanThumbSrc(set){
+  const ids=set.photoIds||[];
+  const ordered=[set.mainPhotoId, ...ids].filter(Boolean);
+  for(const pid of ordered){
+    const rec=await storeGet('photos', pid);
+    if(rec?.dataUrl) return rec.dataUrl;
+  }
+  if(ids.length) return '';
+  return set.coverUrl || '';
+}
+
+async function artisanImageSources(set){
+  const images=[];
+  const seen=new Set();
+  for(const pid of set.photoIds||[]){
+    const rec=await storeGet('photos', pid);
+    if(rec?.dataUrl && !seen.has(rec.dataUrl)){
+      seen.add(rec.dataUrl);
+      images.push({src:rec.dataUrl, name:rec.name||set.name, kind:'local'});
+    }
+  }
+  if(images.length) return images;
+  for(const url of [set.coverUrl, ...(set.externalImageUrls||[])]){
+    if(url && !seen.has(url)){
+      seen.add(url);
+      images.push({src:url, name:set.name, kind:'external'});
+    }
+  }
+  return images;
+}
+
+function renderArtisans(renderFilters=true){
+  if(renderFilters) renderArtisanFilters('artisanFilters','artFilter',renderArtisans);
+  const rows=applyArtisanFilters(state.artisanSets);
+  document.getElementById('artisanHitCount').textContent=String(rows.length);
+  document.getElementById('artisanHitCountLabel').textContent=rows.length===1?'Artisan':'Artisans';
+  const tb=document.getElementById('artisanTbody');
+  tb.innerHTML='';
+  if(!rows.length){
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td colspan="7" class="muted" style="padding:16px;text-align:center">Keine Artisans.</td>';
+    tb.appendChild(tr);
+    return;
+  }
+  for(const set of rows){
+    const tr=document.createElement('tr');
+    const tags=(set.tags||[]).slice(0,3).join(', ')+((set.tags||[]).length>3?' …':'');
+    const source=set.sourceUrl ? '<a href="#" data-source-url="'+esc(set.sourceUrl)+'" style="color:var(--accent)">'+esc(set.sourceShop||'Quelle')+'</a>' : esc(set.sourceShop||'—');
+    tr.innerHTML='<td><div class="miniThumb" title="Spotlight öffnen" role="button" tabindex="0" aria-label="Spotlight zu '+esc(set.name)+' öffnen"><span>—</span></div></td>'+
+      '<td><div class="boardName" style="font-weight:900">'+esc(set.name)+'</div><div class="muted small" style="margin-top:6px">'+source+' • '+esc(set.status||'owned')+'</div></td>'+
+      '<td>'+esc(set.manufacturer||'—')+'</td><td>'+esc(set.profile||'—')+'</td><td>'+esc(tags||'—')+'</td><td>'+esc(boardName(set.mountedBoardId)||'—')+'</td>'+
+      '<td style="text-align:right"><div style="display:flex;gap:8px;justify-content:flex-end"><button data-a="edit">Bearbeiten</button><button data-a="del" class="danger">Löschen</button></div></td>';
+    tr.querySelector('[data-a="edit"]').addEventListener('click', ()=>editArtisanSet(set.id));
+    tr.querySelector('[data-a="del"]').addEventListener('click', ()=>deleteArtisanSet(set.id));
+    const sourceLink=tr.querySelector('[data-source-url]');
+    if(sourceLink){
+      sourceLink.addEventListener('click', e=>{
+        e.preventDefault();
+        window.api.openExternal(sourceLink.dataset.sourceUrl).catch(()=>toast('Link konnte nicht geöffnet werden'));
+      });
+    }
+    const thumbEl=tr.querySelector('.miniThumb');
+    thumbEl.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openArtisanSpotlight(set.id); });
+    thumbEl.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openArtisanSpotlight(set.id);} });
+    tb.appendChild(tr);
+    (async()=>{ const src=await getArtisanThumbSrc(set); if(src && thumbEl.isConnected) thumbEl.innerHTML='<img src="'+src+'" alt="'+esc(set.name)+'">'; })();
+  }
+  updateShellStats();
+}
+
+function renderArtisanGallery(renderFilters=true){
+  if(renderFilters) renderArtisanFilters('artisanGalFilters','artGalFilter',renderArtisanGallery);
+  const rows=applyArtisanFilters(state.artisanSets);
+  document.getElementById('artisanGalCount').textContent=String(rows.length);
+  document.getElementById('artisanGalCountLabel').textContent=rows.length===1?'Artisan':'Artisans';
+  const cards=document.getElementById('artisanCards');
+  cards.innerHTML='';
+  if(!rows.length){
+    cards.innerHTML='<div class="card pad muted" style="border-style:dashed;text-align:center">Keine Artisans.</div>';
+    return;
+  }
+  for(const set of rows){
+    const card=document.createElement('div');
+    card.className='gcard keycapCard';
+    card.tabIndex=0;
+    card.setAttribute('role','button');
+    card.setAttribute('aria-label','Spotlight zu '+set.name+' öffnen');
+    const badges=[];
+    if(set.manufacturer) badges.push('<span class="pill">'+esc(set.manufacturer)+'</span>');
+    if(set.profile) badges.push('<span class="pill">'+esc(set.profile)+'</span>');
+    if(set.material) badges.push('<span class="pill">'+esc(set.material)+'</span>');
+    const tagText=(set.tags||[]).slice(0,3).join(', ')||'Keine Tags';
+    card.innerHTML='<div class="thumb"><span>Lade…</span></div>'+
+      '<div class="gbody"><div class="gname">'+esc(set.name)+'</div><div class="gmeta">'+(badges.length?badges.join(''):'<span class="muted small">—</span>')+'</div>'+
+      '<div class="muted small" style="margin-top:8px">'+esc(tagText)+' • '+esc(set.status||'owned')+'</div></div>';
+    card.addEventListener('click', ()=>openArtisanSpotlight(set.id));
+    card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openArtisanSpotlight(set.id);} });
+    cards.appendChild(card);
+    (async()=>{
+      const src=await getArtisanThumbSrc(set);
+      const thumb=card.querySelector('.thumb');
+      if(!thumb || !card.isConnected) return;
+      thumb.innerHTML=src?'<img src="'+src+'" alt="'+esc(set.name)+'">':'Kein Foto';
+    })();
+  }
+}
+
 async function exportData(){
+  state.meta.language=currentLanguage();
   const storedPhotos=await storeGetAll('photos');
-  const referencedPhotoIds=new Set(state.boards.flatMap(board=>board.photoIds||[]));
+  const referencedPhotoIds=new Set([
+    ...state.boards.flatMap(board=>board.photoIds||[]),
+    ...state.keycapSets.flatMap(set=>set.photoIds||[]),
+    ...state.artisanSets.flatMap(set=>set.photoIds||[])
+  ]);
   const photos=[];
   for(const photo of storedPhotos){
     if(!referencedPhotoIds.has(photo.id)) continue;
-    photos.push({id:photo.id,boardId:photo.boardId,name:photo.name,type:photo.type,width:photo.width,height:photo.height,addedAt:photo.addedAt,dataUrl:photo.dataUrl});
+    photos.push({id:photo.id,boardId:photo.boardId,ownerType:photo.ownerType||'board',ownerId:photo.ownerId||photo.boardId,name:photo.name,type:photo.type,width:photo.width,height:photo.height,addedAt:photo.addedAt,dataUrl:photo.dataUrl});
   }
   const payload={
-    schemaVersion:3,
+    schemaVersion:5,
     format:'keyboard-manager-zip',
     meta:Object.assign({}, state.meta, {exportedAt:Date.now(), note:'ZIP-Backup mit Manifest und Bilddateien.'}),
     lists:state.lists,
     gallery:state.gallery,
     boards:state.boards,
+    keycapSets:state.keycapSets,
+    artisanSets:state.artisanSets,
     photos:photos
   };
 
@@ -2323,6 +3920,10 @@ async function exportData(){
 async function normalizeImport(obj){
   if(!obj || !Array.isArray(obj.boards) || !obj.lists || typeof obj.lists!=='object') throw new Error('Falsches Format');
   if(obj.boards.length>10000) throw new Error('Import enthält zu viele Boards');
+  const sourceKeycapSets=Array.isArray(obj.keycapSets) ? obj.keycapSets : [];
+  if(sourceKeycapSets.length>10000) throw new Error('Import enthält zu viele Keycap-Sets');
+  const sourceArtisanSets=Array.isArray(obj.artisanSets) ? obj.artisanSets : [];
+  if(sourceArtisanSets.length>10000) throw new Error('Import enthält zu viele Artisans');
   const sourcePhotos=Array.isArray(obj.photos) ? obj.photos : [];
   if(sourcePhotos.length>50000) throw new Error('Import enthält zu viele Fotos');
   const lists={
@@ -2332,29 +3933,108 @@ async function normalizeImport(obj){
     stabs:Array.from(new Set([...(obj.lists.stabs||[]), ...STAB_DEFAULTS])),
     manufacturers:Array.from(new Set(obj.lists.manufacturers||[])),
     keycaps:Array.from(new Set([...(obj.lists.keycaps||[]), ...KEYCAP_DEFAULTS])),
+    keycapManufacturers:Array.from(new Set([...(obj.lists.keycapManufacturers||[]), ...KEYCAP_MANUFACTURER_DEFAULTS])),
+    keycapProfiles:Array.from(new Set([...(obj.lists.keycapProfiles||[]), ...KEYCAP_PROFILE_DEFAULTS])),
+    keycapMaterials:Array.from(new Set([...(obj.lists.keycapMaterials||[]), ...KEYCAP_MATERIAL_DEFAULTS])),
+    keycapStatuses:Array.from(new Set([...(obj.lists.keycapStatuses||[]), ...KEYCAP_STATUS_DEFAULTS])),
+    artisanManufacturers:Array.from(new Set([...(obj.lists.artisanManufacturers||[]), ...ARTISAN_MANUFACTURER_DEFAULTS])),
+    artisanProfiles:Array.from(new Set([...(obj.lists.artisanProfiles||[]), ...ARTISAN_PROFILE_DEFAULTS])),
+    artisanMaterials:Array.from(new Set([...(obj.lists.artisanMaterials||[]), ...ARTISAN_MATERIAL_DEFAULTS])),
+    artisanStatuses:Array.from(new Set([...(obj.lists.artisanStatuses||[]), ...KEYCAP_STATUS_DEFAULTS])),
     switches:Array.from(new Set([...(obj.lists.switches||[]), ...SWITCH_DEFAULTS]))
   };
   const gallery=obj.gallery || state.gallery;
-  const meta={version: obj.meta?.version || 'import', createdAt: obj.meta?.createdAt || Date.now(), updatedAt: Date.now()};
+  const meta={version: obj.meta?.version || 'import', createdAt: obj.meta?.createdAt || Date.now(), updatedAt: Date.now(), language: obj.meta?.language === 'en' ? 'en' : 'de'};
   const boards=obj.boards.map(b=>{
     if(!b || typeof b!=='object') throw new Error('Ungültiger Board-Eintrag');
     if(b.id && !/^[a-zA-Z0-9_-]+$/.test(b.id)) throw new Error('Ungültige Board-ID');
     return {
       id:b.id||uid(), name:trim(b.name), manufacturer:trim(b.manufacturer), format:trim(b.format), plate:trim(b.plate), pcb:trim(b.pcb), keycaps:trim(b.keycaps), stabs:trim(b.stabs), switches:trim(b.switches),
+      keycapSetId:typeof b.keycapSetId==='string'?b.keycapSetId:'',
       remark:trim(b.remark), photoIds:Array.isArray(b.photoIds)?b.photoIds.filter(x=>typeof x==='string'):[], mainPhotoId:typeof b.mainPhotoId==='string'?b.mainPhotoId:'', createdAt:b.createdAt||Date.now(), updatedAt:b.updatedAt||Date.now()
     };
   });
   const boardIds=new Set(boards.map(b=>b.id));
   if(boardIds.size!==boards.length) throw new Error('Doppelte Board-IDs im Import');
+  const keycapSets=sourceKeycapSets.map(set=>{
+    if(!set || typeof set!=='object') throw new Error('Ungültiger Keycap-Set-Eintrag');
+    if(set.id && !/^[a-zA-Z0-9_-]+$/.test(set.id)) throw new Error('Ungültige Keycap-Set-ID');
+    return {
+      ...emptyKeycapDraft(),
+      id:set.id||uid(),
+      name:trim(set.name),
+      manufacturer:trim(set.manufacturer),
+      profile:trim(set.profile),
+      material:trim(set.material),
+      status:trim(set.status)||'owned',
+      kits:Array.isArray(set.kits)?set.kits.map(trim).filter(Boolean):[],
+      sourceUrl:trim(set.sourceUrl),
+      sourceShop:trim(set.sourceShop),
+      mountedBoardId:trim(set.mountedBoardId),
+      notes:trim(set.notes),
+      photoIds:Array.isArray(set.photoIds)?set.photoIds.filter(x=>typeof x==='string'):[],
+      mainPhotoId:typeof set.mainPhotoId==='string'?set.mainPhotoId:'',
+      coverUrl:trim(set.coverUrl),
+      externalImageUrls:Array.isArray(set.externalImageUrls)?set.externalImageUrls.filter(x=>typeof x==='string'):[],
+      trelloCardId:trim(set.trelloCardId),
+      trelloListName:trim(set.trelloListName),
+      createdAt:set.createdAt||Date.now(),
+      updatedAt:set.updatedAt||Date.now()
+    };
+  });
+  const keycapSetIds=new Set(keycapSets.map(set=>set.id));
+  if(keycapSetIds.size!==keycapSets.length) throw new Error('Doppelte Keycap-Set-IDs im Import');
+  const artisanSets=sourceArtisanSets.map(set=>{
+    if(!set || typeof set!=='object') throw new Error('Ungültiger Artisan-Eintrag');
+    if(set.id && !/^[a-zA-Z0-9_-]+$/.test(set.id)) throw new Error('Ungültige Artisan-ID');
+    return {
+      ...emptyArtisanDraft(),
+      id:set.id||uid(),
+      name:trim(set.name),
+      manufacturer:trim(set.manufacturer),
+      profile:trim(set.profile),
+      material:trim(set.material),
+      status:trim(set.status)||'owned',
+      tags:Array.isArray(set.tags)?set.tags.map(trim).filter(Boolean):[],
+      sourceUrl:trim(set.sourceUrl),
+      sourceShop:trim(set.sourceShop),
+      mountedBoardId:trim(set.mountedBoardId),
+      notes:trim(set.notes),
+      photoIds:Array.isArray(set.photoIds)?set.photoIds.filter(x=>typeof x==='string'):[],
+      mainPhotoId:typeof set.mainPhotoId==='string'?set.mainPhotoId:'',
+      coverUrl:trim(set.coverUrl),
+      externalImageUrls:Array.isArray(set.externalImageUrls)?set.externalImageUrls.filter(x=>typeof x==='string'):[],
+      trelloCardId:trim(set.trelloCardId),
+      trelloListName:trim(set.trelloListName),
+      createdAt:set.createdAt||Date.now(),
+      updatedAt:set.updatedAt||Date.now()
+    };
+  });
+  const artisanSetIds=new Set(artisanSets.map(set=>set.id));
+  if(artisanSetIds.size!==artisanSets.length) throw new Error('Doppelte Artisan-IDs im Import');
+  for(const board of boards){
+    if(board.keycapSetId && !keycapSetIds.has(board.keycapSetId)) board.keycapSetId='';
+  }
+  for(const set of keycapSets){
+    if(set.mountedBoardId && !boardIds.has(set.mountedBoardId)) set.mountedBoardId='';
+  }
+  for(const set of artisanSets){
+    if(set.mountedBoardId && !boardIds.has(set.mountedBoardId)) set.mountedBoardId='';
+  }
   const photos=[];
   for(const p of sourcePhotos){
-    if(!p || typeof p!=='object' || typeof p.id!=='string' || typeof p.boardId!=='string' || typeof p.dataUrl!=='string') throw new Error('Ungültiger Foto-Eintrag');
-    if(!/^[a-zA-Z0-9_-]+$/.test(p.id) || !/^[a-zA-Z0-9_-]+$/.test(p.boardId)) throw new Error('Ungültige Foto-ID');
-    if(!boardIds.has(p.boardId)) throw new Error('Foto ohne zugehöriges Board');
+    if(!p || typeof p!=='object' || typeof p.id!=='string' || typeof p.dataUrl!=='string') throw new Error('Ungültiger Foto-Eintrag');
+    const ownerType=p.ownerType||'board';
+    const ownerId=p.ownerId||p.boardId;
+    if(!['board','keycapSet','artisanSet'].includes(ownerType) || typeof ownerId!=='string') throw new Error('Ungültiger Foto-Besitzer');
+    if(!/^[a-zA-Z0-9_-]+$/.test(p.id) || !/^[a-zA-Z0-9_-]+$/.test(ownerId)) throw new Error('Ungültige Foto-ID');
+    if(ownerType==='board' && !boardIds.has(ownerId)) throw new Error('Foto ohne zugehöriges Board');
+    if(ownerType==='keycapSet' && !keycapSetIds.has(ownerId)) throw new Error('Foto ohne zugehöriges Keycap-Set');
+    if(ownerType==='artisanSet' && !artisanSetIds.has(ownerId)) throw new Error('Foto ohne zugehörigen Artisan');
     const blob=dataUrlToBlob(p.dataUrl);
     if(blob.size>30*1024*1024) throw new Error('Ein Foto überschreitet 30 MB');
     const normalized=await normalizePhoto(new File([blob],trim(p.name)||'importiertes-foto',{type:blob.type}));
-    const common={id:p.id,boardId:p.boardId,name:trim(p.name),type:normalized.blob.type,width:normalized.width,height:normalized.height,addedAt:p.addedAt||Date.now()};
+    const common={id:p.id,boardId:ownerType==='board'?ownerId:'',ownerType,ownerId,name:trim(p.name),type:normalized.blob.type,width:normalized.width,height:normalized.height,addedAt:p.addedAt||Date.now()};
     photos.push({...common,dataUrl:await blobToDataUrl(normalized.blob)});
   }
   const photoIds=new Set(photos.map(p=>p.id));
@@ -2363,12 +4043,20 @@ async function normalizeImport(obj){
     board.photoIds=board.photoIds.filter(id=>photoIds.has(id));
     if(!board.photoIds.includes(board.mainPhotoId)) board.mainPhotoId=board.photoIds[0]||'';
   }
-  return {meta,lists,gallery,boards,photos};
+  for(const set of keycapSets){
+    set.photoIds=set.photoIds.filter(id=>photoIds.has(id));
+    if(!set.photoIds.includes(set.mainPhotoId)) set.mainPhotoId=set.photoIds[0]||'';
+  }
+  for(const set of artisanSets){
+    set.photoIds=set.photoIds.filter(id=>photoIds.has(id));
+    if(!set.photoIds.includes(set.mainPhotoId)) set.mainPhotoId=set.photoIds[0]||'';
+  }
+  return {meta,lists,gallery,boards,keycapSets,artisanSets,photos};
 }
 
 async function replaceAllData(normalized){
   const appValue={meta:normalized.meta,lists:normalized.lists,gallery:normalized.gallery};
-  await window.api.storage.replaceAll({appValue,boards:normalized.boards,photos:normalized.photos});
+  await window.api.storage.replaceAll({appValue,boards:normalized.boards,keycapSets:normalized.keycapSets||[],artisanSets:normalized.artisanSets||[],photos:normalized.photos});
 }
 
 async function importData(){
@@ -2387,7 +4075,7 @@ async function importData(){
     alert('Import nicht möglich: '+(e.message||'Ungültiges Backup'));
     return;
   }
-  const summary=normalized.boards.length+' Boards und '+normalized.photos.length+' Fotos';
+  const summary=normalized.boards.length+' Boards, '+(normalized.keycapSets?.length||0)+' Keycap-Sets, '+(normalized.artisanSets?.length||0)+' Artisans und '+normalized.photos.length+' Fotos';
   if(!confirm('Validiertes Backup mit '+summary+' importieren? Der aktuelle Stand wird ersetzt.')) return;
   try{
     await replaceAllData(normalized);
@@ -2395,12 +4083,15 @@ async function importData(){
     alert('Import fehlgeschlagen. Der bisherige SQLite-Bestand wurde nicht ersetzt.');
     return;
   }
-  state.meta=normalized.meta; state.lists=normalized.lists; state.gallery=normalized.gallery; state.boards=normalized.boards;
+  state.meta=normalized.meta; state.language=state.meta.language === 'en' ? 'en' : 'de'; state.lists=normalized.lists; state.gallery=normalized.gallery; state.boards=normalized.boards; state.keycapSets=normalized.keycapSets||[]; state.artisanSets=normalized.artisanSets||[];
   document.getElementById('updated').textContent = fmtDate(state.meta.updatedAt);
   newDraft();
+  newKeycapDraft();
+  newArtisanDraft();
   renderSelects();
   renderPreview();
   switchTab('ueb');
+  applyLanguage();
   toast((backup.kind==='zip'?'ZIP-Backup':'Altes JSON-Backup')+' importiert: '+summary);
 }
 
@@ -2455,6 +4146,8 @@ async function legacySnapshot(){
       gallery:value.gallery||state.gallery
     },
     boards:boards,
+    keycapSets:[],
+    artisanSets:[],
     photos:migratedPhotos
   };
 }
@@ -2487,17 +4180,24 @@ async function loadAll(){
   const metaRec = await storeGet('meta','app');
   if(metaRec && metaRec.value){
     state.meta = metaRec.value.meta || state.meta;
+    state.language = state.meta.language === 'en' ? 'en' : 'de';
     state.lists = metaRec.value.lists || state.lists;
-    state.lists.keycaps = Array.from(new Set([...(state.lists.keycaps||[]), ...KEYCAP_DEFAULTS]));
-    state.lists.switches = Array.from(new Set([...(state.lists.switches||[]), ...SWITCH_DEFAULTS]));
+    ensureDefaultLists();
     state.gallery = metaRec.value.gallery || state.gallery;
   }else{
     // create default meta
+    ensureDefaultLists();
     await persistMeta();
   }
 
   state.boards = await storeGetAll('boards');
-  const referencedPhotoIds=new Set(state.boards.flatMap(board=>board.photoIds||[]));
+  state.keycapSets = await storeGetAll('keycapSets');
+  state.artisanSets = await storeGetAll('artisanSets');
+  const referencedPhotoIds=new Set([
+    ...state.boards.flatMap(board=>board.photoIds||[]),
+    ...state.keycapSets.flatMap(set=>set.photoIds||[]),
+    ...state.artisanSets.flatMap(set=>set.photoIds||[])
+  ]);
   for(const photo of await storeGetAll('photos')){
     if(!referencedPhotoIds.has(photo.id)) await storeDelete('photos',photo.id);
   }
@@ -2508,13 +4208,18 @@ async function loadAll(){
   document.getElementById('updated').textContent = fmtDate(state.meta.updatedAt);
 
   newDraft();
+  newKeycapDraft();
+  newArtisanDraft();
   renderSelects();
   renderPreview();
+  renderEntityPanels('erf');
+  applyLanguage();
 }
 
 function wireStatic(){
   document.title='Keyboard Manager – '+VERSION;
   document.getElementById('ver').textContent=VERSION;
+  initLanguageObserver();
   document.getElementById('btnNew').addEventListener('click', async ()=>{
     if(!hasDesktopApi()) return;
     if(!await startNewDraft()) return;
@@ -2526,17 +4231,64 @@ function wireStatic(){
   document.getElementById('btnCancel').addEventListener('click', ()=>{ if(hasDesktopApi()) cancelEditing(); });
   document.getElementById('btnExport').addEventListener('click', ()=>{ if(hasDesktopApi()) exportData(); });
   document.getElementById('btnImport').addEventListener('click', ()=>{ if(hasDesktopApi()) importData(); });
+  document.getElementById('btnLanguage').addEventListener('click', ()=>{ setLanguage(currentLanguage()==='en'?'de':'en'); });
   const tbtn=document.getElementById('btnTheme');
   if(tbtn) tbtn.addEventListener('click', toggleTheme);
   document.getElementById('btnAddPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('filePhotos').click(); });
   document.getElementById('filePhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addPhotos(e.target.files); e.target.value=''; });
+  document.getElementById('btnNewKeycap').addEventListener('click', async ()=>{
+    if(!hasDesktopApi()) return;
+    if(keycapDraftIsDirty() && !confirm('Ungespeicherte Keycap-Änderungen verwerfen?')) return;
+    await discardKeycapDraftChanges();
+    newKeycapDraft();
+    document.getElementById('kc_name').focus();
+  });
+  document.getElementById('btnSaveKeycap').addEventListener('click', ()=>{ if(hasDesktopApi()) saveKeycapDraft(); });
+  document.getElementById('btnCancelKeycap').addEventListener('click', async ()=>{
+    if(!hasDesktopApi()) return;
+    if(keycapDraftIsDirty() && !confirm('Ungespeicherte Keycap-Änderungen verwerfen?')) return;
+    await discardKeycapDraftChanges();
+    newKeycapDraft();
+  });
+  document.getElementById('btnAddKeycapPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('fileKeycapPhotos').click(); });
+  document.getElementById('fileKeycapPhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addKeycapPhotos(e.target.files); e.target.value=''; });
+  document.getElementById('btnNewArtisan').addEventListener('click', async ()=>{
+    if(!hasDesktopApi()) return;
+    if(artisanDraftIsDirty() && !confirm('Ungespeicherte Artisan-Änderungen verwerfen?')) return;
+    await discardArtisanDraftChanges();
+    newArtisanDraft();
+    document.getElementById('art_name').focus();
+  });
+  document.getElementById('btnSaveArtisan').addEventListener('click', ()=>{ if(hasDesktopApi()) saveArtisanDraft(); });
+  document.getElementById('btnCancelArtisan').addEventListener('click', async ()=>{
+    if(!hasDesktopApi()) return;
+    if(artisanDraftIsDirty() && !confirm('Ungespeicherte Artisan-Änderungen verwerfen?')) return;
+    await discardArtisanDraftChanges();
+    newArtisanDraft();
+  });
+  document.getElementById('btnAddArtisanPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('fileArtisanPhotos').click(); });
+  document.getElementById('fileArtisanPhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addArtisanPhotos(e.target.files); e.target.value=''; });
 
   document.getElementById('sideErf')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('erf'); });
   document.getElementById('sideUeb')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('ueb'); });
   document.getElementById('sideGal')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('gal'); });
 
+  document.getElementById('btnErfBoards').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('erf','boards'); });
+  document.getElementById('btnErfKeycaps').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('erf','keycaps'); });
+  document.getElementById('btnErfArtisans').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('erf','artisans'); });
+  document.getElementById('btnOverviewBoards').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('ueb','boards'); });
+  document.getElementById('btnOverviewKeycaps').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('ueb','keycaps'); });
+  document.getElementById('btnOverviewArtisans').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('ueb','artisans'); });
+  document.getElementById('btnGalleryBoards').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('gal','boards'); });
+  document.getElementById('btnGalleryKeycaps').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('gal','keycaps'); });
+  document.getElementById('btnGalleryArtisans').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('gal','artisans'); });
+
   document.getElementById('btnResetOverviewFilters').addEventListener('click', ()=>{ state.filters={q:'',man:'',format:'',sort:'format_asc'}; renderOverview(); });
   document.getElementById('btnResetFilters').addEventListener('click', ()=>{ state.filters={q:'',man:'',format:'',sort:'format_asc'}; renderGallery(); });
+  document.getElementById('btnResetKeycapFilters').addEventListener('click', ()=>{ state.keycapFilters={q:'',manufacturer:'',profile:'',status:'',sort:'manufacturer_asc'}; renderKeycaps(); });
+  document.getElementById('btnResetKeycapGalleryFilters').addEventListener('click', ()=>{ state.keycapFilters={q:'',manufacturer:'',profile:'',status:'',sort:'manufacturer_asc'}; renderKeycapGallery(); });
+  document.getElementById('btnResetArtisanFilters').addEventListener('click', ()=>{ state.artisanFilters={q:'',manufacturer:'',profile:'',status:'',sort:'manufacturer_asc'}; renderArtisans(); });
+  document.getElementById('btnResetArtisanGalleryFilters').addEventListener('click', ()=>{ state.artisanFilters={q:'',manufacturer:'',profile:'',status:'',sort:'manufacturer_asc'}; renderArtisanGallery(); });
 
 
   // Spotlight Buttons
@@ -2562,7 +4314,7 @@ function wireStatic(){
     if(e.key==='ArrowRight') spotStep(1);
   });
   window.addEventListener('beforeunload', e=>{
-    if(!draftIsDirty()) return;
+    if(!draftIsDirty() && !keycapDraftIsDirty() && !artisanDraftIsDirty()) return;
     e.preventDefault();
     e.returnValue='';
   });
@@ -2583,12 +4335,56 @@ function openSpotlight(boardId){
   const b=state.boards.find(x=>x.id===boardId);
   if(!b) return;
   state.spotlight.open=true;
+  state.spotlight.kind='board';
   state.spotlight.previousFocus=document.activeElement;
   state.spotlight.boardId=boardId;
+  state.spotlight.keycapSetId='';
+  state.spotlight.artisanSetId='';
   state.spotlight.photoIds = Array.isArray(b.photoIds)?b.photoIds:[];
+  state.spotlight.images=[];
   state.spotlight.index = 0;
 
   document.getElementById('spotTitle').textContent = 'Spotlight: '+b.name;
+  document.getElementById('spotBack').classList.add('open');
+  document.getElementById('spotBack').setAttribute('aria-hidden','false');
+  renderSpotlight();
+  document.getElementById('spotClose').focus();
+}
+
+function openKeycapSpotlight(setId){
+  const set=state.keycapSets.find(x=>x.id===setId);
+  if(!set) return;
+  state.spotlight.open=true;
+  state.spotlight.kind='keycapSet';
+  state.spotlight.previousFocus=document.activeElement;
+  state.spotlight.boardId='';
+  state.spotlight.keycapSetId=setId;
+  state.spotlight.artisanSetId='';
+  state.spotlight.photoIds=[];
+  state.spotlight.images=[];
+  state.spotlight.index=0;
+
+  document.getElementById('spotTitle').textContent = 'Spotlight: '+set.name;
+  document.getElementById('spotBack').classList.add('open');
+  document.getElementById('spotBack').setAttribute('aria-hidden','false');
+  renderSpotlight();
+  document.getElementById('spotClose').focus();
+}
+
+function openArtisanSpotlight(setId){
+  const set=state.artisanSets.find(x=>x.id===setId);
+  if(!set) return;
+  state.spotlight.open=true;
+  state.spotlight.kind='artisanSet';
+  state.spotlight.previousFocus=document.activeElement;
+  state.spotlight.boardId='';
+  state.spotlight.keycapSetId='';
+  state.spotlight.artisanSetId=setId;
+  state.spotlight.photoIds=[];
+  state.spotlight.images=[];
+  state.spotlight.index=0;
+
+  document.getElementById('spotTitle').textContent = 'Spotlight: '+set.name;
   document.getElementById('spotBack').classList.add('open');
   document.getElementById('spotBack').setAttribute('aria-hidden','false');
   renderSpotlight();
@@ -2601,6 +4397,10 @@ function closeSpotlight(){
   state.spotlight.renderId++;
   revokeSpotlightUrls();
   state.spotlight.open=false;
+  state.spotlight.kind='board';
+  state.spotlight.keycapSetId='';
+  state.spotlight.artisanSetId='';
+  state.spotlight.images=[];
   document.getElementById('spotBack').classList.remove('open');
   document.getElementById('spotBack').setAttribute('aria-hidden','true');
   if(state.spotlight.previousFocus?.focus) state.spotlight.previousFocus.focus();
@@ -2620,7 +4420,7 @@ async function largePhotoSrc(pid){
 }
 
 async function openLargePhoto(){
-  if(!state.spotlight.photoIds.length) return;
+  if(currentSpotlightImageCount() < 1) return;
   state.largePhoto.open=true;
   state.largePhoto.previousFocus=document.activeElement;
   document.getElementById('largeBack').classList.add('open');
@@ -2644,24 +4444,32 @@ async function closeLargePhoto(){
 
 async function renderLargePhoto(){
   if(state.largePhoto.url?.startsWith('blob:')) URL.revokeObjectURL(state.largePhoto.url);
-  const ids=state.spotlight.photoIds;
-  state.spotlight.index=Math.max(0,Math.min(state.spotlight.index,ids.length-1));
-  const photo=await largePhotoSrc(ids[state.spotlight.index]);
+  const count=currentSpotlightImageCount();
+  state.spotlight.index=Math.max(0,Math.min(state.spotlight.index,count-1));
+  const photo=['keycapSet','artisanSet'].includes(state.spotlight.kind)
+    ? (state.spotlight.images[state.spotlight.index] || {src:'', name:''})
+    : await largePhotoSrc(state.spotlight.photoIds[state.spotlight.index]);
   state.largePhoto.url=photo.src;
   const image=document.getElementById('largeImage');
   image.src=photo.src;
   image.alt=photo.name||'Großansicht des Fotos';
-  document.getElementById('largeMeta').textContent=(state.spotlight.index+1)+' / '+ids.length+(photo.name?' • '+photo.name:'');
+  document.getElementById('largeMeta').textContent=(state.spotlight.index+1)+' / '+count+(photo.name?' • '+photo.name:'');
   document.getElementById('largePrev').disabled=state.spotlight.index<=0;
-  document.getElementById('largeNext').disabled=state.spotlight.index>=ids.length-1;
+  document.getElementById('largeNext').disabled=state.spotlight.index>=count-1;
 }
 
 function largeStep(dir){
   if(!state.largePhoto.open) return;
   const next=state.spotlight.index+dir;
-  if(next<0||next>=state.spotlight.photoIds.length) return;
+  if(next<0||next>=currentSpotlightImageCount()) return;
   state.spotlight.index=next;
   renderLargePhoto();
+}
+
+function currentSpotlightImageCount(){
+  return ['keycapSet','artisanSet'].includes(state.spotlight.kind)
+    ? (state.spotlight.images||[]).length
+    : (state.spotlight.photoIds||[]).length;
 }
 
 function attrRow(label, value){
@@ -2669,7 +4477,183 @@ function attrRow(label, value){
   return '<div class=\"attrRow\"><span class=\"k\">'+esc(label)+'</span><span class=\"v\">'+v+'</span></div>';
 }
 
+async function renderKeycapSpotlight(){
+  const body=document.getElementById('spotBody');
+  const foot=document.getElementById('spotFoot');
+  const renderId=++state.spotlight.renderId;
+  const setId=state.spotlight.keycapSetId;
+  const set=state.keycapSets.find(x=>x.id===setId);
+
+  body.innerHTML='<div class="spotLoading">Spotlight wird geladen…</div>';
+  foot.innerHTML='<div class="muted small">Keycap-Set: <b style="color:var(--txt)">'+esc(set?.name||'')+'</b></div>';
+  document.getElementById('spotTitle').textContent='Spotlight: '+(set?.name||'Keycap-Set');
+
+  if(!set){
+    body.innerHTML='<div class="card pad">Keycap-Set nicht gefunden.</div>';
+    return;
+  }
+
+  const images=await keycapImageSources(set);
+  if(renderId!==state.spotlight.renderId || setId!==state.spotlight.keycapSetId) return;
+  state.spotlight.images=images;
+  if(state.spotlight.index<0) state.spotlight.index=0;
+  if(state.spotlight.index>images.length-1) state.spotlight.index=Math.max(0,images.length-1);
+  const current=images[state.spotlight.index] || null;
+
+  body.innerHTML='';
+  const grid=document.createElement('div');
+  grid.className='spotGrid';
+
+  const left=document.createElement('div');
+  left.className='spotMain';
+  left.innerHTML='<div class="frame" role="button" tabindex="0" aria-label="Keycap-Foto in Großansicht öffnen" title="Foto groß ansehen">'+(current?.src?('<img src="'+current.src+'" alt="'+esc(current.name||set.name)+'">'):'<span class="muted">Kein Foto</span>')+'</div>';
+  const frame=left.querySelector('.frame');
+  frame.addEventListener('click', ()=>{ if(images.length) openLargePhoto(); });
+  frame.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && images.length){e.preventDefault();openLargePhoto();} });
+
+  const right=document.createElement('div');
+  right.className='card pad';
+  const kits=(set.kits||[]).length
+    ? '<div class="gmeta">'+(set.kits||[]).map(kit=>'<span class="pill">'+esc(kit)+'</span>').join('')+'</div>'
+    : '<div class="muted small">Keine Kits erfasst.</div>';
+  right.innerHTML='<div style="font-weight:900">Bilder</div>'+
+    '<div class="muted small" style="margin-top:6px">'+(images.length?(state.spotlight.index+1)+' / '+images.length:'Keine Bilder')+'</div>'+
+    '<div class="thumbRow" style="margin-top:12px" id="thumbRow"></div>'+
+    '<div style="margin-top:14px;font-weight:900">Attribute</div>'+
+    '<div class="attrList">'+
+      attrRow('Hersteller', set.manufacturer)+
+      attrRow('Profil', set.profile)+
+      attrRow('Material', set.material)+
+      attrRow('Status', set.status)+
+      attrRow('Board', boardName(set.mountedBoardId))+
+      attrRow('Quelle', set.sourceShop)+
+    '</div>'+
+    '<div style="margin-top:14px;font-weight:900">Kits</div>'+
+    '<div style="margin-top:8px">'+kits+'</div>'+
+    '<div style="margin-top:12px"><div class="muted small" style="margin-bottom:6px">Notizen</div><div class="card pad" style="background:rgba(0,0,0,.12);white-space:pre-wrap">'+esc(set.notes||'—')+'</div></div>';
+
+  grid.appendChild(left);
+  grid.appendChild(right);
+  body.appendChild(grid);
+
+  const tr=right.querySelector('#thumbRow');
+  for(let i=0;i<images.length;i++){
+    const image=images[i];
+    const mini=document.createElement('div');
+    mini.className='tmini'+(i===state.spotlight.index?' active':'');
+    mini.tabIndex=0;
+    mini.setAttribute('role','button');
+    mini.setAttribute('aria-label','Bild '+(i+1)+' anzeigen');
+    mini.innerHTML='<img src="'+image.src+'" alt="'+esc(image.name||set.name)+'">';
+    mini.addEventListener('click', ()=>{ state.spotlight.index=i; renderSpotlight(); });
+    mini.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();state.spotlight.index=i;renderSpotlight();} });
+    tr.appendChild(mini);
+  }
+
+  foot.innerHTML='<div class="muted small">Keycap-Set: <b style="color:var(--txt)">'+esc(set.name||'')+'</b> • Bilder: '+images.length+' • Geändert: '+fmtDateOnly(set.updatedAt||set.createdAt)+'</div>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button id="spotLarge">Groß ansehen</button>'+
+      '<button id="spotEdit">Bearbeiten</button>'+
+      '<button class="danger" id="spotDel">Löschen</button>'+
+    '</div>';
+  document.getElementById('spotLarge').disabled=!images.length;
+  document.getElementById('spotLarge').onclick=openLargePhoto;
+  document.getElementById('spotEdit').onclick=()=>{ closeSpotlight(); editKeycapSet(set.id); };
+  document.getElementById('spotDel').onclick=()=>deleteKeycapSet(set.id);
+  document.getElementById('spotPrev').disabled=state.spotlight.index<=0;
+  document.getElementById('spotNext').disabled=state.spotlight.index>=images.length-1;
+}
+
+async function renderArtisanSpotlight(){
+  const body=document.getElementById('spotBody');
+  const foot=document.getElementById('spotFoot');
+  const renderId=++state.spotlight.renderId;
+  const setId=state.spotlight.artisanSetId;
+  const set=state.artisanSets.find(x=>x.id===setId);
+
+  body.innerHTML='<div class="spotLoading">Spotlight wird geladen…</div>';
+  foot.innerHTML='<div class="muted small">Artisan: <b style="color:var(--txt)">'+esc(set?.name||'')+'</b></div>';
+  document.getElementById('spotTitle').textContent='Spotlight: '+(set?.name||'Artisan');
+
+  if(!set){
+    body.innerHTML='<div class="card pad">Artisan nicht gefunden.</div>';
+    return;
+  }
+
+  const images=await artisanImageSources(set);
+  if(renderId!==state.spotlight.renderId || setId!==state.spotlight.artisanSetId) return;
+  state.spotlight.images=images;
+  if(state.spotlight.index<0) state.spotlight.index=0;
+  if(state.spotlight.index>images.length-1) state.spotlight.index=Math.max(0,images.length-1);
+  const current=images[state.spotlight.index] || null;
+
+  body.innerHTML='';
+  const grid=document.createElement('div');
+  grid.className='spotGrid';
+
+  const left=document.createElement('div');
+  left.className='spotMain';
+  left.innerHTML='<div class="frame" role="button" tabindex="0" aria-label="Artisan-Foto in Großansicht öffnen" title="Foto groß ansehen">'+(current?.src?('<img src="'+current.src+'" alt="'+esc(current.name||set.name)+'">'):'<span class="muted">Kein Foto</span>')+'</div>';
+  const frame=left.querySelector('.frame');
+  frame.addEventListener('click', ()=>{ if(images.length) openLargePhoto(); });
+  frame.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && images.length){e.preventDefault();openLargePhoto();} });
+
+  const right=document.createElement('div');
+  right.className='card pad';
+  const tags=(set.tags||[]).length
+    ? '<div class="gmeta">'+(set.tags||[]).map(tag=>'<span class="pill">'+esc(tag)+'</span>').join('')+'</div>'
+    : '<div class="muted small">Keine Tags erfasst.</div>';
+  right.innerHTML='<div style="font-weight:900">Bilder</div>'+
+    '<div class="muted small" style="margin-top:6px">'+(images.length?(state.spotlight.index+1)+' / '+images.length:'Keine Bilder')+'</div>'+
+    '<div class="thumbRow" style="margin-top:12px" id="thumbRow"></div>'+
+    '<div style="margin-top:14px;font-weight:900">Attribute</div>'+
+    '<div class="attrList">'+
+      attrRow('Hersteller', set.manufacturer)+
+      attrRow('Profil', set.profile)+
+      attrRow('Material', set.material)+
+      attrRow('Status', set.status)+
+      attrRow('Board', boardName(set.mountedBoardId))+
+      attrRow('Quelle', set.sourceShop)+
+    '</div>'+
+    '<div style="margin-top:14px;font-weight:900">Tags</div>'+
+    '<div style="margin-top:8px">'+tags+'</div>'+
+    '<div style="margin-top:12px"><div class="muted small" style="margin-bottom:6px">Notizen</div><div class="card pad" style="background:rgba(0,0,0,.12);white-space:pre-wrap">'+esc(set.notes||'—')+'</div></div>';
+
+  grid.appendChild(left);
+  grid.appendChild(right);
+  body.appendChild(grid);
+
+  const tr=right.querySelector('#thumbRow');
+  for(let i=0;i<images.length;i++){
+    const image=images[i];
+    const mini=document.createElement('div');
+    mini.className='tmini'+(i===state.spotlight.index?' active':'');
+    mini.tabIndex=0;
+    mini.setAttribute('role','button');
+    mini.setAttribute('aria-label','Bild '+(i+1)+' anzeigen');
+    mini.innerHTML='<img src="'+image.src+'" alt="'+esc(image.name||set.name)+'">';
+    mini.addEventListener('click', ()=>{ state.spotlight.index=i; renderSpotlight(); });
+    mini.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();state.spotlight.index=i;renderSpotlight();} });
+    tr.appendChild(mini);
+  }
+
+  foot.innerHTML='<div class="muted small">Artisan: <b style="color:var(--txt)">'+esc(set.name||'')+'</b> • Bilder: '+images.length+' • Geändert: '+fmtDateOnly(set.updatedAt||set.createdAt)+'</div>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button id="spotLarge">Groß ansehen</button>'+
+      '<button id="spotEdit">Bearbeiten</button>'+
+      '<button class="danger" id="spotDel">Löschen</button>'+
+    '</div>';
+  document.getElementById('spotLarge').disabled=!images.length;
+  document.getElementById('spotLarge').onclick=openLargePhoto;
+  document.getElementById('spotEdit').onclick=()=>{ closeSpotlight(); editArtisanSet(set.id); };
+  document.getElementById('spotDel').onclick=()=>deleteArtisanSet(set.id);
+  document.getElementById('spotPrev').disabled=state.spotlight.index<=0;
+  document.getElementById('spotNext').disabled=state.spotlight.index>=images.length-1;
+}
+
 async function renderSpotlight(){
+  if(state.spotlight.kind==='keycapSet') return renderKeycapSpotlight();
+  if(state.spotlight.kind==='artisanSet') return renderArtisanSpotlight();
   const body=document.getElementById('spotBody');
   const foot=document.getElementById('spotFoot');
   const renderId=++state.spotlight.renderId;
@@ -2688,7 +4672,7 @@ async function renderSpotlight(){
     body.innerHTML = '<div class=\"grid\" style=\"grid-template-columns:1fr;gap:12px\">'+
       '<div class=\"card pad\">Keine Fotos für dieses Board.</div>'+
       '<div class=\"card pad\"><div style=\"font-weight:900\">Attribute</div><div class=\"attrList\">'+
-        attrRow('Hersteller', b?.manufacturer)+attrRow('Format', b?.format)+attrRow('PCB', b?.pcb)+attrRow('Plate', b?.plate)+attrRow('Stabs', b?.stabs)+attrRow('Switches', b?.switches)+attrRow('Keycaps', b?.keycaps)+
+        attrRow('Hersteller', b?.manufacturer)+attrRow('Format', b?.format)+attrRow('PCB', b?.pcb)+attrRow('Plate', b?.plate)+attrRow('Stabs', b?.stabs)+attrRow('Switches', b?.switches)+attrRow('Keycaps', b?displayBoardKeycaps(b):'')+
       '</div><div style=\"margin-top:12px\"><div class=\"muted small\" style=\"margin-bottom:6px\">Bemerkung</div><div class=\"card pad\">'+esc(b?.remark||'—')+'</div></div></div></div>';
     foot.innerHTML = '<div class=\"muted small\">Board: <b style=\"color:var(--txt)\">'+esc(b?.name||'')+'</b></div>'+
       '<div style=\"display:flex;gap:8px\"><button id=\"spotEdit\">Bearbeiten</button><button class=\"danger\" id=\"spotDel\">Löschen</button></div>';
@@ -2730,7 +4714,7 @@ async function renderSpotlight(){
       attrRow('Plate', b?.plate)+
       attrRow('Stabs', b?.stabs)+
       attrRow('Switches', b?.switches)+
-      attrRow('Keycaps', b?.keycaps)+
+      attrRow('Keycaps', b?displayBoardKeycaps(b):'')+
     '</div>' +
     '<div style=\"margin-top:12px\"><div class=\"muted small\" style=\"margin-bottom:6px\">Bemerkung</div><div class=\"card pad\" style=\"background:rgba(0,0,0,.12);white-space:pre-wrap\">'+esc((b?.remark||'—'))+'</div></div>';
 
@@ -2780,7 +4764,9 @@ async function renderSpotlight(){
 
 function spotStep(dir){
   if(!state.spotlight.open) return;
-  state.spotlight.index += dir;
+  const next=state.spotlight.index + dir;
+  if(next<0 || next>=currentSpotlightImageCount()) return;
+  state.spotlight.index = next;
   renderSpotlight();
 }
 

@@ -20,6 +20,14 @@ function validateId(id) {
   return id;
 }
 
+function photoOwner(photo) {
+  const ownerType = photo.ownerType || 'board';
+  const ownerId = photo.ownerId || photo.boardId;
+  if (!['board', 'keycapSet', 'artisanSet'].includes(ownerType)) throw new Error('Invalid photo owner type');
+  validateId(ownerId);
+  return { ownerType, ownerId, boardId: ownerType === 'board' ? ownerId : (photo.boardId || '') };
+}
+
 function createStorage(userDataPath) {
   const databasePath = path.join(userDataPath, 'keyboard-manager.sqlite');
   const photoDirectory = path.join(userDataPath, 'photos');
@@ -40,9 +48,19 @@ function createStorage(userDataPath) {
         id TEXT PRIMARY KEY,
         board_json TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS keycap_sets (
+        id TEXT PRIMARY KEY,
+        keycap_set_json TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS artisan_sets (
+        id TEXT PRIMARY KEY,
+        artisan_set_json TEXT NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS photos (
         id TEXT PRIMARY KEY,
         board_id TEXT NOT NULL,
+        owner_type TEXT NOT NULL DEFAULT 'board',
+        owner_id TEXT,
         name TEXT NOT NULL,
         type TEXT NOT NULL,
         width INTEGER,
@@ -52,6 +70,16 @@ function createStorage(userDataPath) {
       );
       CREATE INDEX IF NOT EXISTS photos_board_id ON photos(board_id);
     `);
+    const photoColumns = db.prepare('PRAGMA table_info(photos)').all().map(row => row.name);
+    if (!photoColumns.includes('owner_type')) {
+      db.prepare("ALTER TABLE photos ADD COLUMN owner_type TEXT NOT NULL DEFAULT 'board'").run();
+    }
+    if (!photoColumns.includes('owner_id')) {
+      db.prepare('ALTER TABLE photos ADD COLUMN owner_id TEXT').run();
+    }
+    db.prepare("UPDATE photos SET owner_type = 'board' WHERE owner_type IS NULL OR owner_type = ''").run();
+    db.prepare("UPDATE photos SET owner_id = board_id WHERE owner_id IS NULL OR owner_id = ''").run();
+    db.prepare('CREATE INDEX IF NOT EXISTS photos_owner ON photos(owner_type, owner_id)').run();
     return { mode: 'SQLite + Fotoordner', databasePath, photoDirectory };
   }
 
@@ -69,6 +97,16 @@ function createStorage(userDataPath) {
     return row ? JSON.parse(row.board_json) : null;
   }
 
+  function getKeycapSet(id) {
+    const row = db.prepare('SELECT keycap_set_json FROM keycap_sets WHERE id = ?').get(id);
+    return row ? JSON.parse(row.keycap_set_json) : null;
+  }
+
+  function getArtisanSet(id) {
+    const row = db.prepare('SELECT artisan_set_json FROM artisan_sets WHERE id = ?').get(id);
+    return row ? JSON.parse(row.artisan_set_json) : null;
+  }
+
   async function getPhoto(id) {
     const row = db.prepare('SELECT * FROM photos WHERE id = ?').get(id);
     if (!row) return null;
@@ -76,6 +114,8 @@ function createStorage(userDataPath) {
     return {
       id: row.id,
       boardId: row.board_id,
+      ownerType: row.owner_type || 'board',
+      ownerId: row.owner_id || row.board_id,
       name: row.name,
       type: row.type,
       width: row.width,
@@ -89,28 +129,33 @@ function createStorage(userDataPath) {
     ensureReady();
     if (store === 'meta') return getMeta(key);
     if (store === 'boards') return getBoard(key);
+    if (store === 'keycapSets') return getKeycapSet(key);
+    if (store === 'artisanSets') return getArtisanSet(key);
     if (store === 'photos') return getPhoto(key);
     return null;
   }
 
   async function putPhoto(photo) {
     validateId(photo.id);
-    validateId(photo.boardId);
+    const owner = photoOwner(photo);
     const parsed = parseDataUrl(photo.dataUrl);
     if (parsed.buffer.length > 30 * 1024 * 1024) throw new Error('Photo exceeds 30 MB');
     const fileName = `${photo.id}${MIME_EXTENSIONS[parsed.type]}`;
     const old = db.prepare('SELECT file_name FROM photos WHERE id = ?').get(photo.id);
     await fs.writeFile(path.join(photoDirectory, fileName), parsed.buffer);
     db.prepare(`
-      INSERT INTO photos (id, board_id, name, type, width, height, added_at, file_name)
-      VALUES (@id, @boardId, @name, @type, @width, @height, @addedAt, @fileName)
+      INSERT INTO photos (id, board_id, owner_type, owner_id, name, type, width, height, added_at, file_name)
+      VALUES (@id, @boardId, @ownerType, @ownerId, @name, @type, @width, @height, @addedAt, @fileName)
       ON CONFLICT(id) DO UPDATE SET
-        board_id=excluded.board_id, name=excluded.name, type=excluded.type,
+        board_id=excluded.board_id, owner_type=excluded.owner_type, owner_id=excluded.owner_id,
+        name=excluded.name, type=excluded.type,
         width=excluded.width, height=excluded.height, added_at=excluded.added_at,
         file_name=excluded.file_name
     `).run({
       id: photo.id,
-      boardId: photo.boardId,
+      boardId: owner.boardId,
+      ownerType: owner.ownerType,
+      ownerId: owner.ownerId,
       name: photo.name || '',
       type: parsed.type,
       width: photo.width || null,
@@ -137,6 +182,18 @@ function createStorage(userDataPath) {
         .run(value.id, JSON.stringify(value));
       return value.id;
     }
+    if (store === 'keycapSets') {
+      validateId(value.id);
+      db.prepare('INSERT INTO keycap_sets (id, keycap_set_json) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET keycap_set_json=excluded.keycap_set_json')
+        .run(value.id, JSON.stringify(value));
+      return value.id;
+    }
+    if (store === 'artisanSets') {
+      validateId(value.id);
+      db.prepare('INSERT INTO artisan_sets (id, artisan_set_json) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET artisan_set_json=excluded.artisan_set_json')
+        .run(value.id, JSON.stringify(value));
+      return value.id;
+    }
     if (store === 'photos') return putPhoto(value);
     throw new Error('Unknown store');
   }
@@ -145,6 +202,8 @@ function createStorage(userDataPath) {
     ensureReady();
     if (store === 'meta') return db.prepare('DELETE FROM app_meta WHERE key = ?').run(key).changes;
     if (store === 'boards') return db.prepare('DELETE FROM boards WHERE id = ?').run(key).changes;
+    if (store === 'keycapSets') return db.prepare('DELETE FROM keycap_sets WHERE id = ?').run(key).changes;
+    if (store === 'artisanSets') return db.prepare('DELETE FROM artisan_sets WHERE id = ?').run(key).changes;
     if (store === 'photos') {
       const row = db.prepare('SELECT file_name FROM photos WHERE id = ?').get(key);
       db.prepare('DELETE FROM photos WHERE id = ?').run(key);
@@ -157,6 +216,8 @@ function createStorage(userDataPath) {
   async function all(store) {
     ensureReady();
     if (store === 'boards') return db.prepare('SELECT board_json FROM boards').all().map(row => JSON.parse(row.board_json));
+    if (store === 'keycapSets') return db.prepare('SELECT keycap_set_json FROM keycap_sets').all().map(row => JSON.parse(row.keycap_set_json));
+    if (store === 'artisanSets') return db.prepare('SELECT artisan_set_json FROM artisan_sets').all().map(row => JSON.parse(row.artisan_set_json));
     if (store === 'photos') {
       const rows = db.prepare('SELECT id FROM photos').all();
       return Promise.all(rows.map(row => getPhoto(row.id)));
@@ -166,19 +227,27 @@ function createStorage(userDataPath) {
 
   async function photosByBoard(boardId) {
     ensureReady();
-    const rows = db.prepare('SELECT id FROM photos WHERE board_id = ?').all(boardId);
+    const rows = db.prepare("SELECT id FROM photos WHERE owner_type = 'board' AND owner_id = ?").all(boardId);
     return Promise.all(rows.map(row => getPhoto(row.id)));
   }
 
-  async function replaceAllInternal(appValue, boards, photos) {
+  async function photosByOwner(ownerType, ownerId) {
+    ensureReady();
+    if (!['board', 'keycapSet', 'artisanSet'].includes(ownerType)) throw new Error('Invalid photo owner type');
+    validateId(ownerId);
+    const rows = db.prepare('SELECT id FROM photos WHERE owner_type = ? AND owner_id = ?').all(ownerType, ownerId);
+    return Promise.all(rows.map(row => getPhoto(row.id)));
+  }
+
+  async function replaceAllInternal(appValue, boards, photos, keycapSets = [], artisanSets = []) {
     ensureReady();
     const incoming = [];
     for (const photo of photos) {
       validateId(photo.id);
-      validateId(photo.boardId);
+      const owner = photoOwner(photo);
       const parsed = parseDataUrl(photo.dataUrl);
       if (parsed.buffer.length > 30 * 1024 * 1024) throw new Error('Photo exceeds 30 MB');
-      incoming.push({ photo, parsed, fileName: `${photo.id}${MIME_EXTENSIONS[parsed.type]}` });
+      incoming.push({ photo, owner, parsed, fileName: `${photo.id}${MIME_EXTENSIONS[parsed.type]}` });
     }
 
     const suffix = Date.now();
@@ -196,6 +265,8 @@ function createStorage(userDataPath) {
       db.transaction(() => {
         db.prepare('DELETE FROM photos').run();
         db.prepare('DELETE FROM boards').run();
+        db.prepare('DELETE FROM keycap_sets').run();
+        db.prepare('DELETE FROM artisan_sets').run();
         db.prepare('DELETE FROM app_meta').run();
         db.prepare('INSERT INTO app_meta (key, value_json) VALUES (?, ?)').run('app', JSON.stringify(appValue));
         const boardStmt = db.prepare('INSERT INTO boards (id, board_json) VALUES (?, ?)');
@@ -203,9 +274,19 @@ function createStorage(userDataPath) {
           validateId(board.id);
           boardStmt.run(board.id, JSON.stringify(board));
         }
-        const photoStmt = db.prepare('INSERT INTO photos (id, board_id, name, type, width, height, added_at, file_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-        for (const { photo, parsed, fileName } of incoming) {
-          photoStmt.run(photo.id, photo.boardId, photo.name || '', parsed.type, photo.width || null, photo.height || null, photo.addedAt || Date.now(), fileName);
+        const keycapStmt = db.prepare('INSERT INTO keycap_sets (id, keycap_set_json) VALUES (?, ?)');
+        for (const keycapSet of keycapSets) {
+          validateId(keycapSet.id);
+          keycapStmt.run(keycapSet.id, JSON.stringify(keycapSet));
+        }
+        const artisanStmt = db.prepare('INSERT INTO artisan_sets (id, artisan_set_json) VALUES (?, ?)');
+        for (const artisanSet of artisanSets) {
+          validateId(artisanSet.id);
+          artisanStmt.run(artisanSet.id, JSON.stringify(artisanSet));
+        }
+        const photoStmt = db.prepare('INSERT INTO photos (id, board_id, owner_type, owner_id, name, type, width, height, added_at, file_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        for (const { photo, owner, parsed, fileName } of incoming) {
+          photoStmt.run(photo.id, owner.boardId, owner.ownerType, owner.ownerId, photo.name || '', parsed.type, photo.width || null, photo.height || null, photo.addedAt || Date.now(), fileName);
         }
       })();
       databaseCommitted = true;
@@ -220,8 +301,8 @@ function createStorage(userDataPath) {
     }
   }
 
-  function replaceAll(appValue, boards, photos) {
-    const operation = replaceQueue.then(() => replaceAllInternal(appValue, boards, photos));
+  function replaceAll(appValue, boards, photos, keycapSets = [], artisanSets = []) {
+    const operation = replaceQueue.then(() => replaceAllInternal(appValue, boards, photos, keycapSets, artisanSets));
     replaceQueue = operation.catch(() => {});
     return operation;
   }
@@ -230,6 +311,8 @@ function createStorage(userDataPath) {
     ensureReady();
     return {
       boards: db.prepare('SELECT COUNT(*) AS count FROM boards').get().count,
+      keycapSets: db.prepare('SELECT COUNT(*) AS count FROM keycap_sets').get().count,
+      artisanSets: db.prepare('SELECT COUNT(*) AS count FROM artisan_sets').get().count,
       photos: db.prepare('SELECT COUNT(*) AS count FROM photos').get().count,
       hasMeta: Boolean(db.prepare('SELECT 1 FROM app_meta WHERE key = ?').get('app'))
     };
@@ -240,7 +323,7 @@ function createStorage(userDataPath) {
     db = null;
   }
 
-  return { initialize, get, put, remove, all, photosByBoard, replaceAll, counts, close };
+  return { initialize, get, put, remove, all, photosByBoard, photosByOwner, replaceAll, counts, close };
 }
 
 module.exports = { createStorage };
