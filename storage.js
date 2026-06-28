@@ -8,6 +8,15 @@ const MIME_EXTENSIONS = {
   'image/webp': '.webp',
   'image/gif': '.gif'
 };
+const MAX_PHOTO_SIZE = 30 * 1024 * 1024;
+const MAX_BACKUP_SIZE = 500 * 1024 * 1024;
+const MAX_ITEMS = {
+  boards: 10000,
+  keycapSets: 10000,
+  artisanSets: 10000,
+  switchSets: 10000,
+  photos: 50000
+};
 
 function parseDataUrl(dataUrl) {
   const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/s);
@@ -23,7 +32,7 @@ function validateId(id) {
 function photoOwner(photo) {
   const ownerType = photo.ownerType || 'board';
   const ownerId = photo.ownerId || photo.boardId;
-  if (!['board', 'keycapSet', 'artisanSet'].includes(ownerType)) throw new Error('Invalid photo owner type');
+  if (!['board', 'keycapSet', 'artisanSet', 'switchSet'].includes(ownerType)) throw new Error('Invalid photo owner type');
   validateId(ownerId);
   return { ownerType, ownerId, boardId: ownerType === 'board' ? ownerId : (photo.boardId || '') };
 }
@@ -55,6 +64,10 @@ function createStorage(userDataPath) {
       CREATE TABLE IF NOT EXISTS artisan_sets (
         id TEXT PRIMARY KEY,
         artisan_set_json TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS switch_sets (
+        id TEXT PRIMARY KEY,
+        switch_set_json TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS photos (
         id TEXT PRIMARY KEY,
@@ -107,6 +120,11 @@ function createStorage(userDataPath) {
     return row ? JSON.parse(row.artisan_set_json) : null;
   }
 
+  function getSwitchSet(id) {
+    const row = db.prepare('SELECT switch_set_json FROM switch_sets WHERE id = ?').get(id);
+    return row ? JSON.parse(row.switch_set_json) : null;
+  }
+
   async function getPhoto(id) {
     const row = db.prepare('SELECT * FROM photos WHERE id = ?').get(id);
     if (!row) return null;
@@ -131,6 +149,7 @@ function createStorage(userDataPath) {
     if (store === 'boards') return getBoard(key);
     if (store === 'keycapSets') return getKeycapSet(key);
     if (store === 'artisanSets') return getArtisanSet(key);
+    if (store === 'switchSets') return getSwitchSet(key);
     if (store === 'photos') return getPhoto(key);
     return null;
   }
@@ -139,30 +158,54 @@ function createStorage(userDataPath) {
     validateId(photo.id);
     const owner = photoOwner(photo);
     const parsed = parseDataUrl(photo.dataUrl);
-    if (parsed.buffer.length > 30 * 1024 * 1024) throw new Error('Photo exceeds 30 MB');
+    if (parsed.buffer.length > MAX_PHOTO_SIZE) throw new Error('Photo exceeds 30 MB');
     const fileName = `${photo.id}${MIME_EXTENSIONS[parsed.type]}`;
-    const old = db.prepare('SELECT file_name FROM photos WHERE id = ?').get(photo.id);
-    await fs.writeFile(path.join(photoDirectory, fileName), parsed.buffer);
-    db.prepare(`
-      INSERT INTO photos (id, board_id, owner_type, owner_id, name, type, width, height, added_at, file_name)
-      VALUES (@id, @boardId, @ownerType, @ownerId, @name, @type, @width, @height, @addedAt, @fileName)
-      ON CONFLICT(id) DO UPDATE SET
-        board_id=excluded.board_id, owner_type=excluded.owner_type, owner_id=excluded.owner_id,
-        name=excluded.name, type=excluded.type,
-        width=excluded.width, height=excluded.height, added_at=excluded.added_at,
-        file_name=excluded.file_name
-    `).run({
-      id: photo.id,
-      boardId: owner.boardId,
-      ownerType: owner.ownerType,
-      ownerId: owner.ownerId,
-      name: photo.name || '',
-      type: parsed.type,
-      width: photo.width || null,
-      height: photo.height || null,
-      addedAt: photo.addedAt || Date.now(),
-      fileName
-    });
+    const tempFileName = `${fileName}.tmp-${process.pid}-${Date.now()}`;
+    const old = db.prepare('SELECT * FROM photos WHERE id = ?').get(photo.id);
+    await fs.writeFile(path.join(photoDirectory, tempFileName), parsed.buffer);
+    let databaseWritten = false;
+    try {
+      db.prepare(`
+        INSERT INTO photos (id, board_id, owner_type, owner_id, name, type, width, height, added_at, file_name)
+        VALUES (@id, @boardId, @ownerType, @ownerId, @name, @type, @width, @height, @addedAt, @fileName)
+        ON CONFLICT(id) DO UPDATE SET
+          board_id=excluded.board_id, owner_type=excluded.owner_type, owner_id=excluded.owner_id,
+          name=excluded.name, type=excluded.type,
+          width=excluded.width, height=excluded.height, added_at=excluded.added_at,
+          file_name=excluded.file_name
+      `).run({
+        id: photo.id,
+        boardId: owner.boardId,
+        ownerType: owner.ownerType,
+        ownerId: owner.ownerId,
+        name: photo.name || '',
+        type: parsed.type,
+        width: photo.width || null,
+        height: photo.height || null,
+        addedAt: photo.addedAt || Date.now(),
+        fileName
+      });
+      databaseWritten = true;
+      await fs.rename(path.join(photoDirectory, tempFileName), path.join(photoDirectory, fileName));
+    } catch (error) {
+      await fs.rm(path.join(photoDirectory, tempFileName), { force: true });
+      if (databaseWritten) {
+        if (old) {
+          db.prepare(`
+            INSERT INTO photos (id, board_id, owner_type, owner_id, name, type, width, height, added_at, file_name)
+            VALUES (@id, @board_id, @owner_type, @owner_id, @name, @type, @width, @height, @added_at, @file_name)
+            ON CONFLICT(id) DO UPDATE SET
+              board_id=excluded.board_id, owner_type=excluded.owner_type, owner_id=excluded.owner_id,
+              name=excluded.name, type=excluded.type,
+              width=excluded.width, height=excluded.height, added_at=excluded.added_at,
+              file_name=excluded.file_name
+          `).run(old);
+        } else {
+          db.prepare('DELETE FROM photos WHERE id = ?').run(photo.id);
+        }
+      }
+      throw error;
+    }
     if (old?.file_name && old.file_name !== fileName) {
       await fs.rm(path.join(photoDirectory, old.file_name), { force: true });
     }
@@ -194,6 +237,12 @@ function createStorage(userDataPath) {
         .run(value.id, JSON.stringify(value));
       return value.id;
     }
+    if (store === 'switchSets') {
+      validateId(value.id);
+      db.prepare('INSERT INTO switch_sets (id, switch_set_json) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET switch_set_json=excluded.switch_set_json')
+        .run(value.id, JSON.stringify(value));
+      return value.id;
+    }
     if (store === 'photos') return putPhoto(value);
     throw new Error('Unknown store');
   }
@@ -204,6 +253,7 @@ function createStorage(userDataPath) {
     if (store === 'boards') return db.prepare('DELETE FROM boards WHERE id = ?').run(key).changes;
     if (store === 'keycapSets') return db.prepare('DELETE FROM keycap_sets WHERE id = ?').run(key).changes;
     if (store === 'artisanSets') return db.prepare('DELETE FROM artisan_sets WHERE id = ?').run(key).changes;
+    if (store === 'switchSets') return db.prepare('DELETE FROM switch_sets WHERE id = ?').run(key).changes;
     if (store === 'photos') {
       const row = db.prepare('SELECT file_name FROM photos WHERE id = ?').get(key);
       db.prepare('DELETE FROM photos WHERE id = ?').run(key);
@@ -218,6 +268,7 @@ function createStorage(userDataPath) {
     if (store === 'boards') return db.prepare('SELECT board_json FROM boards').all().map(row => JSON.parse(row.board_json));
     if (store === 'keycapSets') return db.prepare('SELECT keycap_set_json FROM keycap_sets').all().map(row => JSON.parse(row.keycap_set_json));
     if (store === 'artisanSets') return db.prepare('SELECT artisan_set_json FROM artisan_sets').all().map(row => JSON.parse(row.artisan_set_json));
+    if (store === 'switchSets') return db.prepare('SELECT switch_set_json FROM switch_sets').all().map(row => JSON.parse(row.switch_set_json));
     if (store === 'photos') {
       const rows = db.prepare('SELECT id FROM photos').all();
       return Promise.all(rows.map(row => getPhoto(row.id)));
@@ -233,20 +284,34 @@ function createStorage(userDataPath) {
 
   async function photosByOwner(ownerType, ownerId) {
     ensureReady();
-    if (!['board', 'keycapSet', 'artisanSet'].includes(ownerType)) throw new Error('Invalid photo owner type');
+    if (!['board', 'keycapSet', 'artisanSet', 'switchSet'].includes(ownerType)) throw new Error('Invalid photo owner type');
     validateId(ownerId);
     const rows = db.prepare('SELECT id FROM photos WHERE owner_type = ? AND owner_id = ?').all(ownerType, ownerId);
     return Promise.all(rows.map(row => getPhoto(row.id)));
   }
 
-  async function replaceAllInternal(appValue, boards, photos, keycapSets = [], artisanSets = []) {
+  async function replaceAllInternal(appValue, boards, photos, keycapSets = [], artisanSets = [], switchSets = []) {
     ensureReady();
+    if (![boards, photos, keycapSets, artisanSets, switchSets].every(Array.isArray)) {
+      throw new Error('Invalid import payload');
+    }
+    if (!appValue || typeof appValue !== 'object') {
+      throw new Error('Invalid app metadata');
+    }
+    if (boards.length > MAX_ITEMS.boards || keycapSets.length > MAX_ITEMS.keycapSets || artisanSets.length > MAX_ITEMS.artisanSets || switchSets.length > MAX_ITEMS.switchSets || photos.length > MAX_ITEMS.photos) {
+      throw new Error('Import exceeds item limits');
+    }
+    if (Buffer.byteLength(JSON.stringify({ appValue, boards, keycapSets, artisanSets, switchSets }), 'utf8') > 100 * 1024 * 1024) {
+      throw new Error('Import metadata exceeds size limits');
+    }
     const incoming = [];
+    let totalSize = 0;
     for (const photo of photos) {
       validateId(photo.id);
       const owner = photoOwner(photo);
       const parsed = parseDataUrl(photo.dataUrl);
-      if (parsed.buffer.length > 30 * 1024 * 1024) throw new Error('Photo exceeds 30 MB');
+      totalSize += parsed.buffer.length;
+      if (parsed.buffer.length > MAX_PHOTO_SIZE || totalSize > MAX_BACKUP_SIZE) throw new Error('Photo import exceeds size limits');
       incoming.push({ photo, owner, parsed, fileName: `${photo.id}${MIME_EXTENSIONS[parsed.type]}` });
     }
 
@@ -267,6 +332,7 @@ function createStorage(userDataPath) {
         db.prepare('DELETE FROM boards').run();
         db.prepare('DELETE FROM keycap_sets').run();
         db.prepare('DELETE FROM artisan_sets').run();
+        db.prepare('DELETE FROM switch_sets').run();
         db.prepare('DELETE FROM app_meta').run();
         db.prepare('INSERT INTO app_meta (key, value_json) VALUES (?, ?)').run('app', JSON.stringify(appValue));
         const boardStmt = db.prepare('INSERT INTO boards (id, board_json) VALUES (?, ?)');
@@ -283,6 +349,11 @@ function createStorage(userDataPath) {
         for (const artisanSet of artisanSets) {
           validateId(artisanSet.id);
           artisanStmt.run(artisanSet.id, JSON.stringify(artisanSet));
+        }
+        const switchStmt = db.prepare('INSERT INTO switch_sets (id, switch_set_json) VALUES (?, ?)');
+        for (const switchSet of switchSets) {
+          validateId(switchSet.id);
+          switchStmt.run(switchSet.id, JSON.stringify(switchSet));
         }
         const photoStmt = db.prepare('INSERT INTO photos (id, board_id, owner_type, owner_id, name, type, width, height, added_at, file_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         for (const { photo, owner, parsed, fileName } of incoming) {
@@ -301,8 +372,8 @@ function createStorage(userDataPath) {
     }
   }
 
-  function replaceAll(appValue, boards, photos, keycapSets = [], artisanSets = []) {
-    const operation = replaceQueue.then(() => replaceAllInternal(appValue, boards, photos, keycapSets, artisanSets));
+  function replaceAll(appValue, boards, photos, keycapSets = [], artisanSets = [], switchSets = []) {
+    const operation = replaceQueue.then(() => replaceAllInternal(appValue, boards, photos, keycapSets, artisanSets, switchSets));
     replaceQueue = operation.catch(() => {});
     return operation;
   }
@@ -313,6 +384,7 @@ function createStorage(userDataPath) {
       boards: db.prepare('SELECT COUNT(*) AS count FROM boards').get().count,
       keycapSets: db.prepare('SELECT COUNT(*) AS count FROM keycap_sets').get().count,
       artisanSets: db.prepare('SELECT COUNT(*) AS count FROM artisan_sets').get().count,
+      switchSets: db.prepare('SELECT COUNT(*) AS count FROM switch_sets').get().count,
       photos: db.prepare('SELECT COUNT(*) AS count FROM photos').get().count,
       hasMeta: Boolean(db.prepare('SELECT 1 FROM app_meta WHERE key = ?').get('app'))
     };

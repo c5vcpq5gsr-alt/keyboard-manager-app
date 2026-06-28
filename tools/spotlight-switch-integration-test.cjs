@@ -16,6 +16,14 @@ app.on('browser-window-created', (_event, window) => {
             }
           };
           await waitForReady();
+          const startup={
+            tab:state.tab,
+            overviewEntity:state.viewEntities.ueb,
+            overviewDisplay:document.getElementById('viewUeb').style.display,
+            editorDisplay:document.getElementById('viewErf').style.display,
+            overviewActive:document.getElementById('sideUeb').classList.contains('active'),
+            boardsActive:document.getElementById('btnOverviewBoards').classList.contains('active')
+          };
 
           const makePhoto = async (id, boardId, color) => {
             const canvas=document.createElement('canvas');
@@ -44,15 +52,40 @@ app.on('browser-window-created', (_event, window) => {
           await new Promise(resolve=>setTimeout(resolve,10));
           openSpotlight('fast-board');
           await new Promise(resolve=>setTimeout(resolve,250));
-
-          return {
+          const raceResult={
             title:document.getElementById('spotTitle').textContent,
             body:document.getElementById('spotBody').textContent,
             foot:document.getElementById('spotFoot').textContent
           };
+          document.getElementById('spotEdit').click();
+
+          return {
+            startup,
+            ...raceResult,
+            tab:state.tab,
+            editEntity:state.viewEntities.erf,
+            boardPanelDisplay:document.getElementById('boardEditorPanel').style.display,
+            editorTitle:document.getElementById('editorTitle').textContent,
+            editedBoardName:document.getElementById('f_name').value
+          };
         })()
       `);
-      if (result.title !== 'Spotlight: Fast Board' || !result.foot.includes('Fast Board') || result.body.includes('Slow Board')) {
+      if (
+        result.title !== 'Spotlight: Fast Board' ||
+        result.startup.tab !== 'ueb' ||
+        result.startup.overviewEntity !== 'boards' ||
+        result.startup.overviewDisplay !== 'block' ||
+        result.startup.editorDisplay !== 'none' ||
+        !result.startup.overviewActive ||
+        !result.startup.boardsActive ||
+        !result.foot.includes('Fast Board') ||
+        result.body.includes('Slow Board') ||
+        result.tab !== 'erf' ||
+        result.editEntity !== 'boards' ||
+        result.boardPanelDisplay !== 'grid' ||
+        result.editorTitle !== 'Board bearbeiten' ||
+        result.editedBoardName !== 'Fast Board'
+      ) {
         throw new Error(`Unexpected Spotlight result: ${JSON.stringify(result)}`);
       }
       console.log('spotlight fast-switch integration ok');

@@ -1,6 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
+const { pathToFileURL } = require('url');
 const AdmZip = require('adm-zip');
 const { createStorage } = require('./storage');
 
@@ -13,6 +14,8 @@ function isTrustedSender (event) {
 }
 
 function createWindow () {
+  const indexPath = path.join(__dirname, 'index.html');
+  const indexUrl = pathToFileURL(indexPath).toString();
   const win = new BrowserWindow({
     width: 1800,
     height: 1200,
@@ -29,11 +32,14 @@ function createWindow () {
   const webContentsId = win.webContents.id;
   trustedWebContents.add(webContentsId);
   win.webContents.once('destroyed', () => trustedWebContents.delete(webContentsId));
+  win.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) => {
+    callback(false);
+  });
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   win.webContents.on('will-navigate', (event, url) => {
-    if (url !== win.webContents.getURL()) event.preventDefault();
+    if (url !== indexUrl) event.preventDefault();
   });
-  win.loadFile(path.join(__dirname, 'index.html'));
+  win.loadFile(indexPath);
 
   // DevTools nur im Dev-Modus
   if (!app.isPackaged) {
@@ -73,11 +79,11 @@ trustedHandler('storage:delete', (store, key) => storage.remove(store, key));
 trustedHandler('storage:all', store => storage.all(store));
 trustedHandler('storage:photos-by-board', boardId => storage.photosByBoard(boardId));
 trustedHandler('storage:photos-by-owner', (ownerType, ownerId) => storage.photosByOwner(ownerType, ownerId));
-trustedHandler('storage:replace-all', payload => storage.replaceAll(payload.appValue, payload.boards, payload.photos, payload.keycapSets || [], payload.artisanSets || []));
+trustedHandler('storage:replace-all', payload => storage.replaceAll(payload.appValue, payload.boards, payload.photos, payload.keycapSets || [], payload.artisanSets || [], payload.switchSets || []));
 trustedHandler('storage:info', () => storage.counts());
 trustedHandler('shell:open-external', async url => {
   const parsed = new URL(String(url || ''));
-  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Unsupported external URL');
+  if (parsed.protocol !== 'https:') throw new Error('Unsupported external URL');
   await shell.openExternal(parsed.toString());
   return true;
 });
@@ -97,7 +103,7 @@ function photoBuffer(dataUrl, expectedType) {
 trustedHandler('backup:export', async data => {
   const zip = new AdmZip();
   const manifest = {
-    schemaVersion: 5,
+    schemaVersion: 6,
     format: 'keyboard-manager-zip',
     meta: data.meta,
     lists: data.lists,
@@ -105,6 +111,7 @@ trustedHandler('backup:export', async data => {
     boards: data.boards,
     keycapSets: data.keycapSets || [],
     artisanSets: data.artisanSets || [],
+    switchSets: data.switchSets || [],
     photos: []
   };
   let totalSize = 0;
@@ -159,7 +166,7 @@ trustedHandler('backup:open', async () => {
   const manifestEntry = entries.find(entry => entry.entryName === 'manifest.json');
   if (!manifestEntry || manifestEntry.header.size > 10 * 1024 * 1024) throw new Error('ZIP manifest missing or too large');
   const manifest = JSON.parse(manifestEntry.getData().toString('utf8'));
-  if (![3, 4, 5].includes(manifest.schemaVersion) || manifest.format !== 'keyboard-manager-zip' || !Array.isArray(manifest.photos)) throw new Error('Unsupported ZIP backup');
+  if (![3, 4, 5, 6].includes(manifest.schemaVersion) || manifest.format !== 'keyboard-manager-zip' || !Array.isArray(manifest.photos)) throw new Error('Unsupported ZIP backup');
   const entryMap = new Map(entries.map(entry => [entry.entryName, entry]));
   let totalSize = 0;
   const photos = manifest.photos.map(photo => {

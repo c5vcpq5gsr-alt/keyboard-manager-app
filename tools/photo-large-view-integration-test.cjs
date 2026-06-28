@@ -1,7 +1,7 @@
 const path = require('path');
 const { app } = require('electron');
 
-app.setPath('userData', path.join(app.getPath('temp'), 'keyboard-manager-photo-large-view-test'));
+app.setPath('userData', path.join(app.getPath('temp'), `keyboard-manager-photo-large-view-test-${process.pid}-${Date.now()}`));
 
 app.on('browser-window-created', (_event, window) => {
   window.webContents.once('did-finish-load', async () => {

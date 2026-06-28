@@ -31,11 +31,16 @@ npm start
 ## Tests
 
 ```bash
+npm test
 npm run test:migration
 npm run test:storage
 npm run test:close
 npm run test:photos
 npm run test:export
+npm run test:spotlight
+npm run test:keycaps
+npm run test:switches
+npm run test:board-links
 ```
 
 ## Builds
@@ -46,7 +51,7 @@ npm run build:mac
 npm run build:win
 ```
 
-Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag wie `v1.2.8` erzeugt automatisch ein GitHub Release mit ARM-macOS-DMG, Windows-Installer und portabler Windows-App.
+Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag wie `v1.2.9` erzeugt automatisch ein GitHub Release mit ARM-macOS-DMG, Windows-Installer und portabler Windows-App.
 
 Da die Builds nicht signiert sind, können macOS Gatekeeper beziehungsweise Windows SmartScreen beim ersten Start eine Warnung anzeigen.
 

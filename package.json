@@ -1,6 +1,6 @@
 {
   "name": "keyboard-manager",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "Keyboard Board Manager Desktop App",
   "main": "main.js",
   "author": "du",
@@ -11,12 +11,16 @@
     "build:mac": "MAC_ADHOC_SIGN=1 electron-builder --mac dmg --arm64 --publish never",
     "build:win": "electron-builder --win nsis portable --x64 --publish never",
     "postinstall": "electron-builder install-app-deps",
+    "test": "npm run test:close && npm run test:export && npm run test:photos && npm run test:storage && npm run test:migration && npm run test:spotlight && npm run test:keycaps && npm run test:switches && npm run test:board-links",
     "test:export": "electron tools/export-integration-test.cjs",
     "test:photos": "electron tools/photo-large-view-integration-test.cjs",
     "test:spotlight": "electron tools/spotlight-switch-integration-test.cjs",
     "test:close": "electron tools/window-close-integration-test.cjs",
     "test:storage": "electron tools/sqlite-storage-integration-test.cjs",
-    "test:migration": "electron tools/legacy-migration-integration-test.cjs"
+    "test:migration": "electron tools/legacy-migration-integration-test.cjs",
+    "test:keycaps": "electron tools/keycap-test.cjs",
+    "test:switches": "electron tools/switch-test.cjs",
+    "test:board-links": "electron tools/board-link-autofill-test.cjs"
   },
   "devDependencies": {
     "electron": "^42.4.1",

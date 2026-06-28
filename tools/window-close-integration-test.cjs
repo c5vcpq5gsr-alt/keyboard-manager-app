@@ -1,7 +1,7 @@
 const path = require('path');
 const { app } = require('electron');
 
-app.setPath('userData', path.join(app.getPath('temp'), 'keyboard-manager-window-close-test'));
+app.setPath('userData', path.join(app.getPath('temp'), `keyboard-manager-window-close-test-${process.pid}-${Date.now()}`));
 
 let uncaughtError = null;
 process.on('uncaughtException', error => {

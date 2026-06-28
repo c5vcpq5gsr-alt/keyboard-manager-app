@@ -15,29 +15,34 @@ app.on('browser-window-created', (_event, window) => {
           canvas.getContext('2d').fillRect(0,0,32,24);
           const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
           const dataUrl=await blobToDataUrl(blob);
-          const board={id:'sqlite-board',name:'SQLite Board',manufacturer:'',format:'',plate:'',pcb:'',keycaps:'',stabs:'',switches:'',remark:'',photoIds:['sqlite-photo'],mainPhotoId:'sqlite-photo',createdAt:1,updatedAt:1};
+          const board={id:'sqlite-board',name:'SQLite Board',manufacturer:'',format:'',plate:'',pcb:'',keycaps:'',stabs:'',switches:'',switchSetId:'sqlite-switch',remark:'',photoIds:['sqlite-photo'],mainPhotoId:'sqlite-photo',createdAt:1,updatedAt:1};
           const keycapSet={id:'sqlite-keycaps',name:'SQLite Keycaps',manufacturer:'GMK',profile:'Cherry/CYL',material:'ABS',status:'owned',kits:['Base'],photoIds:['sqlite-keycap-photo'],mainPhotoId:'sqlite-keycap-photo',createdAt:1,updatedAt:1};
           const artisanSet={id:'sqlite-artisan',name:'SQLite Artisan',manufacturer:'Alpha Keycaps',profile:'MX',material:'Resin',status:'owned',tags:['Devoura'],photoIds:['sqlite-artisan-photo'],mainPhotoId:'sqlite-artisan-photo',createdAt:1,updatedAt:1};
+          const switchSet={id:'sqlite-switch',name:'SQLite Switch',switchType:'Linear',pins:'5',quantity:90,mountedQuantity:65,mountedBoardId:'sqlite-board',photoIds:['sqlite-switch-photo'],mainPhotoId:'sqlite-switch-photo',createdAt:1,updatedAt:1};
           await storePut('meta',{key:'app',value:{meta:{version:'test'},lists:{},gallery:{}}});
           await storePut('boards',board);
           await storePut('keycapSets',keycapSet);
           await storePut('artisanSets',artisanSet);
+          await storePut('switchSets',switchSet);
           await storePut('photos',{id:'sqlite-photo',boardId:'sqlite-board',name:'photo.png',type:'image/png',width:32,height:24,addedAt:1,dataUrl});
           await storePut('photos',{id:'sqlite-keycap-photo',ownerType:'keycapSet',ownerId:'sqlite-keycaps',boardId:'',name:'keycap.png',type:'image/png',width:32,height:24,addedAt:1,dataUrl});
           await storePut('photos',{id:'sqlite-artisan-photo',ownerType:'artisanSet',ownerId:'sqlite-artisan',boardId:'',name:'artisan.png',type:'image/png',width:32,height:24,addedAt:1,dataUrl});
+          await storePut('photos',{id:'sqlite-switch-photo',ownerType:'switchSet',ownerId:'sqlite-switch',boardId:'',name:'switch.png',type:'image/png',width:32,height:24,addedAt:1,dataUrl});
           const readBoard=await storeGet('boards','sqlite-board');
           const readKeycapSet=await storeGet('keycapSets','sqlite-keycaps');
           const readArtisanSet=await storeGet('artisanSets','sqlite-artisan');
+          const readSwitchSet=await storeGet('switchSets','sqlite-switch');
           const readPhoto=await storeGet('photos','sqlite-photo');
           const byBoard=await storeGetAllByBoardId('sqlite-board');
           const byKeycap=await window.api.storage.photosByOwner('keycapSet','sqlite-keycaps');
           const byArtisan=await window.api.storage.photosByOwner('artisanSet','sqlite-artisan');
-          return {boardName:readBoard.name,keycapName:readKeycapSet.name,artisanName:readArtisanSet.name,photoPrefix:readPhoto.dataUrl.slice(0,22),byBoard:byBoard.length,byKeycap:byKeycap.length,byArtisan:byArtisan.length};
+          const bySwitch=await window.api.storage.photosByOwner('switchSet','sqlite-switch');
+          return {boardName:readBoard.name,keycapName:readKeycapSet.name,artisanName:readArtisanSet.name,switchName:readSwitchSet.name,photoPrefix:readPhoto.dataUrl.slice(0,22),byBoard:byBoard.length,byKeycap:byKeycap.length,byArtisan:byArtisan.length,bySwitch:bySwitch.length};
         })()
       `);
       const databaseExists = await fs.stat(path.join(userDataPath, 'keyboard-manager.sqlite')).then(() => true);
       const photoFiles = await fs.readdir(path.join(userDataPath, 'photos'));
-      if (!databaseExists || result.boardName !== 'SQLite Board' || result.keycapName !== 'SQLite Keycaps' || result.artisanName !== 'SQLite Artisan' || result.photoPrefix !== 'data:image/png;base64,' || result.byBoard !== 1 || result.byKeycap !== 1 || result.byArtisan !== 1 || photoFiles.length !== 3) {
+      if (!databaseExists || result.boardName !== 'SQLite Board' || result.keycapName !== 'SQLite Keycaps' || result.artisanName !== 'SQLite Artisan' || result.switchName !== 'SQLite Switch' || result.photoPrefix !== 'data:image/png;base64,' || result.byBoard !== 1 || result.byKeycap !== 1 || result.byArtisan !== 1 || result.bySwitch !== 1 || photoFiles.length !== 4) {
         throw new Error(`Unexpected SQLite result: ${JSON.stringify({ result, databaseExists, photoFiles })}`);
       }
       console.log('sqlite storage integration ok');

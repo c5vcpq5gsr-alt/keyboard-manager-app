@@ -2,8 +2,9 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-keyboard-manager-app'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; frame-ancestors 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Keyboard Manager – 1.2.8</title>
+  <title>Keyboard Manager – 1.2.9</title>
   <style>
     :root{--bg:#070B14;--surface:#0A1222;--txt:#E5E7EB;--muted:#94A3B8;--border:#22304F;--accent:#38BDF8;--accent2:#0EA5E9;--accentSoft:rgba(56,189,248,.18);--accentMain:rgba(56,189,248,.75);--accentStrong:rgba(56,189,248,.90);--pri:var(--accent);--pri2:var(--accent2);--danger:#FB7185;}
     *{box-sizing:border-box}
@@ -42,6 +43,13 @@
     @media(max-width:620px){.row{display:grid;grid-template-columns:1fr}.row .w{width:100%;min-width:0}}
 
     .pill{display:inline-flex;gap:6px;align-items:center;padding:3px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);font-size:12px;font-weight:800;color:var(--txt)}
+    .choiceRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .choiceRow label{display:flex;align-items:center;gap:7px;width:auto;padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.035);font-size:13px;font-weight:800}
+    .choiceRow input{width:auto;padding:0}
+    .installRows{display:grid;gap:8px;margin-top:8px}
+    .installRow{display:grid;grid-template-columns:minmax(160px,1fr) 110px auto;gap:8px;align-items:center}
+    .installRow input{min-width:0}
+    @media(max-width:620px){.installRow{grid-template-columns:1fr 96px auto}}
 
     .table{width:100%;border-collapse:separate;border-spacing:0}
     .table th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:12px;border-bottom:1px solid var(--border);text-align:left}
@@ -120,7 +128,6 @@
   
 
     /* ===== Theme Toggle (Dark default, Light overrides) ===== */
-    html{color-scheme:dark;}
     html{color-scheme:dark;}
 html[data-theme="light"]{color-scheme:light;}
 
@@ -1470,8 +1477,8 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         </div>
 
         <nav class="sideNav" aria-label="Ansichten">
-          <button id="sideErf" class="active" type="button"><span class="sideIcon">✎</span>Erfassen</button>
-          <button id="sideUeb" type="button"><span class="sideIcon">▤</span>Übersicht</button>
+          <button id="sideErf" type="button"><span class="sideIcon">✎</span>Erfassen</button>
+          <button id="sideUeb" class="active" type="button"><span class="sideIcon">▤</span>Übersicht</button>
           <button id="sideGal" type="button"><span class="sideIcon">▦</span>Galerie</button>
         </nav>
 
@@ -1496,7 +1503,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         </div>
 
         <div class="sideVersion">
-          <span>v<span id="sideVersion">1.2.8</span></span>
+          <span>v<span id="sideVersion">1.2.9</span></span>
           <span aria-hidden="true">⚙</span>
         </div>
       </aside>
@@ -1505,7 +1512,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         <div class="topBar">
           <div class="topIdentity">
             <h1>Keyboard Manager</h1>
-            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.2.8</span></div>
+            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.2.9</span></div>
           </div>
           <div class="topSpacer" aria-hidden="true"></div>
           <div class="actions topActions" role="toolbar" aria-label="Hauptaktionen">
@@ -1526,6 +1533,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         <button id="btnErfBoards" type="button" class="active">Keyboards</button>
         <button id="btnErfKeycaps" type="button">Keycaps</button>
         <button id="btnErfArtisans" type="button">Artisans</button>
+        <button id="btnErfSwitches" type="button">Switches</button>
       </div>
 
       <div class="grid two" id="boardEditorPanel">
@@ -1673,6 +1681,51 @@ html[data-theme="light"] .contentPane > .topBar .sub{
           </div>
         </div>
       </div>
+
+      <div class="grid two" id="switchEditorPanel" style="display:none">
+        <div class="card pad">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+            <div>
+              <div class="muted small">Switch-Erfassung</div>
+              <div style="font-weight:900;font-size:16px" id="switchEditorTitle">Neuer Switch</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button id="btnNewSwitch">Neu</button>
+              <button id="btnCancelSwitch" style="display:none">Abbrechen</button>
+              <button class="primary" id="btnSaveSwitch">Speichern</button>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:1fr;gap:12px;margin-top:12px" id="switchFormGrid"></div>
+
+          <label style="margin-top:12px">
+            <div class="lbl">Notizen</div>
+            <textarea id="sw_notes" placeholder="Sound, Modding, Herkunft…"></textarea>
+          </label>
+
+          <div style="margin-top:12px">
+            <div class="lbl">Fotos <span class="hint">Switch-Fotos, Detailbilder</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+              <input id="fileSwitchPhotos" type="file" accept="image/*" multiple hidden />
+              <button class="primary" id="btnAddSwitchPhotos">Fotos hinzufügen</button>
+            </div>
+            <div id="switchPhotosArea" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:1fr;gap:12px">
+          <div class="card pad">
+            <div style="font-weight:900">Kurzvorschau</div>
+            <div class="card pad" style="margin-top:10px;background:rgba(0,0,0,.12)">
+              <div style="font-weight:900" id="sw_pv_name">(Switch Type)</div>
+              <div class="gmeta" id="sw_pv_badges" style="margin-top:8px"></div>
+              <div class="muted small" id="sw_pv_meta" style="margin-top:10px">Bestand: 0 • Verbaut: 0</div>
+              <div class="muted small" id="sw_pv_photos">Fotos: 0</div>
+              <div id="sw_pv_notes" class="small" style="margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="viewUeb" style="display:none">
@@ -1680,6 +1733,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         <button id="btnOverviewBoards" type="button" class="active">Keyboards</button>
         <button id="btnOverviewKeycaps" type="button">Keycaps</button>
         <button id="btnOverviewArtisans" type="button">Artisans</button>
+        <button id="btnOverviewSwitches" type="button">Switches</button>
       </div>
 
       <div class="grid" id="boardOverviewPanel" style="grid-template-columns:1fr;gap:12px">
@@ -1739,6 +1793,28 @@ html[data-theme="light"] .contentPane > .topBar .sub{
                   <th>Foto</th><th>Artisan</th><th>Hersteller</th><th>Profil</th><th>Tags</th><th>Board</th><th style="text-align:right">Aktionen</th>
                 </tr></thead>
                 <tbody id="artisanTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <div class="grid" id="switchOverviewPanel" style="grid-template-columns:1fr;gap:12px;display:none">
+          <div class="card pad" id="switchFilters"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="muted"><b id="switchHitCount">0</b> <span id="switchHitCountLabel">Switches</span></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <button id="btnResetSwitchFilters">Filter zurücksetzen</button>
+            </div>
+          </div>
+          <div class="card" id="switchTablePanel">
+            <div class="pad" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+              <div style="font-weight:900">Switches</div>
+            </div>
+            <div style="overflow:auto">
+              <table class="table">
+                <thead><tr>
+                  <th>Foto</th><th>Name / Bezeichnung</th><th>Switch Type</th><th>Bestand / Verbaut / Verfügbar</th><th>Board</th><th>Operating Force</th><th style="text-align:right">Aktionen</th>
+                </tr></thead>
+                <tbody id="switchTbody"></tbody>
               </table>
             </div>
           </div>
@@ -1817,7 +1893,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script>
+<script nonce="keyboard-manager-app">
 // ====== Storage Adapter (SQLite + Fotoordner; IndexedDB nur für Migration) ======
 const DB_NAME='keyboard_board_manager';
 const DB_VERSION=1;
@@ -1834,9 +1910,6 @@ function toast(msg){
 const THEME_KEY='kbm_theme_v2';
 function getSavedTheme(){
   try{ return localStorage.getItem(THEME_KEY); }catch(e){ return null; }
-}
-function getSystemTheme(){
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 function applyTheme(mode){
   const root=document.documentElement;
@@ -1901,15 +1974,6 @@ async function idbGetAll(store){
   db.close && db.close();
   return res||[];
 }
-async function idbGetAllByIndex(store,indexName,query){
-  const db=await openDB();
-  const tx=db.transaction(store,'readonly');
-  const st=tx.objectStore(store);
-  const idx=st.index(indexName);
-  const res=await reqP(idx.getAll(query));
-  db.close && db.close();
-  return res||[];
-}
 
 // ---- legacy fallback (nur für einmalige Migration) ----
 function lsGet(key, defVal){
@@ -1920,12 +1984,6 @@ function lsGet(key, defVal){
   }catch(e){
     return defVal;
   }
-}
-function lsSet(key, obj){
-  localStorage.setItem(LS_PREFIX+key, JSON.stringify(obj));
-}
-function lsDel(key){
-  localStorage.removeItem(LS_PREFIX+key);
 }
 
 async function storeGet(store,key){
@@ -1955,7 +2013,7 @@ async function storeGetAllByOwner(ownerType, ownerId){
 }
 
 // ====== App ======
-const VERSION='1.2.8';
+const VERSION='1.2.9';
 const FORMAT_DEFAULTS=["40%", "60%", "65%", "FRL TKL", "TKL", "98%", "Sonstige", "NumPads", "Makro Pads"];
 const PLATE_DEFAULTS=["Aluminium", "PC", "POM", "FR4", "Carbon", "Copper", "Stahl", "n/a"];
 const PCB_DEFAULTS=["Hotswap", "Solder", "MillMax"];
@@ -1969,10 +2027,30 @@ const KEYCAP_STATUS_DEFAULTS=["owned", "ordered", "wishlist", "sold"];
 const ARTISAN_MANUFACTURER_DEFAULTS=["Alpha Keycaps", "Archetype", "Gothcaps", "Mr Maw"];
 const ARTISAN_PROFILE_DEFAULTS=["MX", "Topre", "Choc"];
 const ARTISAN_MATERIAL_DEFAULTS=["Resin", "Metal", "PBT", "ABS"];
+const SWITCH_MATERIAL_DEFAULTS=["Nylon", "PC", "POM", "UHMWPE", "PBT", "PA66"];
+const SWITCH_STEM_MATERIAL_DEFAULTS=["POM", "LY", "UPE", "UHMWPE", "P3", "PBT"];
+const SWITCH_SPRING_TYPE_DEFAULTS=["Single-stage", "Two-stage", "Long spring", "Progressive"];
+const SWITCH_TYPE_DEFAULTS=["Linear", "Tactile", "Clicky", "Silent Linear", "Silent Tactile"];
 
 function uid(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9); }
 function trim(s){ return (s||'').trim(); }
 function esc(s){ return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function safeExternalImageUrl(value){
+  const raw=trim(value);
+  if(!raw) return '';
+  try{
+    const url=new URL(raw);
+    return url.protocol==='https:' ? url.toString() : '';
+  }catch(e){
+    return '';
+  }
+}
+function escImageSrc(src){
+  return esc(src);
+}
+function imageHtml(src, alt){
+  return '<img src="'+escImageSrc(src)+'" alt="'+esc(alt)+'">';
+}
 function fmtDate(ts){ try{ return new Date(ts).toLocaleString('de-DE'); }catch(e){ return '—'; } }
 function fmtDateOnly(ts){ try{ return new Date(ts).toLocaleDateString('de-DE'); }catch(e){ return '—'; } }
 
@@ -2257,7 +2335,7 @@ function initLanguageObserver(){
 
 const state={
   ready:false,
-  tab:'erf',
+  tab:'ueb',
   language:'de',
   meta:{version:VERSION, createdAt:Date.now(), updatedAt:Date.now()},
   lists:{
@@ -2275,24 +2353,39 @@ const state={
     artisanProfiles:[...ARTISAN_PROFILE_DEFAULTS],
     artisanMaterials:[...ARTISAN_MATERIAL_DEFAULTS],
     artisanStatuses:[...KEYCAP_STATUS_DEFAULTS],
-    switches:[...SWITCH_DEFAULTS]
+    switches:[...SWITCH_DEFAULTS],
+    switchNames:[],
+    switchTypes:[...SWITCH_TYPE_DEFAULTS],
+    switchTopHousingMaterials:[...SWITCH_MATERIAL_DEFAULTS],
+    switchBottomHousingMaterials:[...SWITCH_MATERIAL_DEFAULTS],
+    switchStemMaterials:[...SWITCH_STEM_MATERIAL_DEFAULTS],
+    switchSpringLengths:[],
+    switchSpringTypes:[...SWITCH_SPRING_TYPE_DEFAULTS],
+    switchPreTravels:[],
+    switchTotalTravels:[],
+    switchOperatingForces:[],
+    switchBottomOutForces:[]
   },
   gallery:{showFields:{manufacturer:true, format:true, switches:true, keycaps:false}},
   boards:[],
   keycapSets:[],
   artisanSets:[],
+  switchSets:[],
   draft:null,
   keycapDraft:null,
   artisanDraft:null,
+  switchDraft:null,
   filters:{q:'', man:'', format:'', sort:'format_asc'},
   keycapFilters:{q:'', manufacturer:'', profile:'', status:'', sort:'manufacturer_asc'},
   artisanFilters:{q:'', manufacturer:'', profile:'', status:'', sort:'manufacturer_asc'},
+  switchFilters:{q:'', switchType:'', operatingForce:'', pins:'', sort:'name_asc'},
   viewEntities:{erf:'boards', ueb:'boards', gal:'boards'},
-  spotlight:{open:false, kind:'board', boardId:'', keycapSetId:'', artisanSetId:'', photoIds:[], images:[], index:0, urls:[], previousFocus:null, renderId:0},
+  spotlight:{open:false, kind:'board', boardId:'', keycapSetId:'', artisanSetId:'', switchSetId:'', photoIds:[], images:[], index:0, urls:[], previousFocus:null, renderId:0},
   largePhoto:{open:false, url:'', previousFocus:null},
   editorSession:{original:null, addedPhotoIds:new Set()},
   keycapEditorSession:{original:null, addedPhotoIds:new Set()},
-  artisanEditorSession:{original:null, addedPhotoIds:new Set()}
+  artisanEditorSession:{original:null, addedPhotoIds:new Set()},
+  switchEditorSession:{original:null, addedPhotoIds:new Set()}
 };
 
 function showWarn(html){
@@ -2315,7 +2408,7 @@ function enterStaticPreviewMode(){
   document.getElementById('viewUeb').style.display = 'none';
   document.getElementById('viewGal').style.display = 'none';
   document.getElementById('updated').textContent = '—';
-  for(const id of ['btnNew','btnExport','btnImport','btnSave','btnCancel','btnAddPhotos','sideErf','sideUeb','sideGal','btnSaveKeycap','btnCancelKeycap','btnNewKeycap','btnAddKeycapPhotos','btnSaveArtisan','btnCancelArtisan','btnNewArtisan','btnAddArtisanPhotos']){
+  for(const id of ['btnNew','btnExport','btnImport','btnSave','btnCancel','btnAddPhotos','sideErf','sideUeb','sideGal','btnSaveKeycap','btnCancelKeycap','btnNewKeycap','btnAddKeycapPhotos','btnSaveArtisan','btnCancelArtisan','btnNewArtisan','btnAddArtisanPhotos','btnSaveSwitch','btnCancelSwitch','btnNewSwitch','btnAddSwitchPhotos']){
     const el=document.getElementById(id);
     if(el) el.disabled = true;
   }
@@ -2338,6 +2431,12 @@ function switchTab(t){
 }
 
 function setEntityView(view, entity){
+  const allowed={
+    erf:['boards','keycaps','artisans','switches'],
+    ueb:['boards','keycaps','artisans','switches'],
+    gal:['boards','keycaps','artisans']
+  };
+  if(!allowed[view]?.includes(entity)) entity='boards';
   state.viewEntities[view]=entity;
   renderEntityPanels(view);
   if(view==='ueb') renderOverview();
@@ -2352,17 +2451,25 @@ function renderEntityPanels(view){
     toggle('btnErfBoards', entity==='boards');
     toggle('btnErfKeycaps', entity==='keycaps');
     toggle('btnErfArtisans', entity==='artisans');
+    toggle('btnErfSwitches', entity==='switches');
     display('boardEditorPanel', entity==='boards', 'grid');
     display('keycapEditorPanel', entity==='keycaps', 'grid');
     display('artisanEditorPanel', entity==='artisans', 'grid');
+    display('switchEditorPanel', entity==='switches', 'grid');
+    if(entity==='switches' && state.switchDraft && document.getElementById('sw_name')){
+      renderSwitchSelects();
+      setSwitchSelectValuesFromDraft();
+    }
   }
   if(view==='ueb'){
     toggle('btnOverviewBoards', entity==='boards');
     toggle('btnOverviewKeycaps', entity==='keycaps');
     toggle('btnOverviewArtisans', entity==='artisans');
+    toggle('btnOverviewSwitches', entity==='switches');
     display('boardOverviewPanel', entity==='boards', 'grid');
     display('keycapOverviewPanel', entity==='keycaps', 'grid');
     display('artisanOverviewPanel', entity==='artisans', 'grid');
+    display('switchOverviewPanel', entity==='switches', 'grid');
   }
   if(view==='gal'){
     toggle('btnGalleryBoards', entity==='boards');
@@ -2388,6 +2495,7 @@ async function setLanguage(lang, persist=true){
   if(state.draft) renderPreview();
   if(state.keycapDraft) renderKeycapPreview();
   if(state.artisanDraft) renderArtisanPreview();
+  if(state.switchDraft) renderSwitchPreview();
   renderEntityPanels(state.tab);
   if(state.tab==='ueb') renderOverview();
   if(state.tab==='gal') renderGallery();
@@ -2418,6 +2526,7 @@ function ensureDefaultLists(){
   merge('stabs', STAB_DEFAULTS);
   merge('keycaps', KEYCAP_DEFAULTS);
   merge('switches', SWITCH_DEFAULTS);
+  merge('switchTypes', SWITCH_TYPE_DEFAULTS);
   merge('keycapManufacturers', KEYCAP_MANUFACTURER_DEFAULTS);
   merge('keycapProfiles', KEYCAP_PROFILE_DEFAULTS);
   merge('keycapMaterials', KEYCAP_MATERIAL_DEFAULTS);
@@ -2426,7 +2535,17 @@ function ensureDefaultLists(){
   merge('artisanProfiles', ARTISAN_PROFILE_DEFAULTS);
   merge('artisanMaterials', ARTISAN_MATERIAL_DEFAULTS);
   merge('artisanStatuses', KEYCAP_STATUS_DEFAULTS);
+  merge('switchTopHousingMaterials', SWITCH_MATERIAL_DEFAULTS);
+  merge('switchBottomHousingMaterials', SWITCH_MATERIAL_DEFAULTS);
+  merge('switchStemMaterials', SWITCH_STEM_MATERIAL_DEFAULTS);
+  merge('switchSpringTypes', SWITCH_SPRING_TYPE_DEFAULTS);
   state.lists.manufacturers=state.lists.manufacturers||[];
+  state.lists.switchNames=state.lists.switchNames||[];
+  state.lists.switchSpringLengths=state.lists.switchSpringLengths||[];
+  state.lists.switchPreTravels=state.lists.switchPreTravels||[];
+  state.lists.switchTotalTravels=state.lists.switchTotalTravels||[];
+  state.lists.switchOperatingForces=state.lists.switchOperatingForces||[];
+  state.lists.switchBottomOutForces=state.lists.switchBottomOutForces||[];
 }
 
 function keycapSetName(id){
@@ -2437,8 +2556,102 @@ function displayBoardKeycaps(board){
   return keycapSetName(board.keycapSetId) || board.keycaps || '';
 }
 
+function switchSetName(id){
+  return state.switchSets.find(set=>set.id===id)?.name || '';
+}
+
+function switchVariantLabel(set){
+  if(!set) return '';
+  const details=[set.switchType,set.operatingForce,set.pins?set.pins+' PIN':''].filter(Boolean).join(' · ');
+  return (set.name || '(ohne Name)') + (details ? ' ('+details+')' : '');
+}
+
+function switchSetLabel(id){
+  return switchVariantLabel(state.switchSets.find(set=>set.id===id));
+}
+
+function normalizeBoardSwitchSetIds(board){
+  const ids=[];
+  const add=id=>{
+    const v=trim(id);
+    if(v && state.switchSets.some(set=>set.id===v) && !ids.includes(v)) ids.push(v);
+  };
+  if(Array.isArray(board?.switchSetIds)){
+    for(const id of board.switchSetIds) add(id);
+  }else{
+    add(board?.switchSetId);
+  }
+  return ids;
+}
+
+function applyBoardSwitchSetIds(board, ids, syncText=false){
+  board.switchSetIds=(ids||[]).map(trim).filter((id,idx,arr)=>id && state.switchSets.some(set=>set.id===id) && arr.indexOf(id)===idx);
+  board.switchSetId=board.switchSetIds[0] || '';
+  const labels=board.switchSetIds.map(id=>switchSetName(id)).filter(Boolean);
+  if(syncText) board.switches=labels.join(', ');
+  return board;
+}
+
+function displayBoardSwitches(board){
+  const labels=normalizeBoardSwitchSetIds(board).map(id=>switchSetLabel(id)).filter(Boolean);
+  return labels.join(', ') || board.switches || '';
+}
+
+function addListValues(key, values){
+  const arr=state.lists[key]||[];
+  for(const value of values){
+    const v=trim(value);
+    if(v && !arr.includes(v)) arr.push(v);
+  }
+  arr.sort((a,b)=>String(a).localeCompare(String(b),'de'));
+  state.lists[key]=arr;
+}
+
+function hydrateSwitchListsFromSets(){
+  addListValues('switchNames', (state.switchSets||[]).map(set=>set.name));
+  addListValues('switchTypes', (state.switchSets||[]).map(set=>set.switchType));
+}
+
 function boardName(id){
   return state.boards.find(board=>board.id===id)?.name || '';
+}
+
+function displaySwitchBoard(set){
+  const installations=normalizeSwitchInstallations(set);
+  if(installations.length){
+    return installations.map(item=>boardName(item.boardId)+(Number(item.quantity||0)?' ('+Number(item.quantity||0)+')':'')).filter(Boolean).join(', ');
+  }
+  return '';
+}
+
+function availableSwitchQuantity(set){
+  return Number(set?.quantity||0) - Number(set?.mountedQuantity||0);
+}
+
+function normalizeSwitchInstallations(set){
+  const byBoard=new Map();
+  for(const item of Array.isArray(set?.installations) ? set.installations : []){
+    const boardId=trim(item?.boardId);
+    if(!boardId) continue;
+    const current=byBoard.get(boardId) || {boardId, quantity:0};
+    current.quantity+=Math.max(0,parseInt(item?.quantity,10)||0);
+    byBoard.set(boardId, current);
+  }
+  const legacyBoardId=trim(set?.mountedBoardId);
+  if(!Array.isArray(set?.installations) && legacyBoardId && !byBoard.has(legacyBoardId)){
+    byBoard.set(legacyBoardId, {boardId:legacyBoardId, quantity:Math.max(0,parseInt(set?.mountedQuantity,10)||0)});
+  }
+  return Array.from(byBoard.values()).filter(item=>state.boards.some(board=>board.id===item.boardId));
+}
+
+function applySwitchInstallations(set, installations){
+  set.installations=(installations||[]).map(item=>({
+    boardId:trim(item?.boardId),
+    quantity:Math.max(0,parseInt(item?.quantity,10)||0)
+  })).filter(item=>item.boardId);
+  set.mountedQuantity=set.installations.reduce((sum,item)=>sum+Number(item.quantity||0),0);
+  set.mountedBoardId=set.installations.length===1 ? set.installations[0].boardId : '';
+  return set;
 }
 
 function fillSelect(sel, options, emptyLabel){
@@ -2465,6 +2678,57 @@ function fillKeycapSetSelect(sel){
   }
 }
 
+function renderBoardSwitchSetLinks(){
+  const host=document.getElementById('f_switchSetLinks');
+  if(!host || !state.draft) return;
+  const ids=(Array.isArray(state.draft.switchSetIds) ? state.draft.switchSetIds : [state.draft.switchSetId]).map(trim);
+  const validIds=ids.filter((id,idx,arr)=>id && state.switchSets.some(set=>set.id===id) && arr.indexOf(id)===idx);
+  state.draft.switchSetIds=[...ids];
+  state.draft.switchSetId=validIds[0]||'';
+  const options=['<option value="">Switch-Set wählen…</option>'].concat(
+    [...state.switchSets].sort((a,b)=>(a.name||'').localeCompare(b.name||'','de')).map(set=>
+      '<option value="'+esc(set.id)+'">'+esc(switchVariantLabel(set))+'</option>'
+    )
+  ).join('');
+  host.innerHTML='<div class="installRows">'+(ids.length?ids.map((id,idx)=>
+    '<div class="installRow" data-idx="'+idx+'">'+
+      '<select data-a="switchSet">'+options+'</select>'+
+      '<span class="muted small"></span>'+
+      '<button type="button" class="danger" data-a="remove">Entfernen</button>'+
+    '</div>'
+  ).join(''):'<div class="muted small">Kein Switch-Set verknüpft.</div>')+'</div>'+
+  '<div style="margin-top:8px"><button type="button" id="f_addSwitchSetLink">Switch-Set hinzufügen</button></div>';
+  for(const row of host.querySelectorAll('.installRow')){
+    const idx=parseInt(row.dataset.idx,10);
+    const select=row.querySelector('[data-a="switchSet"]');
+    select.value=ids[idx]||'';
+    select.addEventListener('change', e=>{
+      ids[idx]=trim(e.target.value);
+      state.draft.switchSetIds=ids;
+      state.draft.switchSetIdsEdited=true;
+      applyBoardSwitchSetIds(state.draft, ids, true);
+      renderBoardSwitchSetLinks();
+      fillBoardSwitchesFromLinkedSet();
+      renderPreview();
+    });
+    row.querySelector('[data-a="remove"]').addEventListener('click', ()=>{
+      ids.splice(idx,1);
+      state.draft.switchSetIds=ids;
+      state.draft.switchSetIdsEdited=true;
+      applyBoardSwitchSetIds(state.draft, ids, true);
+      renderBoardSwitchSetLinks();
+      fillBoardSwitchesFromLinkedSet();
+      renderPreview();
+    });
+  }
+  document.getElementById('f_addSwitchSetLink').addEventListener('click', ()=>{
+    ids.push('');
+    state.draft.switchSetIds=ids;
+    state.draft.switchSetIdsEdited=true;
+    renderBoardSwitchSetLinks();
+  });
+}
+
 function renderForm(){
   const host=document.getElementById('formGrid');
   host.innerHTML='';
@@ -2481,6 +2745,10 @@ function renderForm(){
   host.appendChild(fieldSelectPlus('Keycaps','f_keycaps','f_keycaps_new'));
   host.appendChild(fieldSelectOnly('Keycap-Set','f_keycapSetId'));
   host.appendChild(fieldSelectPlus('Switches','f_switches','f_switches_new'));
+  const switchLinks=document.createElement('div');
+  switchLinks.style.gridColumn='1 / -1';
+  switchLinks.innerHTML='<div class="lbl">Switch-Sets</div><div id="f_switchSetLinks"></div>';
+  host.appendChild(switchLinks);
 }
 
 function fieldText(label,hint,id,ph){
@@ -2521,6 +2789,7 @@ function renderSelects(){
   fillSelect(document.getElementById('f_keycaps'), state.lists.keycaps, 'Keycaps…');
   fillKeycapSetSelect(document.getElementById('f_keycapSetId'));
   fillSelect(document.getElementById('f_switches'), state.lists.switches, 'Switches…');
+  renderBoardSwitchSetLinks();
 
   const d=state.draft;
   if(d){
@@ -2532,15 +2801,31 @@ function renderSelects(){
     setSelectValue('f_keycaps', d.keycaps);
     document.getElementById('f_keycapSetId').value=d.keycapSetId || '';
     setSelectValue('f_switches', d.switches);
+    renderBoardSwitchSetLinks();
   }
 }
 
+function fillBoardKeycapsFromLinkedSet(){
+  if(!state.draft) return;
+  const name=keycapSetName(state.draft.keycapSetId);
+  if(!name) return;
+  state.draft.keycaps=name;
+  setSelectValue('f_keycaps', name);
+}
+
+function fillBoardSwitchesFromLinkedSet(){
+  if(!state.draft) return;
+  applyBoardSwitchSetIds(state.draft, normalizeBoardSwitchSetIds(state.draft), true);
+  setSelectValue('f_switches', state.draft.switches);
+}
+
 function emptyDraft(){
-  return {id:uid(), name:'', manufacturer:'', format:'', plate:'', pcb:'', keycaps:'', keycapSetId:'', stabs:'', switches:'', remark:'', photoIds:[], mainPhotoId:'', createdAt:Date.now(), updatedAt:Date.now()};
+  return {id:uid(), name:'', manufacturer:'', format:'', plate:'', pcb:'', keycaps:'', keycapSetId:'', stabs:'', switches:'', switchSetId:'', switchSetIds:[], remark:'', photoIds:[], mainPhotoId:'', createdAt:Date.now(), updatedAt:Date.now()};
 }
 
 function beginDraft(board){
   state.draft=board ? JSON.parse(JSON.stringify(board)) : emptyDraft();
+  applyBoardSwitchSetIds(state.draft, normalizeBoardSwitchSetIds(state.draft));
   state.editorSession={original:board ? JSON.parse(JSON.stringify(board)) : null, addedPhotoIds:new Set()};
 }
 
@@ -2553,8 +2838,9 @@ function draftIsDirty(){
   if(!state.draft) return false;
   if(state.editorSession.addedPhotoIds.size) return true;
   const original=state.editorSession.original || emptyDraft();
-  const keys=['name','manufacturer','format','plate','pcb','keycaps','keycapSetId','stabs','switches','remark','mainPhotoId'];
+  const keys=['name','manufacturer','format','plate','pcb','keycaps','keycapSetId','stabs','switches','switchSetId','remark','mainPhotoId'];
   if(keys.some(key=>(state.draft[key]||'')!==(original[key]||''))) return true;
+  if(JSON.stringify(normalizeBoardSwitchSetIds(state.draft))!==JSON.stringify(normalizeBoardSwitchSetIds(original))) return true;
   return JSON.stringify(state.draft.photoIds||[])!==JSON.stringify(original.photoIds||[]);
 }
 
@@ -2575,6 +2861,8 @@ function newDraft(){
 function fillFormFromDraft(){
   renderForm();
   renderSelects();
+  fillBoardKeycapsFromLinkedSet();
+  fillBoardSwitchesFromLinkedSet();
   const d=state.draft;
   document.getElementById('f_name').value=d.name||'';
   document.getElementById('f_remark').value=d.remark||'';
@@ -2590,7 +2878,8 @@ function renderPreview(){
   host.innerHTML='';
   if(d.manufacturer) host.appendChild(pill(d.manufacturer));
   if(d.format) host.appendChild(pill(d.format));
-  if(d.switches) host.appendChild(pill(d.switches));
+  const switchLabel=displayBoardSwitches(d);
+  if(switchLabel) host.appendChild(pill(switchLabel));
   const keycapLabel=displayBoardKeycaps(d);
   if(keycapLabel) host.appendChild(pill(keycapLabel));
   document.getElementById('pv_meta').textContent = 'PCB: '+(d.pcb||'—')+' • Plate: '+(d.plate||'—');
@@ -2612,12 +2901,13 @@ function updateShellStats(){
   setText('sideKeycaps', state.lists.keycaps?.length||0);
   setText('sideKeycapSets', state.keycapSets?.length||0);
   setText('sideArtisanSets', state.artisanSets?.length||0);
-  setText('sideSwitches', state.lists.switches?.length||0);
+  setText('sideSwitches', state.switchSets?.length||0);
   setText('sideBoards', state.boards?.length||0);
   setText('sidePhotos',
     (state.boards||[]).reduce((sum,board)=>sum+(board.photoIds?.length||0),0) +
     (state.keycapSets||[]).reduce((sum,set)=>sum+(set.photoIds?.length||0),0) +
-    (state.artisanSets||[]).reduce((sum,set)=>sum+(set.photoIds?.length||0),0)
+    (state.artisanSets||[]).reduce((sum,set)=>sum+(set.photoIds?.length||0),0) +
+    (state.switchSets||[]).reduce((sum,set)=>sum+(set.photoIds?.length||0),0)
   );
   setText('sideUpdated', state.meta?.updatedAt ? fmtDateOnly(state.meta.updatedAt) : '—');
 }
@@ -2681,7 +2971,7 @@ async function renderPhotosArea(){
     const target=item.querySelector('.pimg');
     const got=await photoSrc(pid);
     if(got.src){
-      target.innerHTML='<img src="'+got.src+'" alt="'+esc(got.name)+'">';
+      target.innerHTML=imageHtml(got.src, got.name);
     }else{
       target.innerHTML='<div class="thumb">(Bild fehlt)</div>';
     }
@@ -2745,6 +3035,11 @@ async function saveDraft(){
   d.keycaps=trim(document.getElementById('f_keycaps').value);
   d.keycapSetId=trim(document.getElementById('f_keycapSetId').value);
   d.switches=trim(document.getElementById('f_switches').value);
+  applyBoardSwitchSetIds(d, d.switchSetIds||[], Boolean(d.switchSetIdsEdited || (d.switchSetIds||[]).length));
+  delete d.switchSetIdsEdited;
+  const linkedKeycaps=keycapSetName(d.keycapSetId);
+  if(linkedKeycaps) d.keycaps=linkedKeycaps;
+  if(d.switchSetIds.length) d.switches=d.switchSetIds.map(id=>switchSetName(id)).filter(Boolean).join(', ');
   d.remark=(document.getElementById('f_remark').value||'').trim();
   d.updatedAt=Date.now();
 
@@ -2766,6 +3061,7 @@ async function saveDraft(){
   const idx=state.boards.findIndex(x=>x.id===d.id);
   if(idx>=0) state.boards[idx]=JSON.parse(JSON.stringify(d)); else state.boards.unshift(JSON.parse(JSON.stringify(d)));
   await syncBoardKeycapLink(d);
+  await syncBoardSwitchLink(d);
   state.editorSession={original:JSON.parse(JSON.stringify(d)), addedPhotoIds:new Set()};
   await persistMeta();
   newDraft();
@@ -2794,11 +3090,33 @@ async function syncBoardKeycapLink(board){
   if(changed) state.keycapSets=await storeGetAll('keycapSets');
 }
 
+async function syncBoardSwitchLink(board){
+  let changed=false;
+  const boardSwitchSetIds=new Set(normalizeBoardSwitchSetIds(board));
+  for(const set of state.switchSets){
+    const installations=normalizeSwitchInstallations(set);
+    const shouldLink=boardSwitchSetIds.has(set.id);
+    const isLinked=installations.some(item=>item.boardId===board.id);
+    if(shouldLink && !isLinked){
+      applySwitchInstallations(set, [...installations, {boardId:board.id, quantity:0}]);
+      set.updatedAt=Date.now();
+      await storePut('switchSets', set);
+      changed=true;
+    }else if(!shouldLink && isLinked){
+      applySwitchInstallations(set, installations.filter(item=>item.boardId!==board.id));
+      set.updatedAt=Date.now();
+      await storePut('switchSets', set);
+      changed=true;
+    }
+  }
+  if(changed) state.switchSets=await storeGetAll('switchSets');
+}
+
 function applyFilters(arr){
   const q=trim(state.filters.q).toLowerCase();
   let out=[...arr];
   if(q){
-    out=out.filter(b=>[b.name,b.manufacturer,b.format,b.plate,b.pcb,displayBoardKeycaps(b),b.stabs,b.switches,b.remark].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
+    out=out.filter(b=>[b.name,b.manufacturer,b.format,b.plate,b.pcb,displayBoardKeycaps(b),b.stabs,displayBoardSwitches(b),b.remark].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
   }
   if(state.filters.man) out=out.filter(b=>(b.manufacturer||'')===state.filters.man);
   if(state.filters.format) out=out.filter(b=>(b.format||'')===state.filters.format);
@@ -2860,6 +3178,10 @@ function renderOverview(renderFilters=true){
     renderArtisans(renderFilters);
     return;
   }
+  if(state.viewEntities.ueb==='switches'){
+    renderSwitches(renderFilters);
+    return;
+  }
   const k=document.getElementById('kpi');
   if(renderFilters){
     renderFilterControls(k, 'ov', renderOverview);
@@ -2883,7 +3205,7 @@ function renderOverview(renderFilters=true){
     // Thumbnail + Board als erste zwei Spalten
     tr.innerHTML='<td><div class=\"miniThumb\" title=\"Spotlight öffnen\" role=\"button\" tabindex=\"0\" aria-label=\"Details zu '+esc(b.name)+' öffnen\"><span>—</span></div></td>'+
       '<td><div class=\"boardName\" style=\"font-weight:900\">'+esc(b.name)+'</div><div class=\"muted small\" style=\"margin-top:6px\">PCB: '+esc(b.pcb||'—')+' • Plate: '+esc(b.plate||'—')+'</div></td>'+
-      '<td>'+esc(b.manufacturer||'—')+'</td><td>'+esc(b.format||'—')+'</td><td>'+esc(b.switches||'—')+'</td><td>'+esc(displayBoardKeycaps(b)||'—')+'</td><td>'+(b.photoIds?b.photoIds.length:0)+'</td>'+
+      '<td>'+esc(b.manufacturer||'—')+'</td><td>'+esc(b.format||'—')+'</td><td>'+esc(displayBoardSwitches(b)||'—')+'</td><td>'+esc(displayBoardKeycaps(b)||'—')+'</td><td>'+(b.photoIds?b.photoIds.length:0)+'</td>'+
       '<td style=\"text-align:right\"><div style=\"display:flex;gap:8px;justify-content:flex-end\">'+
         '<button data-a=\"edit\">Bearbeiten</button><button data-a=\"del\" class=\"danger\">Löschen</button>'+
       '</div></td>';
@@ -2906,7 +3228,7 @@ function renderOverview(renderFilters=true){
       if(!el) return;
       const got = await getBoardThumbSrc(b);
       if(got.src){
-        el.innerHTML = '<img src=\"'+got.src+'\" alt=\"'+esc(b.name)+'\">';
+        el.innerHTML = imageHtml(got.src, b.name);
         if(got.revoke && String(got.src).startsWith('blob:')){
           setTimeout(()=>{ try{ URL.revokeObjectURL(got.src); }catch(e){} }, 15000);
         }
@@ -2958,10 +3280,11 @@ function renderGallery(renderFilters=true){
       const badges=[];
       if(state.gallery.showFields.manufacturer && b.manufacturer) badges.push('<span class="pill">'+esc(b.manufacturer)+'</span>');
       if(state.gallery.showFields.format && b.format) badges.push('<span class="pill">'+esc(b.format)+'</span>');
-      if(state.gallery.showFields.switches && b.switches) badges.push('<span class="pill">'+esc(b.switches)+'</span>');
+      const boardSwitches=displayBoardSwitches(b);
+      if(state.gallery.showFields.switches && boardSwitches) badges.push('<span class="pill">'+esc(boardSwitches)+'</span>');
       const boardKeycaps=displayBoardKeycaps(b);
       if(state.gallery.showFields.keycaps && boardKeycaps) badges.push('<span class="pill">'+esc(boardKeycaps)+'</span>');
-      card.innerHTML='<div class="thumb">'+(src?('<img src="'+src+'" alt="'+esc(b.name)+'">'):'Kein Foto')+'</div>'+
+      card.innerHTML='<div class="thumb">'+(src?imageHtml(src, b.name):'Kein Foto')+'</div>'+
         '<div class="gbody"><div class="gname">'+esc(b.name)+'</div><div class="gmeta">'+(badges.length?badges.join(''):'<span class="muted small">—</span>')+'</div>'+
         '<div class="muted small" style="margin-top:8px">Fotos: '+(b.photoIds?b.photoIds.length:0)+' • Geändert: '+fmtDateOnly(b.updatedAt||b.createdAt)+'</div></div>';
       card.addEventListener('click', ()=>openSpotlight(b.id));
@@ -2978,6 +3301,7 @@ function editExisting(id){
   document.getElementById('editorTitle').textContent='Board bearbeiten';
   document.getElementById('btnCancel').style.display='inline-flex';
   fillFormFromDraft();
+  state.viewEntities.erf='boards';
   switchTab('erf');
 }
 
@@ -2987,6 +3311,15 @@ async function deleteBoard(id){
   await storeDelete('boards', id);
   const photos = await storeGetAllByBoardId(id);
   for(const p of photos) await storeDelete('photos', p.id);
+  for(const set of state.switchSets){
+    const installations=normalizeSwitchInstallations(set);
+    if(installations.some(item=>item.boardId===id)){
+      applySwitchInstallations(set, installations.filter(item=>item.boardId!==id));
+      set.updatedAt=Date.now();
+      await storePut('switchSets', set);
+    }
+  }
+  state.switchSets=await storeGetAll('switchSets');
   state.boards = state.boards.filter(x=>x.id!==id);
   await persistMeta();
   if(state.spotlight.open && state.spotlight.boardId===id) closeSpotlight();
@@ -2999,10 +3332,15 @@ function wireDynamic(){
   document.getElementById('f_name').oninput = e=>{ state.draft.name=trim(e.target.value); renderPreview(); };
   document.getElementById('f_remark').oninput = e=>{ state.draft.remark=(e.target.value||'').trim(); renderPreview(); };
 
-  const map=[['f_man','manufacturer'],['f_format','format'],['f_plate','plate'],['f_pcb','pcb'],['f_stabs','stabs'],['f_keycaps','keycaps'],['f_keycapSetId','keycapSetId'],['f_switches','switches']];
+  const map=[['f_man','manufacturer'],['f_format','format'],['f_plate','plate'],['f_pcb','pcb'],['f_stabs','stabs'],['f_keycaps','keycaps'],['f_switches','switches']];
   for(const [id,key] of map){
     document.getElementById(id).onchange = e=>{ state.draft[key]=trim(e.target.value); renderPreview(); };
   }
+  document.getElementById('f_keycapSetId').onchange = e=>{
+    state.draft.keycapSetId=trim(e.target.value);
+    fillBoardKeycapsFromLinkedSet();
+    renderPreview();
+  };
 
   function wireNew(inputId, listKey, selectId, fieldKey){
     const el=document.getElementById(inputId);
@@ -3209,7 +3547,7 @@ async function renderKeycapPhotosArea(){
     });
     grid.appendChild(item);
     const got=await keycapPhotoSrc(pid);
-    item.querySelector('.pimg').innerHTML=got.src ? '<img src="'+got.src+'" alt="'+esc(got.name)+'">' : '<div class="thumb">(Bild fehlt)</div>';
+    item.querySelector('.pimg').innerHTML=got.src ? imageHtml(got.src, got.name) : '<div class="thumb">(Bild fehlt)</div>';
   }
 }
 
@@ -3254,7 +3592,10 @@ async function syncMountedBoardLinks(set){
       changed=true;
     }
   }
-  if(changed) state.boards=await storeGetAll('boards');
+  if(changed){
+    state.boards=await storeGetAll('boards');
+    state.switchSets=await storeGetAll('switchSets');
+  }
 }
 
 async function saveKeycapDraft(){
@@ -3406,9 +3747,6 @@ async function keycapImageSources(set){
   return images;
 }
 
-function renderKeycapViewMode(){
-}
-
 function renderKeycaps(renderFilters=true){
   if(renderFilters) renderKeycapFilters('keycapFilters','kcFilter',renderKeycaps);
   const rows=applyKeycapFilters(state.keycapSets);
@@ -3443,7 +3781,7 @@ function renderKeycaps(renderFilters=true){
     thumbEl.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openKeycapSpotlight(set.id); });
     thumbEl.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openKeycapSpotlight(set.id);} });
     tb.appendChild(tr);
-    (async()=>{ const src=await getKeycapThumbSrc(set); if(src && thumbEl.isConnected) thumbEl.innerHTML='<img src="'+src+'" alt="'+esc(set.name)+'">'; })();
+    (async()=>{ const src=await getKeycapThumbSrc(set); if(src && thumbEl.isConnected) thumbEl.innerHTML=imageHtml(src, set.name); })();
   }
   updateShellStats();
 }
@@ -3480,9 +3818,605 @@ function renderKeycapGallery(renderFilters=true){
       const src=await getKeycapThumbSrc(set);
       const thumb=card.querySelector('.thumb');
       if(!thumb || !card.isConnected) return;
-      thumb.innerHTML=src?'<img src="'+src+'" alt="'+esc(set.name)+'">':'Kein Foto';
+      thumb.innerHTML=src?imageHtml(src, set.name):'Kein Foto';
     })();
   }
+}
+
+function emptySwitchDraft(){
+  return {
+    id:uid(),
+    name:'',
+    switchType:'',
+    topHousingMaterial:'',
+    bottomHousingMaterial:'',
+    stemMaterial:'',
+    springLength:'',
+    springType:'',
+    preTravel:'',
+    totalTravel:'',
+    operatingForce:'',
+    bottomOutForce:'',
+    pins:'5',
+    ledDiffuser:false,
+    factoryLubed:false,
+    quantity:0,
+    mountedQuantity:0,
+    mountedBoardId:'',
+    installations:[],
+    importedBoardText:'',
+    importedBoardAllocations:[],
+    importSource:'',
+    importRow:0,
+    importKey:'',
+    importWarnings:[],
+    notes:'',
+    photoIds:[],
+    mainPhotoId:'',
+    createdAt:Date.now(),
+    updatedAt:Date.now()
+  };
+}
+
+function beginSwitchDraft(set){
+  state.switchDraft=set ? JSON.parse(JSON.stringify(set)) : emptySwitchDraft();
+  const installations=normalizeSwitchInstallations(state.switchDraft);
+  if(installations.length) applySwitchInstallations(state.switchDraft, installations);
+  state.switchEditorSession={original:set ? JSON.parse(JSON.stringify(set)) : null, addedPhotoIds:new Set()};
+}
+
+function switchDraftIsDirty(){
+  if(!state.switchDraft) return false;
+  if(state.switchEditorSession.addedPhotoIds.size) return true;
+  const original=state.switchEditorSession.original || emptySwitchDraft();
+  const keys=['name','switchType','topHousingMaterial','bottomHousingMaterial','stemMaterial','springLength','springType','preTravel','totalTravel','operatingForce','bottomOutForce','pins','notes','mainPhotoId'];
+  if(keys.some(key=>(state.switchDraft[key]||'')!==(original[key]||''))) return true;
+  if(Boolean(state.switchDraft.ledDiffuser)!==Boolean(original.ledDiffuser)) return true;
+  if(Boolean(state.switchDraft.factoryLubed)!==Boolean(original.factoryLubed)) return true;
+  if(Number(state.switchDraft.quantity||0)!==Number(original.quantity||0)) return true;
+  if(JSON.stringify(normalizeSwitchInstallations(state.switchDraft))!==JSON.stringify(normalizeSwitchInstallations(original))) return true;
+  return JSON.stringify(state.switchDraft.photoIds||[])!==JSON.stringify(original.photoIds||[]);
+}
+
+async function discardSwitchDraftChanges(){
+  for(const id of state.switchEditorSession.addedPhotoIds) await storeDelete('photos', id);
+  state.switchEditorSession={original:null, addedPhotoIds:new Set()};
+}
+
+function newSwitchDraft(){
+  beginSwitchDraft(null);
+  document.getElementById('switchEditorTitle').textContent='Neuer Switch';
+  document.getElementById('btnCancelSwitch').style.display='none';
+  fillSwitchFormFromDraft();
+}
+
+function fieldRadioGroup(label, name, options){
+  const w=document.createElement('div');
+  w.innerHTML='<div class="lbl">'+esc(label)+'</div><div class="choiceRow">'+options.map(opt=>
+    '<label><input type="radio" name="'+esc(name)+'" value="'+esc(opt.value)+'"> '+esc(opt.label)+'</label>'
+  ).join('')+'</div>';
+  return w;
+}
+
+function radioValue(name){
+  return document.querySelector('input[name="'+name+'"]:checked')?.value || '';
+}
+
+function setRadioValue(name, value){
+  const el=document.querySelector('input[name="'+name+'"][value="'+String(value)+'"]');
+  if(el) el.checked=true;
+}
+
+function renderSwitchForm(){
+  const host=document.getElementById('switchFormGrid');
+  host.innerHTML='';
+  host.style.display='grid';
+  host.style.gridTemplateColumns = window.matchMedia('(min-width:780px)').matches ? '1fr 1fr' : '1fr';
+  host.style.gap='12px';
+  host.appendChild(fieldSelectPlus('Name / Bezeichnung','sw_name','sw_name_new'));
+  host.appendChild(fieldSelectPlus('Switch Type','sw_switchType','sw_switchType_new'));
+  host.appendChild(fieldSelectPlus('Top Housing Material','sw_topHousingMaterial','sw_topHousingMaterial_new'));
+  host.appendChild(fieldSelectPlus('Bottom Housing Material','sw_bottomHousingMaterial','sw_bottomHousingMaterial_new'));
+  host.appendChild(fieldSelectPlus('Stem Material','sw_stemMaterial','sw_stemMaterial_new'));
+  host.appendChild(fieldSelectPlus('Spring Length','sw_springLength','sw_springLength_new'));
+  host.appendChild(fieldSelectPlus('Spring Type','sw_springType','sw_springType_new'));
+  host.appendChild(fieldSelectPlus('Pre-travel','sw_preTravel','sw_preTravel_new'));
+  host.appendChild(fieldSelectPlus('Total Travel','sw_totalTravel','sw_totalTravel_new'));
+  host.appendChild(fieldSelectPlus('Operating Force','sw_operatingForce','sw_operatingForce_new'));
+  host.appendChild(fieldSelectPlus('Bottom-out Force','sw_bottomOutForce','sw_bottomOutForce_new'));
+  host.appendChild(fieldText('Anzahl','','sw_quantity','z.B. 90'));
+  host.appendChild(fieldRadioGroup('Pins','sw_pins',[{value:'3',label:'3 PIN'},{value:'5',label:'5 PIN'}]));
+  host.appendChild(fieldRadioGroup('LED Diffusor','sw_ledDiffuser',[{value:'yes',label:'Ja'},{value:'no',label:'Nein'}]));
+  host.appendChild(fieldRadioGroup('Factory Lubed','sw_factoryLubed',[{value:'yes',label:'Ja'},{value:'no',label:'Nein'}]));
+  const installs=document.createElement('div');
+  installs.style.gridColumn='1 / -1';
+  installs.innerHTML='<div class="lbl">In Boards verbaut</div><div id="sw_installations"></div>';
+  host.appendChild(installs);
+}
+
+function renderSwitchSelects(){
+  fillSelect(document.getElementById('sw_name'), state.lists.switchNames, 'Name / Bezeichnung…');
+  fillSelect(document.getElementById('sw_switchType'), state.lists.switchTypes, 'Switch Type…');
+  fillSelect(document.getElementById('sw_topHousingMaterial'), state.lists.switchTopHousingMaterials, 'Material…');
+  fillSelect(document.getElementById('sw_bottomHousingMaterial'), state.lists.switchBottomHousingMaterials, 'Material…');
+  fillSelect(document.getElementById('sw_stemMaterial'), state.lists.switchStemMaterials, 'Material…');
+  fillSelect(document.getElementById('sw_springLength'), state.lists.switchSpringLengths, 'Spring Length…');
+  fillSelect(document.getElementById('sw_springType'), state.lists.switchSpringTypes, 'Spring Type…');
+  fillSelect(document.getElementById('sw_preTravel'), state.lists.switchPreTravels, 'Pre-travel…');
+  fillSelect(document.getElementById('sw_totalTravel'), state.lists.switchTotalTravels, 'Total Travel…');
+  fillSelect(document.getElementById('sw_operatingForce'), state.lists.switchOperatingForces, 'Operating Force…');
+  fillSelect(document.getElementById('sw_bottomOutForce'), state.lists.switchBottomOutForces, 'Bottom-out Force…');
+}
+
+function fillSwitchFormFromDraft(){
+  renderSwitchForm();
+  renderSwitchSelects();
+  setSwitchSelectValuesFromDraft();
+  const d=state.switchDraft;
+  document.getElementById('sw_quantity').value=Number(d.quantity||0) || '';
+  document.getElementById('sw_notes').value=d.notes||'';
+  setRadioValue('sw_pins', d.pins||'5');
+  setRadioValue('sw_ledDiffuser', d.ledDiffuser?'yes':'no');
+  setRadioValue('sw_factoryLubed', d.factoryLubed?'yes':'no');
+  renderSwitchInstallations();
+  renderSwitchPhotosArea();
+  renderSwitchPreview();
+  wireSwitchDynamic();
+}
+
+function setSwitchSelectValuesFromDraft(){
+  const d=state.switchDraft;
+  setSelectValue('sw_name', d.name);
+  setSelectValue('sw_switchType', d.switchType);
+  setSelectValue('sw_topHousingMaterial', d.topHousingMaterial);
+  setSelectValue('sw_bottomHousingMaterial', d.bottomHousingMaterial);
+  setSelectValue('sw_stemMaterial', d.stemMaterial);
+  setSelectValue('sw_springLength', d.springLength);
+  setSelectValue('sw_springType', d.springType);
+  setSelectValue('sw_preTravel', d.preTravel);
+  setSelectValue('sw_totalTravel', d.totalTravel);
+  setSelectValue('sw_operatingForce', d.operatingForce);
+  setSelectValue('sw_bottomOutForce', d.bottomOutForce);
+}
+
+function captureSwitchFormToDraft(){
+  const d=state.switchDraft;
+  if(!d || !document.getElementById('sw_name')) return;
+  const selectMap=[
+    ['sw_name','name'],['sw_switchType','switchType'],['sw_topHousingMaterial','topHousingMaterial'],['sw_bottomHousingMaterial','bottomHousingMaterial'],
+    ['sw_stemMaterial','stemMaterial'],['sw_springLength','springLength'],['sw_springType','springType'],
+    ['sw_preTravel','preTravel'],['sw_totalTravel','totalTravel'],['sw_operatingForce','operatingForce'],['sw_bottomOutForce','bottomOutForce']
+  ];
+  for(const [id,key] of selectMap){
+    const el=document.getElementById(id);
+    if(el) d[key]=trim(el.value);
+  }
+  const quantity=document.getElementById('sw_quantity');
+  if(quantity) d.quantity=Math.max(0,parseInt(quantity.value,10)||0);
+  const notes=document.getElementById('sw_notes');
+  if(notes) d.notes=(notes.value||'').trim();
+  d.pins=radioValue('sw_pins')||'5';
+  d.ledDiffuser=radioValue('sw_ledDiffuser')==='yes';
+  d.factoryLubed=radioValue('sw_factoryLubed')==='yes';
+}
+
+function renderSwitchInstallations(){
+  const host=document.getElementById('sw_installations');
+  if(!host || !state.switchDraft) return;
+  const installations=(Array.isArray(state.switchDraft.installations) ? state.switchDraft.installations : normalizeSwitchInstallations(state.switchDraft)).map(item=>({
+    boardId:trim(item?.boardId),
+    quantity:Math.max(0,parseInt(item?.quantity,10)||0)
+  }));
+  const syncDraft=(force=false)=>{
+    state.switchDraft.installations=installations;
+    const valid=installations.filter(item=>item.boardId);
+    if(force || valid.length || !state.switchDraft.importedBoardText){
+      state.switchDraft.installationsEdited=Boolean(force || state.switchDraft.installationsEdited);
+      state.switchDraft.mountedQuantity=valid.reduce((sum,item)=>sum+Number(item.quantity||0),0);
+      state.switchDraft.mountedBoardId=valid.length===1 ? valid[0].boardId : '';
+    }
+  };
+  syncDraft();
+  const boardOptions=['<option value="">Board wählen…</option>'].concat(
+    [...state.boards].sort((a,b)=>(a.name||'').localeCompare(b.name||'','de')).map(board=>
+      '<option value="'+esc(board.id)+'">'+esc(board.name||'(ohne Name)')+'</option>'
+    )
+  ).join('');
+  host.innerHTML='<div class="installRows">'+(installations.length?installations.map((item,idx)=>
+    '<div class="installRow" data-idx="'+idx+'">'+
+      '<select data-a="board">'+boardOptions+'</select>'+
+      '<input data-a="qty" inputmode="numeric" placeholder="Anzahl" value="'+esc(item.quantity||'')+'">'+
+      '<button type="button" class="danger" data-a="remove">Entfernen</button>'+
+    '</div>'
+  ).join(''):'<div class="muted small">Noch kein Board zugeordnet.</div>')+'</div>'+
+  '<div style="margin-top:8px"><button type="button" id="sw_addInstallation">Board hinzufügen</button></div>';
+  for(const row of host.querySelectorAll('.installRow')){
+    const idx=parseInt(row.dataset.idx,10);
+    const board=row.querySelector('[data-a="board"]');
+    const qty=row.querySelector('[data-a="qty"]');
+    board.value=installations[idx]?.boardId||'';
+    board.addEventListener('change', e=>{
+      installations[idx].boardId=trim(e.target.value);
+      syncDraft(true);
+      renderSwitchPreview();
+    });
+    qty.addEventListener('input', e=>{
+      installations[idx].quantity=Math.max(0,parseInt(e.target.value,10)||0);
+      syncDraft(true);
+      renderSwitchPreview();
+    });
+    row.querySelector('[data-a="remove"]').addEventListener('click', ()=>{
+      installations.splice(idx,1);
+      syncDraft(true);
+      renderSwitchInstallations();
+      renderSwitchPreview();
+    });
+  }
+  document.getElementById('sw_addInstallation').addEventListener('click', ()=>{
+    installations.push({boardId:'', quantity:0});
+    syncDraft(true);
+    renderSwitchInstallations();
+    renderSwitchPreview();
+  });
+}
+
+function wireSwitchDynamic(){
+  const selectMap=[
+    ['sw_name','name'],['sw_switchType','switchType'],['sw_topHousingMaterial','topHousingMaterial'],['sw_bottomHousingMaterial','bottomHousingMaterial'],
+    ['sw_stemMaterial','stemMaterial'],['sw_springLength','springLength'],['sw_springType','springType'],
+    ['sw_preTravel','preTravel'],['sw_totalTravel','totalTravel'],['sw_operatingForce','operatingForce'],
+    ['sw_bottomOutForce','bottomOutForce']
+  ];
+  for(const [id,key] of selectMap) document.getElementById(id).onchange=e=>{ state.switchDraft[key]=trim(e.target.value); renderSwitchPreview(); };
+  document.getElementById('sw_quantity').oninput=e=>{ state.switchDraft.quantity=Math.max(0,parseInt(e.target.value,10)||0); renderSwitchPreview(); };
+  document.getElementById('sw_notes').oninput=e=>{ state.switchDraft.notes=(e.target.value||'').trim(); renderSwitchPreview(); };
+  for(const name of ['sw_pins','sw_ledDiffuser','sw_factoryLubed']){
+    for(const el of document.querySelectorAll('input[name="'+name+'"]')){
+      el.onchange=()=>{
+        state.switchDraft.pins=radioValue('sw_pins')||'5';
+        state.switchDraft.ledDiffuser=radioValue('sw_ledDiffuser')==='yes';
+        state.switchDraft.factoryLubed=radioValue('sw_factoryLubed')==='yes';
+        renderSwitchPreview();
+      };
+    }
+  }
+  function wireNew(inputId, listKey, selectId, fieldKey){
+    const el=document.getElementById(inputId);
+    el.onkeydown=e=>{
+      if(e.key!=='Enter') return;
+      e.preventDefault();
+      const v=trim(el.value);
+      if(!v) return;
+      captureSwitchFormToDraft();
+      ensureInList(listKey, v);
+      state.switchDraft[fieldKey]=v;
+      renderSwitchSelects();
+      setSwitchSelectValuesFromDraft();
+      el.value='';
+      renderSwitchPreview();
+    };
+  }
+  wireNew('sw_name_new','switchNames','sw_name','name');
+  wireNew('sw_switchType_new','switchTypes','sw_switchType','switchType');
+  wireNew('sw_topHousingMaterial_new','switchTopHousingMaterials','sw_topHousingMaterial','topHousingMaterial');
+  wireNew('sw_bottomHousingMaterial_new','switchBottomHousingMaterials','sw_bottomHousingMaterial','bottomHousingMaterial');
+  wireNew('sw_stemMaterial_new','switchStemMaterials','sw_stemMaterial','stemMaterial');
+  wireNew('sw_springLength_new','switchSpringLengths','sw_springLength','springLength');
+  wireNew('sw_springType_new','switchSpringTypes','sw_springType','springType');
+  wireNew('sw_preTravel_new','switchPreTravels','sw_preTravel','preTravel');
+  wireNew('sw_totalTravel_new','switchTotalTravels','sw_totalTravel','totalTravel');
+  wireNew('sw_operatingForce_new','switchOperatingForces','sw_operatingForce','operatingForce');
+  wireNew('sw_bottomOutForce_new','switchBottomOutForces','sw_bottomOutForce','bottomOutForce');
+}
+
+function renderSwitchPreview(){
+  const d=state.switchDraft;
+  if(!d || !document.getElementById('sw_pv_name')) return;
+  document.getElementById('sw_pv_name').textContent=d.name||'(Switch Type)';
+  const badges=document.getElementById('sw_pv_badges');
+  badges.innerHTML='';
+  if(d.pins) badges.appendChild(pill(d.pins+' PIN'));
+  if(d.switchType) badges.appendChild(pill(d.switchType));
+  if(d.stemMaterial) badges.appendChild(pill('Stem: '+d.stemMaterial));
+  if(d.factoryLubed) badges.appendChild(pill('Factory Lubed'));
+  if(d.ledDiffuser) badges.appendChild(pill('LED Diffusor'));
+  document.getElementById('sw_pv_meta').textContent='Bestand: '+Number(d.quantity||0)+' • Verbaut: '+Number(d.mountedQuantity||0)+' • Verfügbar: '+availableSwitchQuantity(d)+(displaySwitchBoard(d)?' • '+displaySwitchBoard(d):'');
+  document.getElementById('sw_pv_photos').textContent='Fotos: '+((d.photoIds||[]).length);
+  document.getElementById('sw_pv_notes').textContent=d.notes||'';
+}
+
+async function switchPhotoSrc(photoId){
+  const rec=await storeGet('photos', photoId);
+  if(!rec) return {src:'', name:''};
+  return {src:rec.dataUrl||'', name:rec.name||''};
+}
+
+async function renderSwitchPhotosArea(){
+  const host=document.getElementById('switchPhotosArea');
+  const ids=state.switchDraft.photoIds||[];
+  if(!ids.length){
+    host.innerHTML='<div class="card pad" style="background:rgba(0,0,0,.12);border-style:dashed">Noch keine Fotos.</div>';
+    return;
+  }
+  host.innerHTML='';
+  const grid=document.createElement('div');
+  grid.className='photoGrid';
+  host.appendChild(grid);
+  for(const pid of ids){
+    const item=document.createElement('div');
+    item.className='pitem'+(state.switchDraft.mainPhotoId===pid?' main':'');
+    item.innerHTML='<div class="pimg"><div class="thumb">Lade…</div></div><div class="pbtns"><button class="primary" type="button">'+(state.switchDraft.mainPhotoId===pid?'Hauptfoto':'Als Hauptfoto')+'</button><button class="danger" type="button">Entfernen</button></div>';
+    const btnMain=item.querySelectorAll('button')[0];
+    const btnDel=item.querySelectorAll('button')[1];
+    btnMain.addEventListener('click', ()=>{ state.switchDraft.mainPhotoId=pid; renderSwitchPhotosArea(); });
+    btnDel.addEventListener('click', async ()=>{
+      if(state.switchEditorSession.addedPhotoIds.has(pid)){
+        await storeDelete('photos', pid);
+        state.switchEditorSession.addedPhotoIds.delete(pid);
+      }
+      state.switchDraft.photoIds=(state.switchDraft.photoIds||[]).filter(x=>x!==pid);
+      if(state.switchDraft.mainPhotoId===pid) state.switchDraft.mainPhotoId=state.switchDraft.photoIds[0]||'';
+      renderSwitchPhotosArea();
+      renderSwitchPreview();
+    });
+    grid.appendChild(item);
+    const got=await switchPhotoSrc(pid);
+    item.querySelector('.pimg').innerHTML=got.src ? imageHtml(got.src, got.name) : '<div class="thumb">(Bild fehlt)</div>';
+  }
+}
+
+async function addSwitchPhotos(fileList){
+  const files=Array.from(fileList||[]).filter(f=>f.type && f.type.startsWith('image/'));
+  if(!files.length) return;
+  let resized=0;
+  for(const f of files){
+    const normalized=await normalizePhoto(f);
+    if(normalized.resized) resized++;
+    const id=uid();
+    const dataUrl=await blobToDataUrl(normalized.blob);
+    await storePut('photos', {id, ownerType:'switchSet', ownerId:state.switchDraft.id, boardId:'', name:f.name, type:normalized.blob.type, dataUrl, width:normalized.width, height:normalized.height, addedAt:Date.now()});
+    state.switchDraft.photoIds.push(id);
+    state.switchEditorSession.addedPhotoIds.add(id);
+  }
+  if(!state.switchDraft.mainPhotoId && state.switchDraft.photoIds.length) state.switchDraft.mainPhotoId=state.switchDraft.photoIds[0];
+  renderSwitchPhotosArea();
+  renderSwitchPreview();
+  toast(files.length+' Foto'+(files.length===1?'':'s')+' hinzugefügt'+(resized?' • '+resized+' auf 1080p angepasst':''));
+}
+
+async function syncMountedSwitchBoardLinks(set){
+  let changed=false;
+  const installations=normalizeSwitchInstallations(set);
+  const boardIds=new Set(installations.map(item=>item.boardId));
+  for(const board of state.boards){
+    const shouldLink=boardIds.has(board.id);
+    const currentIds=normalizeBoardSwitchSetIds(board);
+    const isLinked=currentIds.includes(set.id);
+    if(shouldLink){
+      let nextIds=currentIds.includes(set.id) ? [...currentIds] : [...currentIds, set.id];
+      const otherIds=nextIds.filter(id=>id!==set.id);
+      if(!isLinked && otherIds.length){
+        const otherLabels=otherIds.map(id=>switchSetLabel(id)).filter(Boolean).join(', ');
+        const add=confirm('Auf „'+(board.name||'diesem Board')+'“ sind bereits Switch-Sets zugeordnet:\n'+otherLabels+'\n\n„'+switchVariantLabel(set)+'“ zusätzlich hinzufügen?\n\nOK = hinzufügen\nAbbrechen = vorhandene ersetzen');
+        if(!add){
+          nextIds=[set.id];
+          for(const other of state.switchSets){
+            if(other.id===set.id || !otherIds.includes(other.id)) continue;
+            const otherInstallations=normalizeSwitchInstallations(other);
+            const filtered=otherInstallations.filter(item=>item.boardId!==board.id);
+            if(filtered.length!==otherInstallations.length){
+              applySwitchInstallations(other, filtered);
+              other.updatedAt=Date.now();
+              await storePut('switchSets', other);
+              changed=true;
+            }
+          }
+        }
+      }
+      applyBoardSwitchSetIds(board, nextIds, true);
+      board.updatedAt=Date.now();
+      await storePut('boards', board);
+      changed=true;
+    }else if(!shouldLink && isLinked){
+      applyBoardSwitchSetIds(board, currentIds.filter(id=>id!==set.id), true);
+      board.updatedAt=Date.now();
+      await storePut('boards', board);
+      changed=true;
+    }
+  }
+  if(changed){
+    state.boards=await storeGetAll('boards');
+    state.switchSets=await storeGetAll('switchSets');
+  }
+}
+
+async function saveSwitchDraft(){
+  const d=state.switchDraft;
+  d.name=trim(document.getElementById('sw_name').value);
+  d.switchType=trim(document.getElementById('sw_switchType').value);
+  d.topHousingMaterial=trim(document.getElementById('sw_topHousingMaterial').value);
+  d.bottomHousingMaterial=trim(document.getElementById('sw_bottomHousingMaterial').value);
+  d.stemMaterial=trim(document.getElementById('sw_stemMaterial').value);
+  d.springLength=trim(document.getElementById('sw_springLength').value);
+  d.springType=trim(document.getElementById('sw_springType').value);
+  d.preTravel=trim(document.getElementById('sw_preTravel').value);
+  d.totalTravel=trim(document.getElementById('sw_totalTravel').value);
+  d.operatingForce=trim(document.getElementById('sw_operatingForce').value);
+  d.bottomOutForce=trim(document.getElementById('sw_bottomOutForce').value);
+  d.quantity=Math.max(0,parseInt(document.getElementById('sw_quantity').value,10)||0);
+  if(d.installationsEdited || (d.installations||[]).some(item=>trim(item?.boardId)) || !d.importedBoardText){
+    applySwitchInstallations(d, d.installations||[]);
+  }
+  delete d.installationsEdited;
+  d.pins=radioValue('sw_pins')||'5';
+  d.ledDiffuser=radioValue('sw_ledDiffuser')==='yes';
+  d.factoryLubed=radioValue('sw_factoryLubed')==='yes';
+  d.notes=(document.getElementById('sw_notes').value||'').trim();
+  d.updatedAt=Date.now();
+  if(!d.name){ alert('Bitte mindestens Name / Bezeichnung angeben.'); return; }
+  ensureInList('switchNames', d.name);
+  ensureInList('switchTypes', d.switchType);
+  ensureInList('switchTopHousingMaterials', d.topHousingMaterial);
+  ensureInList('switchBottomHousingMaterials', d.bottomHousingMaterial);
+  ensureInList('switchStemMaterials', d.stemMaterial);
+  ensureInList('switchSpringLengths', d.springLength);
+  ensureInList('switchSpringTypes', d.springType);
+  ensureInList('switchPreTravels', d.preTravel);
+  ensureInList('switchTotalTravels', d.totalTravel);
+  ensureInList('switchOperatingForces', d.operatingForce);
+  ensureInList('switchBottomOutForces', d.bottomOutForce);
+  await storePut('switchSets', d);
+  const originalIds=state.switchEditorSession.original?.photoIds||[];
+  for(const pid of originalIds){
+    if(!(d.photoIds||[]).includes(pid)) await storeDelete('photos', pid);
+  }
+  const idx=state.switchSets.findIndex(x=>x.id===d.id);
+  if(idx>=0) state.switchSets[idx]=JSON.parse(JSON.stringify(d)); else state.switchSets.unshift(JSON.parse(JSON.stringify(d)));
+  state.switchEditorSession={original:JSON.parse(JSON.stringify(d)), addedPhotoIds:new Set()};
+  await syncMountedSwitchBoardLinks(d);
+  await persistMeta();
+  renderSelects();
+  newSwitchDraft();
+  renderSwitches();
+  renderOverview();
+  renderGallery();
+  toast('Switch gespeichert');
+}
+
+function editSwitchSet(id){
+  const set=state.switchSets.find(x=>x.id===id);
+  if(!set) return;
+  beginSwitchDraft(set);
+  document.getElementById('switchEditorTitle').textContent='Switch bearbeiten';
+  document.getElementById('btnCancelSwitch').style.display='inline-flex';
+  fillSwitchFormFromDraft();
+  state.viewEntities.erf='switches';
+  switchTab('erf');
+}
+
+async function deleteSwitchSet(id){
+  const set=state.switchSets.find(x=>x.id===id);
+  if(!confirm('„'+(set?.name||'diesen Switch')+'“ wirklich löschen?')) return;
+  await storeDelete('switchSets', id);
+  const photos=await storeGetAllByOwner('switchSet', id);
+  for(const p of photos) await storeDelete('photos', p.id);
+  for(const board of state.boards){
+    const currentIds=normalizeBoardSwitchSetIds(board);
+    if(currentIds.includes(id)){
+      applyBoardSwitchSetIds(board, currentIds.filter(setId=>setId!==id), true);
+      board.updatedAt=Date.now();
+      await storePut('boards', board);
+    }
+  }
+  state.boards=await storeGetAll('boards');
+  state.switchSets=state.switchSets.filter(x=>x.id!==id);
+  await persistMeta();
+  newSwitchDraft();
+  renderSwitches();
+  renderOverview();
+  renderGallery();
+  toast('Switch gelöscht');
+}
+
+function applySwitchFilters(arr){
+  const f=state.switchFilters;
+  const q=trim(f.q).toLowerCase();
+  let out=[...arr];
+  if(q){
+    out=out.filter(set=>[
+      set.name,set.switchType,set.operatingForce,set.pins,displaySwitchBoard(set)
+    ].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)));
+  }
+  if(f.switchType) out=out.filter(set=>(set.switchType||'')===f.switchType);
+  if(f.operatingForce) out=out.filter(set=>(set.operatingForce||'')===f.operatingForce);
+  if(f.pins) out=out.filter(set=>(set.pins||'')===f.pins);
+  const [key,dir]=(f.sort||'name_asc').split('_');
+  const mult=dir==='asc'?1:-1;
+  out.sort((a,b)=>{
+    if(['name','pins','switchType','operatingForce'].includes(key)) return mult*(a[key]||'').localeCompare(b[key]||'','de');
+    return mult*((Number(a[key]||0))-(Number(b[key]||0)));
+  });
+  return out;
+}
+
+function renderSwitchFilters(hostId='switchFilters', prefix='swFilter', renderResults=renderSwitches){
+  const host=document.getElementById(hostId);
+  if(!host) return;
+  host.innerHTML='<div style="font-weight:900">Filter</div><div style="margin-top:10px;display:grid;gap:8px">'+
+    '<label><div class="lbl">Suche</div><input id="'+prefix+'_q" value="'+esc(state.switchFilters.q)+'" placeholder="Switches durchsuchen…"></label>'+
+    '<label><div class="lbl">Switch Type</div><select id="'+prefix+'_switchType"></select></label>'+
+    '<label><div class="lbl">Operating Force</div><select id="'+prefix+'_operatingForce"></select></label>'+
+    '<label><div class="lbl">Pins</div><select id="'+prefix+'_pins"><option value="">Alle</option><option value="3">3 PIN</option><option value="5">5 PIN</option></select></label>'+
+    '<label><div class="lbl">Sortierung</div><select id="'+prefix+'_sort"><option value="name_asc">Name A-Z</option><option value="name_desc">Name Z-A</option><option value="switchType_asc">Switch Type A-Z</option><option value="operatingForce_asc">Operating Force A-Z</option><option value="quantity_desc">Bestand absteigend</option><option value="quantity_asc">Bestand aufsteigend</option></select></label>'+
+    '</div>';
+  fillSelect(document.getElementById(prefix+'_switchType'), state.lists.switchTypes, 'Alle');
+  fillSelect(document.getElementById(prefix+'_operatingForce'), state.lists.switchOperatingForces, 'Alle');
+  document.getElementById(prefix+'_switchType').value=state.switchFilters.switchType;
+  document.getElementById(prefix+'_operatingForce').value=state.switchFilters.operatingForce;
+  document.getElementById(prefix+'_pins').value=state.switchFilters.pins;
+  document.getElementById(prefix+'_sort').value=state.switchFilters.sort;
+  document.getElementById(prefix+'_q').addEventListener('input', e=>{ state.switchFilters.q=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_switchType').addEventListener('change', e=>{ state.switchFilters.switchType=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_operatingForce').addEventListener('change', e=>{ state.switchFilters.operatingForce=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_pins').addEventListener('change', e=>{ state.switchFilters.pins=e.target.value; renderResults(false); });
+  document.getElementById(prefix+'_sort').addEventListener('change', e=>{ state.switchFilters.sort=e.target.value; renderResults(false); });
+}
+
+async function getSwitchThumbSrc(set){
+  const ids=set.photoIds||[];
+  const ordered=[set.mainPhotoId, ...ids].filter(Boolean);
+  for(const pid of ordered){
+    const rec=await storeGet('photos', pid);
+    if(rec?.dataUrl) return rec.dataUrl;
+  }
+  return '';
+}
+
+async function switchImageSources(set){
+  const images=[];
+  const seen=new Set();
+  for(const pid of set.photoIds||[]){
+    const rec=await storeGet('photos', pid);
+    if(rec?.dataUrl && !seen.has(rec.dataUrl)){
+      seen.add(rec.dataUrl);
+      images.push({src:rec.dataUrl, name:rec.name||set.name, kind:'local'});
+    }
+  }
+  return images;
+}
+
+function renderSwitches(renderFilters=true){
+  if(renderFilters) renderSwitchFilters('switchFilters','swFilter',renderSwitches);
+  const rows=applySwitchFilters(state.switchSets);
+  document.getElementById('switchHitCount').textContent=String(rows.length);
+  document.getElementById('switchHitCountLabel').textContent=rows.length===1?'Switch':'Switches';
+  const tb=document.getElementById('switchTbody');
+  tb.innerHTML='';
+  if(!rows.length){
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td colspan="7" class="muted" style="padding:16px;text-align:center">Keine Switches.</td>';
+    tb.appendChild(tr);
+    return;
+  }
+  for(const set of rows){
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td><div class="miniThumb"><span>—</span></div></td>'+
+      '<td><div class="boardName" style="font-weight:900">'+esc(set.name)+'</div><div class="muted small" style="margin-top:6px">'+esc(set.pins||'—')+' PIN</div></td>'+
+      '<td>'+esc(set.switchType||'—')+'</td><td>'+Number(set.quantity||0)+' / '+Number(set.mountedQuantity||0)+' / '+availableSwitchQuantity(set)+'</td><td>'+esc(displaySwitchBoard(set)||'—')+'</td><td>'+esc(set.operatingForce||'—')+'</td>'+
+      '<td style="text-align:right"><div style="display:flex;gap:8px;justify-content:flex-end"><button data-a="spot">Details</button><button data-a="edit">Bearbeiten</button><button data-a="del" class="danger">Löschen</button></div></td>';
+    tr.querySelector('[data-a="spot"]').addEventListener('click', ()=>openSwitchSpotlight(set.id));
+    tr.querySelector('[data-a="edit"]').addEventListener('click', ()=>editSwitchSet(set.id));
+    tr.querySelector('[data-a="del"]').addEventListener('click', ()=>deleteSwitchSet(set.id));
+    const thumbEl=tr.querySelector('.miniThumb');
+    thumbEl.tabIndex=0;
+    thumbEl.setAttribute('role','button');
+    thumbEl.setAttribute('aria-label','Switch-Details öffnen');
+    thumbEl.addEventListener('click', ()=>openSwitchSpotlight(set.id));
+    thumbEl.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openSwitchSpotlight(set.id);} });
+    tb.appendChild(tr);
+    (async()=>{ const src=await getSwitchThumbSrc(set); if(src && thumbEl.isConnected) thumbEl.innerHTML=imageHtml(src, set.name); })();
+  }
+  updateShellStats();
 }
 
 function emptyArtisanDraft(){
@@ -3642,7 +4576,7 @@ async function renderArtisanPhotosArea(){
     });
     grid.appendChild(item);
     const got=await artisanPhotoSrc(pid);
-    item.querySelector('.pimg').innerHTML=got.src ? '<img src="'+got.src+'" alt="'+esc(got.name)+'">' : '<div class="thumb">(Bild fehlt)</div>';
+    item.querySelector('.pimg').innerHTML=got.src ? imageHtml(got.src, got.name) : '<div class="thumb">(Bild fehlt)</div>';
   }
 }
 
@@ -3842,7 +4776,7 @@ function renderArtisans(renderFilters=true){
     thumbEl.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); openArtisanSpotlight(set.id); });
     thumbEl.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();openArtisanSpotlight(set.id);} });
     tb.appendChild(tr);
-    (async()=>{ const src=await getArtisanThumbSrc(set); if(src && thumbEl.isConnected) thumbEl.innerHTML='<img src="'+src+'" alt="'+esc(set.name)+'">'; })();
+    (async()=>{ const src=await getArtisanThumbSrc(set); if(src && thumbEl.isConnected) thumbEl.innerHTML=imageHtml(src, set.name); })();
   }
   updateShellStats();
 }
@@ -3879,7 +4813,7 @@ function renderArtisanGallery(renderFilters=true){
       const src=await getArtisanThumbSrc(set);
       const thumb=card.querySelector('.thumb');
       if(!thumb || !card.isConnected) return;
-      thumb.innerHTML=src?'<img src="'+src+'" alt="'+esc(set.name)+'">':'Kein Foto';
+      thumb.innerHTML=src?imageHtml(src, set.name):'Kein Foto';
     })();
   }
 }
@@ -3890,7 +4824,8 @@ async function exportData(){
   const referencedPhotoIds=new Set([
     ...state.boards.flatMap(board=>board.photoIds||[]),
     ...state.keycapSets.flatMap(set=>set.photoIds||[]),
-    ...state.artisanSets.flatMap(set=>set.photoIds||[])
+    ...state.artisanSets.flatMap(set=>set.photoIds||[]),
+    ...state.switchSets.flatMap(set=>set.photoIds||[])
   ]);
   const photos=[];
   for(const photo of storedPhotos){
@@ -3898,7 +4833,7 @@ async function exportData(){
     photos.push({id:photo.id,boardId:photo.boardId,ownerType:photo.ownerType||'board',ownerId:photo.ownerId||photo.boardId,name:photo.name,type:photo.type,width:photo.width,height:photo.height,addedAt:photo.addedAt,dataUrl:photo.dataUrl});
   }
   const payload={
-    schemaVersion:5,
+    schemaVersion:6,
     format:'keyboard-manager-zip',
     meta:Object.assign({}, state.meta, {exportedAt:Date.now(), note:'ZIP-Backup mit Manifest und Bilddateien.'}),
     lists:state.lists,
@@ -3906,6 +4841,7 @@ async function exportData(){
     boards:state.boards,
     keycapSets:state.keycapSets,
     artisanSets:state.artisanSets,
+    switchSets:state.switchSets,
     photos:photos
   };
 
@@ -3924,6 +4860,8 @@ async function normalizeImport(obj){
   if(sourceKeycapSets.length>10000) throw new Error('Import enthält zu viele Keycap-Sets');
   const sourceArtisanSets=Array.isArray(obj.artisanSets) ? obj.artisanSets : [];
   if(sourceArtisanSets.length>10000) throw new Error('Import enthält zu viele Artisans');
+  const sourceSwitchSets=Array.isArray(obj.switchSets) ? obj.switchSets : [];
+  if(sourceSwitchSets.length>10000) throw new Error('Import enthält zu viele Switches');
   const sourcePhotos=Array.isArray(obj.photos) ? obj.photos : [];
   if(sourcePhotos.length>50000) throw new Error('Import enthält zu viele Fotos');
   const lists={
@@ -3941,7 +4879,18 @@ async function normalizeImport(obj){
     artisanProfiles:Array.from(new Set([...(obj.lists.artisanProfiles||[]), ...ARTISAN_PROFILE_DEFAULTS])),
     artisanMaterials:Array.from(new Set([...(obj.lists.artisanMaterials||[]), ...ARTISAN_MATERIAL_DEFAULTS])),
     artisanStatuses:Array.from(new Set([...(obj.lists.artisanStatuses||[]), ...KEYCAP_STATUS_DEFAULTS])),
-    switches:Array.from(new Set([...(obj.lists.switches||[]), ...SWITCH_DEFAULTS]))
+    switches:Array.from(new Set([...(obj.lists.switches||[]), ...SWITCH_DEFAULTS])),
+    switchNames:Array.from(new Set(obj.lists.switchNames||[])),
+    switchTypes:Array.from(new Set([...(obj.lists.switchTypes||[]), ...SWITCH_TYPE_DEFAULTS])),
+    switchTopHousingMaterials:Array.from(new Set([...(obj.lists.switchTopHousingMaterials||[]), ...SWITCH_MATERIAL_DEFAULTS])),
+    switchBottomHousingMaterials:Array.from(new Set([...(obj.lists.switchBottomHousingMaterials||[]), ...SWITCH_MATERIAL_DEFAULTS])),
+    switchStemMaterials:Array.from(new Set([...(obj.lists.switchStemMaterials||[]), ...SWITCH_STEM_MATERIAL_DEFAULTS])),
+    switchSpringLengths:Array.from(new Set(obj.lists.switchSpringLengths||[])),
+    switchSpringTypes:Array.from(new Set([...(obj.lists.switchSpringTypes||[]), ...SWITCH_SPRING_TYPE_DEFAULTS])),
+    switchPreTravels:Array.from(new Set(obj.lists.switchPreTravels||[])),
+    switchTotalTravels:Array.from(new Set(obj.lists.switchTotalTravels||[])),
+    switchOperatingForces:Array.from(new Set(obj.lists.switchOperatingForces||[])),
+    switchBottomOutForces:Array.from(new Set(obj.lists.switchBottomOutForces||[]))
   };
   const gallery=obj.gallery || state.gallery;
   const meta={version: obj.meta?.version || 'import', createdAt: obj.meta?.createdAt || Date.now(), updatedAt: Date.now(), language: obj.meta?.language === 'en' ? 'en' : 'de'};
@@ -3951,6 +4900,8 @@ async function normalizeImport(obj){
     return {
       id:b.id||uid(), name:trim(b.name), manufacturer:trim(b.manufacturer), format:trim(b.format), plate:trim(b.plate), pcb:trim(b.pcb), keycaps:trim(b.keycaps), stabs:trim(b.stabs), switches:trim(b.switches),
       keycapSetId:typeof b.keycapSetId==='string'?b.keycapSetId:'',
+      switchSetId:typeof b.switchSetId==='string'?b.switchSetId:'',
+      switchSetIds:Array.isArray(b.switchSetIds)?b.switchSetIds.map(trim).filter(Boolean):[],
       remark:trim(b.remark), photoIds:Array.isArray(b.photoIds)?b.photoIds.filter(x=>typeof x==='string'):[], mainPhotoId:typeof b.mainPhotoId==='string'?b.mainPhotoId:'', createdAt:b.createdAt||Date.now(), updatedAt:b.updatedAt||Date.now()
     };
   });
@@ -3974,8 +4925,8 @@ async function normalizeImport(obj){
       notes:trim(set.notes),
       photoIds:Array.isArray(set.photoIds)?set.photoIds.filter(x=>typeof x==='string'):[],
       mainPhotoId:typeof set.mainPhotoId==='string'?set.mainPhotoId:'',
-      coverUrl:trim(set.coverUrl),
-      externalImageUrls:Array.isArray(set.externalImageUrls)?set.externalImageUrls.filter(x=>typeof x==='string'):[],
+      coverUrl:safeExternalImageUrl(set.coverUrl),
+      externalImageUrls:Array.isArray(set.externalImageUrls)?set.externalImageUrls.map(safeExternalImageUrl).filter(Boolean):[],
       trelloCardId:trim(set.trelloCardId),
       trelloListName:trim(set.trelloListName),
       createdAt:set.createdAt||Date.now(),
@@ -4002,8 +4953,8 @@ async function normalizeImport(obj){
       notes:trim(set.notes),
       photoIds:Array.isArray(set.photoIds)?set.photoIds.filter(x=>typeof x==='string'):[],
       mainPhotoId:typeof set.mainPhotoId==='string'?set.mainPhotoId:'',
-      coverUrl:trim(set.coverUrl),
-      externalImageUrls:Array.isArray(set.externalImageUrls)?set.externalImageUrls.filter(x=>typeof x==='string'):[],
+      coverUrl:safeExternalImageUrl(set.coverUrl),
+      externalImageUrls:Array.isArray(set.externalImageUrls)?set.externalImageUrls.map(safeExternalImageUrl).filter(Boolean):[],
       trelloCardId:trim(set.trelloCardId),
       trelloListName:trim(set.trelloListName),
       createdAt:set.createdAt||Date.now(),
@@ -4012,8 +4963,70 @@ async function normalizeImport(obj){
   });
   const artisanSetIds=new Set(artisanSets.map(set=>set.id));
   if(artisanSetIds.size!==artisanSets.length) throw new Error('Doppelte Artisan-IDs im Import');
+  const switchSets=sourceSwitchSets.map(set=>{
+    if(!set || typeof set!=='object') throw new Error('Ungültiger Switch-Eintrag');
+    if(set.id && !/^[a-zA-Z0-9_-]+$/.test(set.id)) throw new Error('Ungültige Switch-ID');
+    return {
+      ...emptySwitchDraft(),
+      id:set.id||uid(),
+      name:trim(set.name),
+      switchType:trim(set.switchType),
+      topHousingMaterial:trim(set.topHousingMaterial),
+      bottomHousingMaterial:trim(set.bottomHousingMaterial),
+      stemMaterial:trim(set.stemMaterial),
+      springLength:trim(set.springLength),
+      springType:trim(set.springType),
+      preTravel:trim(set.preTravel),
+      totalTravel:trim(set.totalTravel),
+      operatingForce:trim(set.operatingForce),
+      bottomOutForce:trim(set.bottomOutForce),
+      pins:['3','5'].includes(String(set.pins)) ? String(set.pins) : '5',
+      ledDiffuser:Boolean(set.ledDiffuser),
+      factoryLubed:Boolean(set.factoryLubed),
+      quantity:Math.max(0,parseInt(set.quantity,10)||0),
+      mountedQuantity:Math.max(0,parseInt(set.mountedQuantity,10)||0),
+      mountedBoardId:trim(set.mountedBoardId),
+      installations:Array.isArray(set.installations)?set.installations.map(item=>({
+        boardId:trim(item?.boardId),
+        quantity:Math.max(0,parseInt(item?.quantity,10)||0)
+      })).filter(item=>item.boardId):[],
+      importedBoardText:trim(set.importedBoardText),
+      importedBoardAllocations:Array.isArray(set.importedBoardAllocations)?set.importedBoardAllocations.map(item=>({
+        board:trim(item?.board),
+        quantity:Math.max(0,parseInt(item?.quantity,10)||0),
+        inferred:Boolean(item?.inferred)
+      })).filter(item=>item.board):[],
+      importSource:trim(set.importSource),
+      importRow:Math.max(0,parseInt(set.importRow,10)||0),
+      importKey:trim(set.importKey),
+      importWarnings:Array.isArray(set.importWarnings)?set.importWarnings.filter(x=>typeof x==='string'):[],
+      notes:trim(set.notes),
+      photoIds:Array.isArray(set.photoIds)?set.photoIds.filter(x=>typeof x==='string'):[],
+      mainPhotoId:typeof set.mainPhotoId==='string'?set.mainPhotoId:'',
+      createdAt:set.createdAt||Date.now(),
+      updatedAt:set.updatedAt||Date.now()
+    };
+  });
+  const switchSetIds=new Set(switchSets.map(set=>set.id));
+  if(switchSetIds.size!==switchSets.length) throw new Error('Doppelte Switch-IDs im Import');
+  for(const set of switchSets){
+    if(set.name && !lists.switchNames.includes(set.name)) lists.switchNames.push(set.name);
+    if(set.switchType && !lists.switchTypes.includes(set.switchType)) lists.switchTypes.push(set.switchType);
+    if(set.springLength && !lists.switchSpringLengths.includes(set.springLength)) lists.switchSpringLengths.push(set.springLength);
+    if(set.springType && !lists.switchSpringTypes.includes(set.springType)) lists.switchSpringTypes.push(set.springType);
+    if(set.operatingForce && !lists.switchOperatingForces.includes(set.operatingForce)) lists.switchOperatingForces.push(set.operatingForce);
+  }
+  lists.switchNames.sort((a,b)=>String(a).localeCompare(String(b),'de'));
+  lists.switchTypes.sort((a,b)=>String(a).localeCompare(String(b),'de'));
+  lists.switchSpringLengths.sort((a,b)=>String(a).localeCompare(String(b),'de'));
+  lists.switchSpringTypes.sort((a,b)=>String(a).localeCompare(String(b),'de'));
+  lists.switchOperatingForces.sort((a,b)=>String(a).localeCompare(String(b),'de'));
   for(const board of boards){
     if(board.keycapSetId && !keycapSetIds.has(board.keycapSetId)) board.keycapSetId='';
+    board.switchSetIds=board.switchSetIds.filter((id,idx,arr)=>switchSetIds.has(id) && arr.indexOf(id)===idx);
+    if(board.switchSetId && switchSetIds.has(board.switchSetId) && !board.switchSetIds.includes(board.switchSetId)) board.switchSetIds.unshift(board.switchSetId);
+    board.switchSetId=board.switchSetIds[0]||'';
+    if(board.switchSetIds.length) board.switches=board.switchSetIds.map(id=>switchSets.find(set=>set.id===id)?.name).filter(Boolean).join(', ');
   }
   for(const set of keycapSets){
     if(set.mountedBoardId && !boardIds.has(set.mountedBoardId)) set.mountedBoardId='';
@@ -4021,16 +5034,35 @@ async function normalizeImport(obj){
   for(const set of artisanSets){
     if(set.mountedBoardId && !boardIds.has(set.mountedBoardId)) set.mountedBoardId='';
   }
+  for(const set of switchSets){
+    const installations=[...set.installations];
+    if(set.mountedBoardId && boardIds.has(set.mountedBoardId) && !installations.some(item=>item.boardId===set.mountedBoardId)){
+      installations.push({boardId:set.mountedBoardId, quantity:set.mountedQuantity||0});
+    }
+    applySwitchInstallations(set, installations.filter(item=>boardIds.has(item.boardId)));
+  }
+  for(const board of boards){
+    for(const switchSetId of board.switchSetIds){
+      const set=switchSets.find(item=>item.id===switchSetId);
+      if(!set) continue;
+      const installations=[...set.installations];
+      if(!installations.some(item=>item.boardId===board.id)){
+        installations.push({boardId:board.id, quantity:0});
+        applySwitchInstallations(set, installations);
+      }
+    }
+  }
   const photos=[];
   for(const p of sourcePhotos){
     if(!p || typeof p!=='object' || typeof p.id!=='string' || typeof p.dataUrl!=='string') throw new Error('Ungültiger Foto-Eintrag');
     const ownerType=p.ownerType||'board';
     const ownerId=p.ownerId||p.boardId;
-    if(!['board','keycapSet','artisanSet'].includes(ownerType) || typeof ownerId!=='string') throw new Error('Ungültiger Foto-Besitzer');
+    if(!['board','keycapSet','artisanSet','switchSet'].includes(ownerType) || typeof ownerId!=='string') throw new Error('Ungültiger Foto-Besitzer');
     if(!/^[a-zA-Z0-9_-]+$/.test(p.id) || !/^[a-zA-Z0-9_-]+$/.test(ownerId)) throw new Error('Ungültige Foto-ID');
     if(ownerType==='board' && !boardIds.has(ownerId)) throw new Error('Foto ohne zugehöriges Board');
     if(ownerType==='keycapSet' && !keycapSetIds.has(ownerId)) throw new Error('Foto ohne zugehöriges Keycap-Set');
     if(ownerType==='artisanSet' && !artisanSetIds.has(ownerId)) throw new Error('Foto ohne zugehörigen Artisan');
+    if(ownerType==='switchSet' && !switchSetIds.has(ownerId)) throw new Error('Foto ohne zugehörigen Switch');
     const blob=dataUrlToBlob(p.dataUrl);
     if(blob.size>30*1024*1024) throw new Error('Ein Foto überschreitet 30 MB');
     const normalized=await normalizePhoto(new File([blob],trim(p.name)||'importiertes-foto',{type:blob.type}));
@@ -4051,12 +5083,16 @@ async function normalizeImport(obj){
     set.photoIds=set.photoIds.filter(id=>photoIds.has(id));
     if(!set.photoIds.includes(set.mainPhotoId)) set.mainPhotoId=set.photoIds[0]||'';
   }
-  return {meta,lists,gallery,boards,keycapSets,artisanSets,photos};
+  for(const set of switchSets){
+    set.photoIds=set.photoIds.filter(id=>photoIds.has(id));
+    if(!set.photoIds.includes(set.mainPhotoId)) set.mainPhotoId=set.photoIds[0]||'';
+  }
+  return {meta,lists,gallery,boards,keycapSets,artisanSets,switchSets,photos};
 }
 
 async function replaceAllData(normalized){
   const appValue={meta:normalized.meta,lists:normalized.lists,gallery:normalized.gallery};
-  await window.api.storage.replaceAll({appValue,boards:normalized.boards,keycapSets:normalized.keycapSets||[],artisanSets:normalized.artisanSets||[],photos:normalized.photos});
+  await window.api.storage.replaceAll({appValue,boards:normalized.boards,keycapSets:normalized.keycapSets||[],artisanSets:normalized.artisanSets||[],switchSets:normalized.switchSets||[],photos:normalized.photos});
 }
 
 async function importData(){
@@ -4075,7 +5111,7 @@ async function importData(){
     alert('Import nicht möglich: '+(e.message||'Ungültiges Backup'));
     return;
   }
-  const summary=normalized.boards.length+' Boards, '+(normalized.keycapSets?.length||0)+' Keycap-Sets, '+(normalized.artisanSets?.length||0)+' Artisans und '+normalized.photos.length+' Fotos';
+  const summary=normalized.boards.length+' Boards, '+(normalized.keycapSets?.length||0)+' Keycap-Sets, '+(normalized.artisanSets?.length||0)+' Artisans, '+(normalized.switchSets?.length||0)+' Switches und '+normalized.photos.length+' Fotos';
   if(!confirm('Validiertes Backup mit '+summary+' importieren? Der aktuelle Stand wird ersetzt.')) return;
   try{
     await replaceAllData(normalized);
@@ -4083,11 +5119,13 @@ async function importData(){
     alert('Import fehlgeschlagen. Der bisherige SQLite-Bestand wurde nicht ersetzt.');
     return;
   }
-  state.meta=normalized.meta; state.language=state.meta.language === 'en' ? 'en' : 'de'; state.lists=normalized.lists; state.gallery=normalized.gallery; state.boards=normalized.boards; state.keycapSets=normalized.keycapSets||[]; state.artisanSets=normalized.artisanSets||[];
+  state.meta=normalized.meta; state.language=state.meta.language === 'en' ? 'en' : 'de'; state.lists=normalized.lists; state.gallery=normalized.gallery; state.boards=normalized.boards; state.keycapSets=normalized.keycapSets||[]; state.artisanSets=normalized.artisanSets||[]; state.switchSets=normalized.switchSets||[];
+  hydrateSwitchListsFromSets();
   document.getElementById('updated').textContent = fmtDate(state.meta.updatedAt);
   newDraft();
   newKeycapDraft();
   newArtisanDraft();
+  newSwitchDraft();
   renderSelects();
   renderPreview();
   switchTab('ueb');
@@ -4148,13 +5186,14 @@ async function legacySnapshot(){
     boards:boards,
     keycapSets:[],
     artisanSets:[],
+    switchSets:[],
     photos:migratedPhotos
   };
 }
 
 async function migrateLegacyStorageIfNeeded(force=false){
   const info=await window.api.storage.info();
-  if(!force && (info.hasMeta || info.boards || info.photos)) return false;
+  if(!force && (info.hasMeta || info.boards || info.keycapSets || info.artisanSets || info.switchSets || info.photos)) return false;
   const legacy=await legacySnapshot();
   if(!legacy) return false;
   await window.api.storage.replaceAll(legacy);
@@ -4193,10 +5232,13 @@ async function loadAll(){
   state.boards = await storeGetAll('boards');
   state.keycapSets = await storeGetAll('keycapSets');
   state.artisanSets = await storeGetAll('artisanSets');
+  state.switchSets = await storeGetAll('switchSets');
+  hydrateSwitchListsFromSets();
   const referencedPhotoIds=new Set([
     ...state.boards.flatMap(board=>board.photoIds||[]),
     ...state.keycapSets.flatMap(set=>set.photoIds||[]),
-    ...state.artisanSets.flatMap(set=>set.photoIds||[])
+    ...state.artisanSets.flatMap(set=>set.photoIds||[]),
+    ...state.switchSets.flatMap(set=>set.photoIds||[])
   ]);
   for(const photo of await storeGetAll('photos')){
     if(!referencedPhotoIds.has(photo.id)) await storeDelete('photos',photo.id);
@@ -4204,16 +5246,16 @@ async function loadAll(){
 
   state.ready=true;
   document.getElementById('init').style.display='none';
-  document.getElementById('viewErf').style.display='block';
   document.getElementById('updated').textContent = fmtDate(state.meta.updatedAt);
 
   newDraft();
   newKeycapDraft();
   newArtisanDraft();
+  newSwitchDraft();
   renderSelects();
   renderPreview();
-  renderEntityPanels('erf');
   applyLanguage();
+  switchTab('ueb');
 }
 
 function wireStatic(){
@@ -4268,6 +5310,22 @@ function wireStatic(){
   });
   document.getElementById('btnAddArtisanPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('fileArtisanPhotos').click(); });
   document.getElementById('fileArtisanPhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addArtisanPhotos(e.target.files); e.target.value=''; });
+  document.getElementById('btnNewSwitch').addEventListener('click', async ()=>{
+    if(!hasDesktopApi()) return;
+    if(switchDraftIsDirty() && !confirm('Ungespeicherte Switch-Änderungen verwerfen?')) return;
+    await discardSwitchDraftChanges();
+    newSwitchDraft();
+    document.getElementById('sw_name').focus();
+  });
+  document.getElementById('btnSaveSwitch').addEventListener('click', ()=>{ if(hasDesktopApi()) saveSwitchDraft(); });
+  document.getElementById('btnCancelSwitch').addEventListener('click', async ()=>{
+    if(!hasDesktopApi()) return;
+    if(switchDraftIsDirty() && !confirm('Ungespeicherte Switch-Änderungen verwerfen?')) return;
+    await discardSwitchDraftChanges();
+    newSwitchDraft();
+  });
+  document.getElementById('btnAddSwitchPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('fileSwitchPhotos').click(); });
+  document.getElementById('fileSwitchPhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addSwitchPhotos(e.target.files); e.target.value=''; });
 
   document.getElementById('sideErf')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('erf'); });
   document.getElementById('sideUeb')?.addEventListener('click', ()=>{ if(hasDesktopApi()) switchTab('ueb'); });
@@ -4276,9 +5334,11 @@ function wireStatic(){
   document.getElementById('btnErfBoards').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('erf','boards'); });
   document.getElementById('btnErfKeycaps').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('erf','keycaps'); });
   document.getElementById('btnErfArtisans').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('erf','artisans'); });
+  document.getElementById('btnErfSwitches').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('erf','switches'); });
   document.getElementById('btnOverviewBoards').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('ueb','boards'); });
   document.getElementById('btnOverviewKeycaps').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('ueb','keycaps'); });
   document.getElementById('btnOverviewArtisans').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('ueb','artisans'); });
+  document.getElementById('btnOverviewSwitches').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('ueb','switches'); });
   document.getElementById('btnGalleryBoards').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('gal','boards'); });
   document.getElementById('btnGalleryKeycaps').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('gal','keycaps'); });
   document.getElementById('btnGalleryArtisans').addEventListener('click', ()=>{ if(hasDesktopApi()) setEntityView('gal','artisans'); });
@@ -4289,6 +5349,7 @@ function wireStatic(){
   document.getElementById('btnResetKeycapGalleryFilters').addEventListener('click', ()=>{ state.keycapFilters={q:'',manufacturer:'',profile:'',status:'',sort:'manufacturer_asc'}; renderKeycapGallery(); });
   document.getElementById('btnResetArtisanFilters').addEventListener('click', ()=>{ state.artisanFilters={q:'',manufacturer:'',profile:'',status:'',sort:'manufacturer_asc'}; renderArtisans(); });
   document.getElementById('btnResetArtisanGalleryFilters').addEventListener('click', ()=>{ state.artisanFilters={q:'',manufacturer:'',profile:'',status:'',sort:'manufacturer_asc'}; renderArtisanGallery(); });
+  document.getElementById('btnResetSwitchFilters').addEventListener('click', ()=>{ state.switchFilters={q:'',switchType:'',operatingForce:'',pins:'',sort:'name_asc'}; renderSwitches(); });
 
 
   // Spotlight Buttons
@@ -4314,7 +5375,7 @@ function wireStatic(){
     if(e.key==='ArrowRight') spotStep(1);
   });
   window.addEventListener('beforeunload', e=>{
-    if(!draftIsDirty() && !keycapDraftIsDirty() && !artisanDraftIsDirty()) return;
+    if(!draftIsDirty() && !keycapDraftIsDirty() && !artisanDraftIsDirty() && !switchDraftIsDirty()) return;
     e.preventDefault();
     e.returnValue='';
   });
@@ -4391,6 +5452,27 @@ function openArtisanSpotlight(setId){
   document.getElementById('spotClose').focus();
 }
 
+function openSwitchSpotlight(setId){
+  const set=state.switchSets.find(x=>x.id===setId);
+  if(!set) return;
+  state.spotlight.open=true;
+  state.spotlight.kind='switchSet';
+  state.spotlight.previousFocus=document.activeElement;
+  state.spotlight.boardId='';
+  state.spotlight.keycapSetId='';
+  state.spotlight.artisanSetId='';
+  state.spotlight.switchSetId=setId;
+  state.spotlight.photoIds=[];
+  state.spotlight.images=[];
+  state.spotlight.index=0;
+
+  document.getElementById('spotTitle').textContent = 'Spotlight: '+set.name;
+  document.getElementById('spotBack').classList.add('open');
+  document.getElementById('spotBack').setAttribute('aria-hidden','false');
+  renderSpotlight();
+  document.getElementById('spotClose').focus();
+}
+
 function closeSpotlight(){
   if(!state.spotlight.open) return;
   if(state.largePhoto.open) closeLargePhoto();
@@ -4400,6 +5482,7 @@ function closeSpotlight(){
   state.spotlight.kind='board';
   state.spotlight.keycapSetId='';
   state.spotlight.artisanSetId='';
+  state.spotlight.switchSetId='';
   state.spotlight.images=[];
   document.getElementById('spotBack').classList.remove('open');
   document.getElementById('spotBack').setAttribute('aria-hidden','true');
@@ -4446,7 +5529,7 @@ async function renderLargePhoto(){
   if(state.largePhoto.url?.startsWith('blob:')) URL.revokeObjectURL(state.largePhoto.url);
   const count=currentSpotlightImageCount();
   state.spotlight.index=Math.max(0,Math.min(state.spotlight.index,count-1));
-  const photo=['keycapSet','artisanSet'].includes(state.spotlight.kind)
+  const photo=['keycapSet','artisanSet','switchSet'].includes(state.spotlight.kind)
     ? (state.spotlight.images[state.spotlight.index] || {src:'', name:''})
     : await largePhotoSrc(state.spotlight.photoIds[state.spotlight.index]);
   state.largePhoto.url=photo.src;
@@ -4467,13 +5550,13 @@ function largeStep(dir){
 }
 
 function currentSpotlightImageCount(){
-  return ['keycapSet','artisanSet'].includes(state.spotlight.kind)
+  return ['keycapSet','artisanSet','switchSet'].includes(state.spotlight.kind)
     ? (state.spotlight.images||[]).length
     : (state.spotlight.photoIds||[]).length;
 }
 
 function attrRow(label, value){
-  const v = value ? esc(value) : '—';
+  const v = value===0 || value ? esc(value) : '—';
   return '<div class=\"attrRow\"><span class=\"k\">'+esc(label)+'</span><span class=\"v\">'+v+'</span></div>';
 }
 
@@ -4506,7 +5589,7 @@ async function renderKeycapSpotlight(){
 
   const left=document.createElement('div');
   left.className='spotMain';
-  left.innerHTML='<div class="frame" role="button" tabindex="0" aria-label="Keycap-Foto in Großansicht öffnen" title="Foto groß ansehen">'+(current?.src?('<img src="'+current.src+'" alt="'+esc(current.name||set.name)+'">'):'<span class="muted">Kein Foto</span>')+'</div>';
+  left.innerHTML='<div class="frame" role="button" tabindex="0" aria-label="Keycap-Foto in Großansicht öffnen" title="Foto groß ansehen">'+(current?.src?imageHtml(current.src, current.name||set.name):'<span class="muted">Kein Foto</span>')+'</div>';
   const frame=left.querySelector('.frame');
   frame.addEventListener('click', ()=>{ if(images.length) openLargePhoto(); });
   frame.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && images.length){e.preventDefault();openLargePhoto();} });
@@ -4544,7 +5627,7 @@ async function renderKeycapSpotlight(){
     mini.tabIndex=0;
     mini.setAttribute('role','button');
     mini.setAttribute('aria-label','Bild '+(i+1)+' anzeigen');
-    mini.innerHTML='<img src="'+image.src+'" alt="'+esc(image.name||set.name)+'">';
+    mini.innerHTML=imageHtml(image.src, image.name||set.name);
     mini.addEventListener('click', ()=>{ state.spotlight.index=i; renderSpotlight(); });
     mini.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();state.spotlight.index=i;renderSpotlight();} });
     tr.appendChild(mini);
@@ -4593,7 +5676,7 @@ async function renderArtisanSpotlight(){
 
   const left=document.createElement('div');
   left.className='spotMain';
-  left.innerHTML='<div class="frame" role="button" tabindex="0" aria-label="Artisan-Foto in Großansicht öffnen" title="Foto groß ansehen">'+(current?.src?('<img src="'+current.src+'" alt="'+esc(current.name||set.name)+'">'):'<span class="muted">Kein Foto</span>')+'</div>';
+  left.innerHTML='<div class="frame" role="button" tabindex="0" aria-label="Artisan-Foto in Großansicht öffnen" title="Foto groß ansehen">'+(current?.src?imageHtml(current.src, current.name||set.name):'<span class="muted">Kein Foto</span>')+'</div>';
   const frame=left.querySelector('.frame');
   frame.addEventListener('click', ()=>{ if(images.length) openLargePhoto(); });
   frame.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && images.length){e.preventDefault();openLargePhoto();} });
@@ -4631,7 +5714,7 @@ async function renderArtisanSpotlight(){
     mini.tabIndex=0;
     mini.setAttribute('role','button');
     mini.setAttribute('aria-label','Bild '+(i+1)+' anzeigen');
-    mini.innerHTML='<img src="'+image.src+'" alt="'+esc(image.name||set.name)+'">';
+    mini.innerHTML=imageHtml(image.src, image.name||set.name);
     mini.addEventListener('click', ()=>{ state.spotlight.index=i; renderSpotlight(); });
     mini.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();state.spotlight.index=i;renderSpotlight();} });
     tr.appendChild(mini);
@@ -4651,9 +5734,122 @@ async function renderArtisanSpotlight(){
   document.getElementById('spotNext').disabled=state.spotlight.index>=images.length-1;
 }
 
+async function clearSwitchImportWarnings(setId){
+  const set=state.switchSets.find(x=>x.id===setId);
+  if(!set) return;
+  set.importWarnings=[];
+  set.updatedAt=Date.now();
+  await storePut('switchSets', set);
+  await persistMeta();
+  state.switchSets=await storeGetAll('switchSets');
+  renderSwitches(false);
+  renderOverview(false);
+  await renderSpotlight();
+  toast('Import-Hinweise gelöscht');
+}
+
+async function renderSwitchSpotlight(){
+  const body=document.getElementById('spotBody');
+  const foot=document.getElementById('spotFoot');
+  const renderId=++state.spotlight.renderId;
+  const setId=state.spotlight.switchSetId;
+  const set=state.switchSets.find(x=>x.id===setId);
+
+  body.innerHTML='<div class="spotLoading">Spotlight wird geladen…</div>';
+  foot.innerHTML='<div class="muted small">Switch: <b style="color:var(--txt)">'+esc(set?.name||'')+'</b></div>';
+  document.getElementById('spotTitle').textContent='Spotlight: '+(set?.name||'Switch');
+
+  if(!set){
+    body.innerHTML='<div class="card pad">Switch nicht gefunden.</div>';
+    return;
+  }
+
+  const images=await switchImageSources(set);
+  if(renderId!==state.spotlight.renderId || setId!==state.spotlight.switchSetId) return;
+  state.spotlight.images=images;
+  if(state.spotlight.index<0) state.spotlight.index=0;
+  if(state.spotlight.index>images.length-1) state.spotlight.index=Math.max(0,images.length-1);
+  const current=images[state.spotlight.index] || null;
+
+  body.innerHTML='';
+  const grid=document.createElement('div');
+  grid.className='spotGrid';
+
+  const left=document.createElement('div');
+  left.className='spotMain';
+  left.innerHTML='<div class="frame" role="button" tabindex="0" aria-label="Switch-Foto in Großansicht öffnen" title="Foto groß ansehen">'+(current?.src?imageHtml(current.src, current.name||set.name):'<span class="muted">Kein Foto</span>')+'</div>';
+  const frame=left.querySelector('.frame');
+  frame.addEventListener('click', ()=>{ if(images.length) openLargePhoto(); });
+  frame.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && images.length){e.preventDefault();openLargePhoto();} });
+
+  const right=document.createElement('div');
+  right.className='card pad';
+  const installRows=normalizeSwitchInstallations(set).map(item=>esc(boardName(item.boardId))+' ('+Number(item.quantity||0)+')');
+  right.innerHTML='<div style="font-weight:900">Bilder</div>'+
+    '<div class="muted small" style="margin-top:6px">'+(images.length?(state.spotlight.index+1)+' / '+images.length:'Keine Bilder')+'</div>'+
+    '<div class="thumbRow" style="margin-top:12px" id="thumbRow"></div>'+
+    '<div style="margin-top:14px;font-weight:900">Attribute</div>'+
+    '<div class="attrList">'+
+      attrRow('Name / Bezeichnung', set.name)+
+      attrRow('Switch Type', set.switchType)+
+      attrRow('Top Housing Material', set.topHousingMaterial)+
+      attrRow('Bottom Housing Material', set.bottomHousingMaterial)+
+      attrRow('Stem Material', set.stemMaterial)+
+      attrRow('Spring Length', set.springLength)+
+      attrRow('Spring Type', set.springType)+
+      attrRow('Pre-travel', set.preTravel)+
+      attrRow('Total Travel', set.totalTravel)+
+      attrRow('Operating Force', set.operatingForce)+
+      attrRow('Bottom-out Force', set.bottomOutForce)+
+      attrRow('Pins', set.pins ? set.pins+' PIN' : '')+
+      attrRow('LED Diffusor', set.ledDiffuser?'Ja':'Nein')+
+      attrRow('Factory Lubed', set.factoryLubed?'Ja':'Nein')+
+      attrRow('Bestand', Number(set.quantity||0))+
+      attrRow('Verbaut', Number(set.mountedQuantity||0))+
+      attrRow('Verfügbar', availableSwitchQuantity(set))+
+      attrRow('In Boards verbaut', installRows.join(', '))+
+    '</div>'+
+    '<div style="margin-top:12px"><div class="muted small" style="margin-bottom:6px">Bemerkungen</div><div class="card pad" style="background:rgba(0,0,0,.12);white-space:pre-wrap">'+esc(set.notes||'—')+'</div></div>'+
+    ((set.importWarnings||[]).length?'<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px"><div class="muted small">Import-Hinweise</div><button type="button" id="spotClearImportWarnings">Hinweise löschen</button></div><div class="card pad" style="background:rgba(0,0,0,.12);white-space:pre-wrap">'+esc((set.importWarnings||[]).join('\n'))+'</div></div>':'');
+
+  grid.appendChild(left);
+  grid.appendChild(right);
+  body.appendChild(grid);
+  const clearWarningsButton=right.querySelector('#spotClearImportWarnings');
+  if(clearWarningsButton) clearWarningsButton.addEventListener('click', ()=>clearSwitchImportWarnings(set.id));
+
+  const tr=right.querySelector('#thumbRow');
+  for(let i=0;i<images.length;i++){
+    const image=images[i];
+    const mini=document.createElement('div');
+    mini.className='tmini'+(i===state.spotlight.index?' active':'');
+    mini.tabIndex=0;
+    mini.setAttribute('role','button');
+    mini.setAttribute('aria-label','Bild '+(i+1)+' anzeigen');
+    mini.innerHTML=imageHtml(image.src, image.name||set.name);
+    mini.addEventListener('click', ()=>{ state.spotlight.index=i; renderSpotlight(); });
+    mini.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();state.spotlight.index=i;renderSpotlight();} });
+    tr.appendChild(mini);
+  }
+
+  foot.innerHTML='<div class="muted small">Switch: <b style="color:var(--txt)">'+esc(set.name||'')+'</b> • Bilder: '+images.length+' • Geändert: '+fmtDateOnly(set.updatedAt||set.createdAt)+'</div>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button id="spotLarge">Groß ansehen</button>'+
+      '<button id="spotEdit">Bearbeiten</button>'+
+      '<button class="danger" id="spotDel">Löschen</button>'+
+    '</div>';
+  document.getElementById('spotLarge').disabled=!images.length;
+  document.getElementById('spotLarge').onclick=openLargePhoto;
+  document.getElementById('spotEdit').onclick=()=>{ closeSpotlight(); editSwitchSet(set.id); };
+  document.getElementById('spotDel').onclick=()=>deleteSwitchSet(set.id);
+  document.getElementById('spotPrev').disabled=state.spotlight.index<=0;
+  document.getElementById('spotNext').disabled=state.spotlight.index>=images.length-1;
+}
+
 async function renderSpotlight(){
   if(state.spotlight.kind==='keycapSet') return renderKeycapSpotlight();
   if(state.spotlight.kind==='artisanSet') return renderArtisanSpotlight();
+  if(state.spotlight.kind==='switchSet') return renderSwitchSpotlight();
   const body=document.getElementById('spotBody');
   const foot=document.getElementById('spotFoot');
   const renderId=++state.spotlight.renderId;
@@ -4672,7 +5868,7 @@ async function renderSpotlight(){
     body.innerHTML = '<div class=\"grid\" style=\"grid-template-columns:1fr;gap:12px\">'+
       '<div class=\"card pad\">Keine Fotos für dieses Board.</div>'+
       '<div class=\"card pad\"><div style=\"font-weight:900\">Attribute</div><div class=\"attrList\">'+
-        attrRow('Hersteller', b?.manufacturer)+attrRow('Format', b?.format)+attrRow('PCB', b?.pcb)+attrRow('Plate', b?.plate)+attrRow('Stabs', b?.stabs)+attrRow('Switches', b?.switches)+attrRow('Keycaps', b?displayBoardKeycaps(b):'')+
+        attrRow('Hersteller', b?.manufacturer)+attrRow('Format', b?.format)+attrRow('PCB', b?.pcb)+attrRow('Plate', b?.plate)+attrRow('Stabs', b?.stabs)+attrRow('Switches', b?displayBoardSwitches(b):'')+attrRow('Keycaps', b?displayBoardKeycaps(b):'')+
       '</div><div style=\"margin-top:12px\"><div class=\"muted small\" style=\"margin-bottom:6px\">Bemerkung</div><div class=\"card pad\">'+esc(b?.remark||'—')+'</div></div></div></div>';
     foot.innerHTML = '<div class=\"muted small\">Board: <b style=\"color:var(--txt)\">'+esc(b?.name||'')+'</b></div>'+
       '<div style=\"display:flex;gap:8px\"><button id=\"spotEdit\">Bearbeiten</button><button class=\"danger\" id=\"spotDel\">Löschen</button></div>';
@@ -4696,7 +5892,7 @@ async function renderSpotlight(){
 
   const left=document.createElement('div');
   left.className='spotMain';
-  left.innerHTML = '<div class=\"frame\" role=\"button\" tabindex=\"0\" aria-label=\"Foto in Großansicht öffnen\" title=\"Foto groß ansehen\">'+(main.src?('<img src=\"'+main.src+'\" alt=\"'+esc(main.name)+'\">'):'<span class=\"muted\">Kein Bild</span>')+'</div>';
+  left.innerHTML = '<div class=\"frame\" role=\"button\" tabindex=\"0\" aria-label=\"Foto in Großansicht öffnen\" title=\"Foto groß ansehen\">'+(main.src?imageHtml(main.src, main.name):'<span class=\"muted\">Kein Bild</span>')+'</div>';
   const frame=left.querySelector('.frame');
   frame.addEventListener('click',openLargePhoto);
   frame.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLargePhoto();}});
@@ -4713,7 +5909,7 @@ async function renderSpotlight(){
       attrRow('PCB', b?.pcb)+
       attrRow('Plate', b?.plate)+
       attrRow('Stabs', b?.stabs)+
-      attrRow('Switches', b?.switches)+
+      attrRow('Switches', b?displayBoardSwitches(b):'')+
       attrRow('Keycaps', b?displayBoardKeycaps(b):'')+
     '</div>' +
     '<div style=\"margin-top:12px\"><div class=\"muted small\" style=\"margin-bottom:6px\">Bemerkung</div><div class=\"card pad\" style=\"background:rgba(0,0,0,.12);white-space:pre-wrap\">'+esc((b?.remark||'—'))+'</div></div>';
@@ -4739,7 +5935,7 @@ async function renderSpotlight(){
     thumbnailLoads.push(spotPhotoSrc(pid).then(got=>{
       if(renderId!==state.spotlight.renderId || boardId!==state.spotlight.boardId || !mini.isConnected) return;
       mini.innerHTML = got.src
-        ? '<img src=\"'+got.src+'\" alt=\"'+esc(got.name)+'\">'
+        ? imageHtml(got.src, got.name)
         : '<div class=\"thumb\">(Bild)</div>';
     }));
   }
