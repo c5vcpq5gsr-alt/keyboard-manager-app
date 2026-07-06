@@ -15,11 +15,16 @@ Desktop-Anwendung zur Verwaltung einer Keyboard-Sammlung mit Boards, Komponenten
 
 | Erfassung | Übersicht |
 | --- | --- |
-| <img src="screenshots/001-erfassen.png" alt="Erfassung" width="420"> | <img src="screenshots/002-uebersicht.png" alt="Übersicht" width="420"> |
+| <img src="Screens/a_Erfassen%20001%20Keyboards.png" alt="Keyboard-Erfassung" width="420"> | <img src="Screens/b_Uebersicht%20001%20Keyboards.png" alt="Keyboard-Übersicht" width="420"> |
+| <img src="Screens/a_Erfassen%20002%20Keycaps.png" alt="Keycap-Erfassung" width="420"> | <img src="Screens/b_Uebersicht%20002%20Keycaps.png" alt="Keycap-Übersicht" width="420"> |
+| <img src="Screens/a_Erfassen%20003%20Artisans.png" alt="Artisan-Erfassung" width="420"> | <img src="Screens/b_Uebersicht%20003%20Artisans.png" alt="Artisan-Übersicht" width="420"> |
+| <img src="Screens/a_Erfassen%20004%20Switches.png" alt="Switch-Erfassung" width="420"> | <img src="Screens/b_Uebersicht%20004%20Switches.png" alt="Switch-Übersicht" width="420"> |
 
-| Galerie | Spotlight |
-| --- | --- |
-| <img src="screenshots/003-galerie.png" alt="Galerie" width="420"> | <img src="screenshots/004-spotlight.png" alt="Spotlight" width="420"> |
+| Galerie |
+| --- |
+| <img src="Screens/c_Galerie%20001%20Keyboards.png" alt="Keyboard-Galerie" width="420"> |
+| <img src="Screens/c_Galerie%20002%20Keycaps.png" alt="Keycap-Galerie" width="420"> |
+| <img src="Screens/c_Galerie%20003%20Artisans.png" alt="Artisan-Galerie" width="420"> |
 
 ## Entwicklung
 
@@ -41,6 +46,7 @@ npm run test:spotlight
 npm run test:keycaps
 npm run test:switches
 npm run test:board-links
+npm run test:editor-return
 ```
 
 ## Builds
@@ -51,7 +57,7 @@ npm run build:mac
 npm run build:win
 ```
 
-Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag wie `v1.2.9` erzeugt automatisch ein GitHub Release mit ARM-macOS-DMG, Windows-Installer und portabler Windows-App.
+Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag wie `v1.3.0` erzeugt automatisch ein GitHub Release mit ARM-macOS-DMG, Windows-Installer und portabler Windows-App.
 
 Da die Builds nicht signiert sind, können macOS Gatekeeper beziehungsweise Windows SmartScreen beim ersten Start eine Warnung anzeigen.
 

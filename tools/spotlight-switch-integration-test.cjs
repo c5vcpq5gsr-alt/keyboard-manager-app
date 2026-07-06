@@ -55,13 +55,24 @@ app.on('browser-window-created', (_event, window) => {
           const raceResult={
             title:document.getElementById('spotTitle').textContent,
             body:document.getElementById('spotBody').textContent,
-            foot:document.getElementById('spotFoot').textContent
+            foot:document.getElementById('spotFoot').textContent,
+            prevDisabled:document.getElementById('spotPrev').disabled,
+            nextDisabled:document.getElementById('spotNext').disabled
           };
+          document.getElementById('spotPrev').click();
+          for(let i=0;i<30 && document.getElementById('spotTitle').textContent!=='Spotlight: Slow Board';i++){
+            await new Promise(resolve=>setTimeout(resolve,20));
+          }
+          for(let i=0;i<30 && !(document.getElementById('spotFoot').textContent.includes('Slow Board') && document.getElementById('spotEdit'));i++){
+            await new Promise(resolve=>setTimeout(resolve,20));
+          }
+          const previousBoardTitle=document.getElementById('spotTitle').textContent;
           document.getElementById('spotEdit').click();
 
           return {
             startup,
             ...raceResult,
+            previousBoardTitle,
             tab:state.tab,
             editEntity:state.viewEntities.erf,
             boardPanelDisplay:document.getElementById('boardEditorPanel').style.display,
@@ -80,11 +91,14 @@ app.on('browser-window-created', (_event, window) => {
         !result.startup.boardsActive ||
         !result.foot.includes('Fast Board') ||
         result.body.includes('Slow Board') ||
+        result.prevDisabled ||
+        !result.nextDisabled ||
+        result.previousBoardTitle !== 'Spotlight: Slow Board' ||
         result.tab !== 'erf' ||
         result.editEntity !== 'boards' ||
         result.boardPanelDisplay !== 'grid' ||
         result.editorTitle !== 'Board bearbeiten' ||
-        result.editedBoardName !== 'Fast Board'
+        result.editedBoardName !== 'Slow Board'
       ) {
         throw new Error(`Unexpected Spotlight result: ${JSON.stringify(result)}`);
       }

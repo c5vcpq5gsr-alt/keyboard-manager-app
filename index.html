@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-keyboard-manager-app'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; frame-ancestors 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Keyboard Manager – 1.2.9</title>
+  <title>Keyboard Manager – 1.3.0</title>
   <style>
     :root{--bg:#070B14;--surface:#0A1222;--txt:#E5E7EB;--muted:#94A3B8;--border:#22304F;--accent:#38BDF8;--accent2:#0EA5E9;--accentSoft:rgba(56,189,248,.18);--accentMain:rgba(56,189,248,.75);--accentStrong:rgba(56,189,248,.90);--pri:var(--accent);--pri2:var(--accent2);--danger:#FB7185;}
     *{box-sizing:border-box}
@@ -1503,7 +1503,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         </div>
 
         <div class="sideVersion">
-          <span>v<span id="sideVersion">1.2.9</span></span>
+          <span>v<span id="sideVersion">1.3.0</span></span>
           <span aria-hidden="true">⚙</span>
         </div>
       </aside>
@@ -1512,7 +1512,7 @@ html[data-theme="light"] .contentPane > .topBar .sub{
         <div class="topBar">
           <div class="topIdentity">
             <h1>Keyboard Manager</h1>
-            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.2.9</span></div>
+            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.3.0</span></div>
           </div>
           <div class="topSpacer" aria-hidden="true"></div>
           <div class="actions topActions" role="toolbar" aria-label="Hauptaktionen">
@@ -1868,8 +1868,8 @@ html[data-theme="light"] .contentPane > .topBar .sub{
       <div class="mhead">
         <div style="font-weight:900" id="spotTitle">Spotlight</div>
         <div style="display:flex;gap:8px">
-          <button id="spotPrev" aria-label="Vorheriges Foto">◀</button>
-          <button id="spotNext" aria-label="Nächstes Foto">▶</button>
+          <button id="spotPrev" aria-label="Vorheriges Element">◀</button>
+          <button id="spotNext" aria-label="Nächstes Element">▶</button>
           <button class="danger" id="spotClose" aria-label="Dialog schließen">✕</button>
         </div>
       </div>
@@ -2013,7 +2013,7 @@ async function storeGetAllByOwner(ownerType, ownerId){
 }
 
 // ====== App ======
-const VERSION='1.2.9';
+const VERSION='1.3.0';
 const FORMAT_DEFAULTS=["40%", "60%", "65%", "FRL TKL", "TKL", "98%", "Sonstige", "NumPads", "Makro Pads"];
 const PLATE_DEFAULTS=["Aluminium", "PC", "POM", "FR4", "Carbon", "Copper", "Stahl", "n/a"];
 const PCB_DEFAULTS=["Hotswap", "Solder", "MillMax"];
@@ -2166,6 +2166,8 @@ const GUI_DE_EN={
   'Dialog schließen':'Close dialog',
   'Vorheriges Foto':'Previous photo',
   'Nächstes Foto':'Next photo',
+  'Vorheriges Element':'Previous item',
+  'Nächstes Element':'Next item',
   'Großansicht schließen':'Close large view',
   'Großansicht des Fotos':'Large photo view',
   'Groß ansehen':'View large',
@@ -2382,6 +2384,7 @@ const state={
   viewEntities:{erf:'boards', ueb:'boards', gal:'boards'},
   spotlight:{open:false, kind:'board', boardId:'', keycapSetId:'', artisanSetId:'', switchSetId:'', photoIds:[], images:[], index:0, urls:[], previousFocus:null, renderId:0},
   largePhoto:{open:false, url:'', previousFocus:null},
+  returnToOverview:null,
   editorSession:{original:null, addedPhotoIds:new Set()},
   keycapEditorSession:{original:null, addedPhotoIds:new Set()},
   artisanEditorSession:{original:null, addedPhotoIds:new Set()},
@@ -2441,6 +2444,33 @@ function setEntityView(view, entity){
   renderEntityPanels(view);
   if(view==='ueb') renderOverview();
   if(view==='gal') renderGallery();
+}
+
+function captureOverviewReturn(entity, id){
+  state.returnToOverview={
+    entity,
+    id,
+    scrollY:window.scrollY || document.documentElement.scrollTop || 0
+  };
+}
+
+function findOverviewElement(entity, id){
+  return Array.from(document.querySelectorAll('[data-overview-entity="'+entity+'"]')).find(el=>el.dataset.id===id) || null;
+}
+
+function returnToOverviewEntity(entity, id){
+  const ctx=state.returnToOverview && state.returnToOverview.entity===entity ? state.returnToOverview : {entity,id,scrollY:null};
+  state.viewEntities.ueb=entity;
+  switchTab('ueb');
+  renderOverview();
+  requestAnimationFrame(()=>{
+    if(typeof ctx.scrollY==='number'){
+      window.scrollTo({top:ctx.scrollY});
+    }else{
+      findOverviewElement(entity, id)?.scrollIntoView({block:'center'});
+    }
+  });
+  state.returnToOverview=null;
 }
 
 function renderEntityPanels(view){
@@ -2570,6 +2600,56 @@ function switchSetLabel(id){
   return switchVariantLabel(state.switchSets.find(set=>set.id===id));
 }
 
+function boardSwitchSetQuantity(boardId, switchSetId){
+  const set=state.switchSets.find(item=>item.id===switchSetId);
+  const install=(Array.isArray(set?.installations) ? set.installations : normalizeSwitchInstallations(set)).find(item=>trim(item?.boardId)===boardId);
+  return Math.max(0,parseInt(install?.quantity,10)||0);
+}
+
+function boardSwitchQuantityMap(board){
+  const out={};
+  if(!board?.id) return out;
+  for(const id of normalizeBoardSwitchSetIds(board)){
+    out[id]=boardSwitchSetQuantity(board.id, id);
+  }
+  return out;
+}
+
+function normalizeBoardSwitchQuantities(board){
+  const quantities=board?.switchSetQuantities || {};
+  const out={};
+  for(const id of normalizeBoardSwitchSetIds(board)){
+    out[id]=Math.max(0,parseInt(quantities[id],10)||0);
+  }
+  return out;
+}
+
+function captureBoardSwitchSetLinks(){
+  if(!state.draft) return;
+  const host=document.getElementById('f_switchSetLinks');
+  if(!host) return;
+  const ids=[];
+  const quantities={};
+  const rows=host.querySelectorAll('.installRow');
+  for(const row of rows){
+    const id=trim(row.querySelector('[data-a="switchSet"]')?.value);
+    if(!id || ids.includes(id)) continue;
+    ids.push(id);
+    quantities[id]=Math.max(0,parseInt(row.querySelector('[data-a="qty"]')?.value,10)||0);
+  }
+  state.draft.switchSetIds=ids;
+  state.draft.switchSetQuantities=quantities;
+  applyBoardSwitchSetIds(state.draft, ids, true);
+}
+
+function switchSetLabelForBoard(id, board){
+  const label=switchSetLabel(id);
+  if(!label) return '';
+  const draftQuantity=state.draft && board?.id===state.draft.id ? board?.switchSetQuantities?.[id] : undefined;
+  const quantity=draftQuantity ?? boardSwitchSetQuantity(board?.id, id);
+  return label + (Number(quantity||0) ? ' ('+Number(quantity||0)+')' : '');
+}
+
 function normalizeBoardSwitchSetIds(board){
   const ids=[];
   const add=id=>{
@@ -2593,7 +2673,7 @@ function applyBoardSwitchSetIds(board, ids, syncText=false){
 }
 
 function displayBoardSwitches(board){
-  const labels=normalizeBoardSwitchSetIds(board).map(id=>switchSetLabel(id)).filter(Boolean);
+  const labels=normalizeBoardSwitchSetIds(board).map(id=>switchSetLabelForBoard(id, board)).filter(Boolean);
   return labels.join(', ') || board.switches || '';
 }
 
@@ -2682,9 +2762,11 @@ function renderBoardSwitchSetLinks(){
   const host=document.getElementById('f_switchSetLinks');
   if(!host || !state.draft) return;
   const ids=(Array.isArray(state.draft.switchSetIds) ? state.draft.switchSetIds : [state.draft.switchSetId]).map(trim);
+  const quantities=normalizeBoardSwitchQuantities(state.draft);
   const validIds=ids.filter((id,idx,arr)=>id && state.switchSets.some(set=>set.id===id) && arr.indexOf(id)===idx);
   state.draft.switchSetIds=[...ids];
   state.draft.switchSetId=validIds[0]||'';
+  state.draft.switchSetQuantities=quantities;
   const options=['<option value="">Switch-Set wählen…</option>'].concat(
     [...state.switchSets].sort((a,b)=>(a.name||'').localeCompare(b.name||'','de')).map(set=>
       '<option value="'+esc(set.id)+'">'+esc(switchVariantLabel(set))+'</option>'
@@ -2693,7 +2775,7 @@ function renderBoardSwitchSetLinks(){
   host.innerHTML='<div class="installRows">'+(ids.length?ids.map((id,idx)=>
     '<div class="installRow" data-idx="'+idx+'">'+
       '<select data-a="switchSet">'+options+'</select>'+
-      '<span class="muted small"></span>'+
+      '<input data-a="qty" inputmode="numeric" placeholder="Anzahl" value="'+esc(quantities[id]||'')+'">'+
       '<button type="button" class="danger" data-a="remove">Entfernen</button>'+
     '</div>'
   ).join(''):'<div class="muted small">Kein Switch-Set verknüpft.</div>')+'</div>'+
@@ -2703,17 +2785,31 @@ function renderBoardSwitchSetLinks(){
     const select=row.querySelector('[data-a="switchSet"]');
     select.value=ids[idx]||'';
     select.addEventListener('change', e=>{
+      const previousId=ids[idx];
       ids[idx]=trim(e.target.value);
+      if(previousId && previousId!==ids[idx]) delete quantities[previousId];
+      if(ids[idx] && !(ids[idx] in quantities)) quantities[ids[idx]]=0;
       state.draft.switchSetIds=ids;
+      state.draft.switchSetQuantities=quantities;
       state.draft.switchSetIdsEdited=true;
       applyBoardSwitchSetIds(state.draft, ids, true);
       renderBoardSwitchSetLinks();
       fillBoardSwitchesFromLinkedSet();
       renderPreview();
     });
+    row.querySelector('[data-a="qty"]').addEventListener('input', e=>{
+      const id=ids[idx];
+      if(!id) return;
+      quantities[id]=Math.max(0,parseInt(e.target.value,10)||0);
+      state.draft.switchSetQuantities=quantities;
+      state.draft.switchSetIdsEdited=true;
+      renderPreview();
+    });
     row.querySelector('[data-a="remove"]').addEventListener('click', ()=>{
+      if(ids[idx]) delete quantities[ids[idx]];
       ids.splice(idx,1);
       state.draft.switchSetIds=ids;
+      state.draft.switchSetQuantities=quantities;
       state.draft.switchSetIdsEdited=true;
       applyBoardSwitchSetIds(state.draft, ids, true);
       renderBoardSwitchSetLinks();
@@ -2724,6 +2820,7 @@ function renderBoardSwitchSetLinks(){
   document.getElementById('f_addSwitchSetLink').addEventListener('click', ()=>{
     ids.push('');
     state.draft.switchSetIds=ids;
+    state.draft.switchSetQuantities=quantities;
     state.draft.switchSetIdsEdited=true;
     renderBoardSwitchSetLinks();
   });
@@ -2826,7 +2923,10 @@ function emptyDraft(){
 function beginDraft(board){
   state.draft=board ? JSON.parse(JSON.stringify(board)) : emptyDraft();
   applyBoardSwitchSetIds(state.draft, normalizeBoardSwitchSetIds(state.draft));
-  state.editorSession={original:board ? JSON.parse(JSON.stringify(board)) : null, addedPhotoIds:new Set()};
+  state.draft.switchSetQuantities=boardSwitchQuantityMap(state.draft);
+  const original=board ? JSON.parse(JSON.stringify(board)) : null;
+  if(original) original.switchSetQuantities=boardSwitchQuantityMap(original);
+  state.editorSession={original, addedPhotoIds:new Set()};
 }
 
 async function discardDraftChanges(){
@@ -2836,11 +2936,13 @@ async function discardDraftChanges(){
 
 function draftIsDirty(){
   if(!state.draft) return false;
+  captureBoardSwitchSetLinks();
   if(state.editorSession.addedPhotoIds.size) return true;
   const original=state.editorSession.original || emptyDraft();
   const keys=['name','manufacturer','format','plate','pcb','keycaps','keycapSetId','stabs','switches','switchSetId','remark','mainPhotoId'];
   if(keys.some(key=>(state.draft[key]||'')!==(original[key]||''))) return true;
   if(JSON.stringify(normalizeBoardSwitchSetIds(state.draft))!==JSON.stringify(normalizeBoardSwitchSetIds(original))) return true;
+  if(JSON.stringify(normalizeBoardSwitchQuantities(state.draft))!==JSON.stringify(normalizeBoardSwitchQuantities(original))) return true;
   return JSON.stringify(state.draft.photoIds||[])!==JSON.stringify(original.photoIds||[]);
 }
 
@@ -3026,6 +3128,9 @@ async function normalizePhoto(file){
 
 async function saveDraft(){
   const d=state.draft;
+  captureBoardSwitchSetLinks();
+  const wasEditing=Boolean(state.editorSession.original);
+  const savedId=d.id;
   d.name=trim(document.getElementById('f_name').value);
   d.manufacturer=trim(document.getElementById('f_man').value);
   d.format=trim(document.getElementById('f_format').value);
@@ -3037,6 +3142,8 @@ async function saveDraft(){
   d.switches=trim(document.getElementById('f_switches').value);
   applyBoardSwitchSetIds(d, d.switchSetIds||[], Boolean(d.switchSetIdsEdited || (d.switchSetIds||[]).length));
   delete d.switchSetIdsEdited;
+  const switchSetQuantities=normalizeBoardSwitchQuantities(d);
+  delete d.switchSetQuantities;
   const linkedKeycaps=keycapSetName(d.keycapSetId);
   if(linkedKeycaps) d.keycaps=linkedKeycaps;
   if(d.switchSetIds.length) d.switches=d.switchSetIds.map(id=>switchSetName(id)).filter(Boolean).join(', ');
@@ -3061,13 +3168,16 @@ async function saveDraft(){
   const idx=state.boards.findIndex(x=>x.id===d.id);
   if(idx>=0) state.boards[idx]=JSON.parse(JSON.stringify(d)); else state.boards.unshift(JSON.parse(JSON.stringify(d)));
   await syncBoardKeycapLink(d);
-  await syncBoardSwitchLink(d);
+  await syncBoardSwitchLink(d, switchSetQuantities);
   state.editorSession={original:JSON.parse(JSON.stringify(d)), addedPhotoIds:new Set()};
   await persistMeta();
   newDraft();
   toast('Gespeichert');
-  switchTab('ueb');
-  renderOverview();
+  if(wasEditing) returnToOverviewEntity('boards', savedId);
+  else{
+    switchTab('ueb');
+    renderOverview();
+  }
 }
 
 async function syncBoardKeycapLink(board){
@@ -3090,15 +3200,22 @@ async function syncBoardKeycapLink(board){
   if(changed) state.keycapSets=await storeGetAll('keycapSets');
 }
 
-async function syncBoardSwitchLink(board){
+async function syncBoardSwitchLink(board, switchSetQuantities={}){
   let changed=false;
   const boardSwitchSetIds=new Set(normalizeBoardSwitchSetIds(board));
   for(const set of state.switchSets){
     const installations=normalizeSwitchInstallations(set);
     const shouldLink=boardSwitchSetIds.has(set.id);
-    const isLinked=installations.some(item=>item.boardId===board.id);
+    const existing=installations.find(item=>item.boardId===board.id);
+    const isLinked=Boolean(existing);
+    const quantity=Math.max(0,parseInt(switchSetQuantities[set.id],10)||0);
     if(shouldLink && !isLinked){
-      applySwitchInstallations(set, [...installations, {boardId:board.id, quantity:0}]);
+      applySwitchInstallations(set, [...installations, {boardId:board.id, quantity}]);
+      set.updatedAt=Date.now();
+      await storePut('switchSets', set);
+      changed=true;
+    }else if(shouldLink && Number(existing?.quantity||0)!==quantity){
+      applySwitchInstallations(set, installations.map(item=>item.boardId===board.id ? {...item, quantity} : item));
       set.updatedAt=Date.now();
       await storePut('switchSets', set);
       changed=true;
@@ -3201,6 +3318,8 @@ function renderOverview(renderFilters=true){
 
   for(const b of rows){
     const tr=document.createElement('tr');
+    tr.dataset.overviewEntity='boards';
+    tr.dataset.id=b.id;
 
     // Thumbnail + Board als erste zwei Spalten
     tr.innerHTML='<td><div class=\"miniThumb\" title=\"Spotlight öffnen\" role=\"button\" tabindex=\"0\" aria-label=\"Details zu '+esc(b.name)+' öffnen\"><span>—</span></div></td>'+
@@ -3297,6 +3416,7 @@ function renderGallery(renderFilters=true){
 function editExisting(id){
   const b=state.boards.find(x=>x.id===id);
   if(!b) return;
+  captureOverviewReturn('boards', id);
   beginDraft(b);
   document.getElementById('editorTitle').textContent='Board bearbeiten';
   document.getElementById('btnCancel').style.display='inline-flex';
@@ -3600,6 +3720,8 @@ async function syncMountedBoardLinks(set){
 
 async function saveKeycapDraft(){
   const d=state.keycapDraft;
+  const wasEditing=Boolean(state.keycapEditorSession.original);
+  const savedId=d.id;
   d.name=trim(document.getElementById('kc_name').value);
   d.manufacturer=trim(document.getElementById('kc_manufacturer').value);
   d.profile=trim(document.getElementById('kc_profile').value);
@@ -3637,17 +3759,28 @@ async function saveKeycapDraft(){
   renderOverview();
   renderGallery();
   toast('Keycap-Set gespeichert');
+  if(wasEditing) returnToOverviewEntity('keycaps', savedId);
 }
 
 function editKeycapSet(id){
   const set=state.keycapSets.find(x=>x.id===id);
   if(!set) return;
+  captureOverviewReturn('keycaps', id);
   beginKeycapDraft(set);
   document.getElementById('keycapEditorTitle').textContent='Keycap-Set bearbeiten';
   document.getElementById('btnCancelKeycap').style.display='inline-flex';
   fillKeycapFormFromDraft();
   state.viewEntities.erf='keycaps';
   switchTab('erf');
+}
+
+async function cancelKeycapEditing(){
+  if(keycapDraftIsDirty() && !confirm('Ungespeicherte Keycap-Änderungen verwerfen?')) return;
+  const wasEditing=Boolean(state.keycapEditorSession.original);
+  const editedId=state.keycapDraft?.id || '';
+  await discardKeycapDraftChanges();
+  newKeycapDraft();
+  if(wasEditing) returnToOverviewEntity('keycaps', editedId);
 }
 
 async function deleteKeycapSet(id){
@@ -3762,6 +3895,8 @@ function renderKeycaps(renderFilters=true){
   }
   for(const set of rows){
     const tr=document.createElement('tr');
+    tr.dataset.overviewEntity='keycaps';
+    tr.dataset.id=set.id;
     const kits=(set.kits||[]).slice(0,3).join(', ')+((set.kits||[]).length>3?' …':'');
     const source=set.sourceUrl ? '<a href="#" data-source-url="'+esc(set.sourceUrl)+'" style="color:var(--accent)">'+esc(set.sourceShop||'Quelle')+'</a>' : esc(set.sourceShop||'—');
     tr.innerHTML='<td><div class="miniThumb" title="Spotlight öffnen" role="button" tabindex="0" aria-label="Spotlight zu '+esc(set.name)+' öffnen"><span>—</span></div></td>'+
@@ -4232,6 +4367,8 @@ async function syncMountedSwitchBoardLinks(set){
 
 async function saveSwitchDraft(){
   const d=state.switchDraft;
+  const wasEditing=Boolean(state.switchEditorSession.original);
+  const savedId=d.id;
   d.name=trim(document.getElementById('sw_name').value);
   d.switchType=trim(document.getElementById('sw_switchType').value);
   d.topHousingMaterial=trim(document.getElementById('sw_topHousingMaterial').value);
@@ -4281,17 +4418,28 @@ async function saveSwitchDraft(){
   renderOverview();
   renderGallery();
   toast('Switch gespeichert');
+  if(wasEditing) returnToOverviewEntity('switches', savedId);
 }
 
 function editSwitchSet(id){
   const set=state.switchSets.find(x=>x.id===id);
   if(!set) return;
+  captureOverviewReturn('switches', id);
   beginSwitchDraft(set);
   document.getElementById('switchEditorTitle').textContent='Switch bearbeiten';
   document.getElementById('btnCancelSwitch').style.display='inline-flex';
   fillSwitchFormFromDraft();
   state.viewEntities.erf='switches';
   switchTab('erf');
+}
+
+async function cancelSwitchEditing(){
+  if(switchDraftIsDirty() && !confirm('Ungespeicherte Switch-Änderungen verwerfen?')) return;
+  const wasEditing=Boolean(state.switchEditorSession.original);
+  const editedId=state.switchDraft?.id || '';
+  await discardSwitchDraftChanges();
+  newSwitchDraft();
+  if(wasEditing) returnToOverviewEntity('switches', editedId);
 }
 
 async function deleteSwitchSet(id){
@@ -4400,6 +4548,8 @@ function renderSwitches(renderFilters=true){
   }
   for(const set of rows){
     const tr=document.createElement('tr');
+    tr.dataset.overviewEntity='switches';
+    tr.dataset.id=set.id;
     tr.innerHTML='<td><div class="miniThumb"><span>—</span></div></td>'+
       '<td><div class="boardName" style="font-weight:900">'+esc(set.name)+'</div><div class="muted small" style="margin-top:6px">'+esc(set.pins||'—')+' PIN</div></td>'+
       '<td>'+esc(set.switchType||'—')+'</td><td>'+Number(set.quantity||0)+' / '+Number(set.mountedQuantity||0)+' / '+availableSwitchQuantity(set)+'</td><td>'+esc(displaySwitchBoard(set)||'—')+'</td><td>'+esc(set.operatingForce||'—')+'</td>'+
@@ -4605,6 +4755,8 @@ async function addArtisanPhotos(fileList){
 
 async function saveArtisanDraft(){
   const d=state.artisanDraft;
+  const wasEditing=Boolean(state.artisanEditorSession.original);
+  const savedId=d.id;
   d.name=trim(document.getElementById('art_name').value);
   d.manufacturer=trim(document.getElementById('art_manufacturer').value);
   d.profile=trim(document.getElementById('art_profile').value);
@@ -4640,17 +4792,28 @@ async function saveArtisanDraft(){
   renderOverview();
   renderGallery();
   toast('Artisan gespeichert');
+  if(wasEditing) returnToOverviewEntity('artisans', savedId);
 }
 
 function editArtisanSet(id){
   const set=state.artisanSets.find(x=>x.id===id);
   if(!set) return;
+  captureOverviewReturn('artisans', id);
   beginArtisanDraft(set);
   document.getElementById('artisanEditorTitle').textContent='Artisan bearbeiten';
   document.getElementById('btnCancelArtisan').style.display='inline-flex';
   fillArtisanFormFromDraft();
   state.viewEntities.erf='artisans';
   switchTab('erf');
+}
+
+async function cancelArtisanEditing(){
+  if(artisanDraftIsDirty() && !confirm('Ungespeicherte Artisan-Änderungen verwerfen?')) return;
+  const wasEditing=Boolean(state.artisanEditorSession.original);
+  const editedId=state.artisanDraft?.id || '';
+  await discardArtisanDraftChanges();
+  newArtisanDraft();
+  if(wasEditing) returnToOverviewEntity('artisans', editedId);
 }
 
 async function deleteArtisanSet(id){
@@ -4757,6 +4920,8 @@ function renderArtisans(renderFilters=true){
   }
   for(const set of rows){
     const tr=document.createElement('tr');
+    tr.dataset.overviewEntity='artisans';
+    tr.dataset.id=set.id;
     const tags=(set.tags||[]).slice(0,3).join(', ')+((set.tags||[]).length>3?' …':'');
     const source=set.sourceUrl ? '<a href="#" data-source-url="'+esc(set.sourceUrl)+'" style="color:var(--accent)">'+esc(set.sourceShop||'Quelle')+'</a>' : esc(set.sourceShop||'—');
     tr.innerHTML='<td><div class="miniThumb" title="Spotlight öffnen" role="button" tabindex="0" aria-label="Spotlight zu '+esc(set.name)+' öffnen"><span>—</span></div></td>'+
@@ -5135,9 +5300,12 @@ async function importData(){
 
 async function cancelEditing(){
   if(draftIsDirty() && !confirm('Ungespeicherte Änderungen verwerfen?')) return;
+  const wasEditing=Boolean(state.editorSession.original);
+  const editedId=state.draft?.id || '';
   await discardDraftChanges();
   newDraft();
-  switchTab(state.boards.length ? 'ueb' : 'erf');
+  if(wasEditing) returnToOverviewEntity('boards', editedId);
+  else switchTab(state.boards.length ? 'ueb' : 'erf');
 }
 
 async function legacySnapshot(){
@@ -5286,12 +5454,7 @@ function wireStatic(){
     document.getElementById('kc_name').focus();
   });
   document.getElementById('btnSaveKeycap').addEventListener('click', ()=>{ if(hasDesktopApi()) saveKeycapDraft(); });
-  document.getElementById('btnCancelKeycap').addEventListener('click', async ()=>{
-    if(!hasDesktopApi()) return;
-    if(keycapDraftIsDirty() && !confirm('Ungespeicherte Keycap-Änderungen verwerfen?')) return;
-    await discardKeycapDraftChanges();
-    newKeycapDraft();
-  });
+  document.getElementById('btnCancelKeycap').addEventListener('click', ()=>{ if(hasDesktopApi()) cancelKeycapEditing(); });
   document.getElementById('btnAddKeycapPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('fileKeycapPhotos').click(); });
   document.getElementById('fileKeycapPhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addKeycapPhotos(e.target.files); e.target.value=''; });
   document.getElementById('btnNewArtisan').addEventListener('click', async ()=>{
@@ -5302,12 +5465,7 @@ function wireStatic(){
     document.getElementById('art_name').focus();
   });
   document.getElementById('btnSaveArtisan').addEventListener('click', ()=>{ if(hasDesktopApi()) saveArtisanDraft(); });
-  document.getElementById('btnCancelArtisan').addEventListener('click', async ()=>{
-    if(!hasDesktopApi()) return;
-    if(artisanDraftIsDirty() && !confirm('Ungespeicherte Artisan-Änderungen verwerfen?')) return;
-    await discardArtisanDraftChanges();
-    newArtisanDraft();
-  });
+  document.getElementById('btnCancelArtisan').addEventListener('click', ()=>{ if(hasDesktopApi()) cancelArtisanEditing(); });
   document.getElementById('btnAddArtisanPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('fileArtisanPhotos').click(); });
   document.getElementById('fileArtisanPhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addArtisanPhotos(e.target.files); e.target.value=''; });
   document.getElementById('btnNewSwitch').addEventListener('click', async ()=>{
@@ -5318,12 +5476,7 @@ function wireStatic(){
     document.getElementById('sw_name').focus();
   });
   document.getElementById('btnSaveSwitch').addEventListener('click', ()=>{ if(hasDesktopApi()) saveSwitchDraft(); });
-  document.getElementById('btnCancelSwitch').addEventListener('click', async ()=>{
-    if(!hasDesktopApi()) return;
-    if(switchDraftIsDirty() && !confirm('Ungespeicherte Switch-Änderungen verwerfen?')) return;
-    await discardSwitchDraftChanges();
-    newSwitchDraft();
-  });
+  document.getElementById('btnCancelSwitch').addEventListener('click', ()=>{ if(hasDesktopApi()) cancelSwitchEditing(); });
   document.getElementById('btnAddSwitchPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('fileSwitchPhotos').click(); });
   document.getElementById('fileSwitchPhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addSwitchPhotos(e.target.files); e.target.value=''; });
 
@@ -5401,6 +5554,7 @@ function openSpotlight(boardId){
   state.spotlight.boardId=boardId;
   state.spotlight.keycapSetId='';
   state.spotlight.artisanSetId='';
+  state.spotlight.switchSetId='';
   state.spotlight.photoIds = Array.isArray(b.photoIds)?b.photoIds:[];
   state.spotlight.images=[];
   state.spotlight.index = 0;
@@ -5421,6 +5575,7 @@ function openKeycapSpotlight(setId){
   state.spotlight.boardId='';
   state.spotlight.keycapSetId=setId;
   state.spotlight.artisanSetId='';
+  state.spotlight.switchSetId='';
   state.spotlight.photoIds=[];
   state.spotlight.images=[];
   state.spotlight.index=0;
@@ -5441,6 +5596,7 @@ function openArtisanSpotlight(setId){
   state.spotlight.boardId='';
   state.spotlight.keycapSetId='';
   state.spotlight.artisanSetId=setId;
+  state.spotlight.switchSetId='';
   state.spotlight.photoIds=[];
   state.spotlight.images=[];
   state.spotlight.index=0;
@@ -5480,6 +5636,7 @@ function closeSpotlight(){
   revokeSpotlightUrls();
   state.spotlight.open=false;
   state.spotlight.kind='board';
+  state.spotlight.boardId='';
   state.spotlight.keycapSetId='';
   state.spotlight.artisanSetId='';
   state.spotlight.switchSetId='';
@@ -5553,6 +5710,77 @@ function currentSpotlightImageCount(){
   return ['keycapSet','artisanSet','switchSet'].includes(state.spotlight.kind)
     ? (state.spotlight.images||[]).length
     : (state.spotlight.photoIds||[]).length;
+}
+
+function currentSpotlightItemId(){
+  if(state.spotlight.kind==='keycapSet') return state.spotlight.keycapSetId;
+  if(state.spotlight.kind==='artisanSet') return state.spotlight.artisanSetId;
+  if(state.spotlight.kind==='switchSet') return state.spotlight.switchSetId;
+  return state.spotlight.boardId;
+}
+
+function spotlightRowsForKind(kind, filtered=true){
+  if(kind==='keycapSet') return filtered ? applyKeycapFilters(state.keycapSets) : [...state.keycapSets];
+  if(kind==='artisanSet') return filtered ? applyArtisanFilters(state.artisanSets) : [...state.artisanSets];
+  if(kind==='switchSet') return filtered ? applySwitchFilters(state.switchSets) : [...state.switchSets];
+  return filtered ? applyFilters(state.boards) : [...state.boards];
+}
+
+function currentSpotlightCollection(){
+  const kind=state.spotlight.kind;
+  const currentId=currentSpotlightItemId();
+  let rows=spotlightRowsForKind(kind, true);
+  if(currentId && !rows.some(item=>item.id===currentId)) rows=spotlightRowsForKind(kind, false);
+  return rows.map(item=>item.id).filter(Boolean);
+}
+
+function setCurrentSpotlightItemId(id){
+  if(state.spotlight.kind==='keycapSet'){
+    const set=state.keycapSets.find(item=>item.id===id);
+    if(!set) return false;
+    state.spotlight.boardId='';
+    state.spotlight.keycapSetId=id;
+    state.spotlight.artisanSetId='';
+    state.spotlight.switchSetId='';
+    state.spotlight.photoIds=[];
+  }else if(state.spotlight.kind==='artisanSet'){
+    const set=state.artisanSets.find(item=>item.id===id);
+    if(!set) return false;
+    state.spotlight.boardId='';
+    state.spotlight.keycapSetId='';
+    state.spotlight.artisanSetId=id;
+    state.spotlight.switchSetId='';
+    state.spotlight.photoIds=[];
+  }else if(state.spotlight.kind==='switchSet'){
+    const set=state.switchSets.find(item=>item.id===id);
+    if(!set) return false;
+    state.spotlight.boardId='';
+    state.spotlight.keycapSetId='';
+    state.spotlight.artisanSetId='';
+    state.spotlight.switchSetId=id;
+    state.spotlight.photoIds=[];
+  }else{
+    const board=state.boards.find(item=>item.id===id);
+    if(!board) return false;
+    state.spotlight.boardId=id;
+    state.spotlight.keycapSetId='';
+    state.spotlight.artisanSetId='';
+    state.spotlight.switchSetId='';
+    state.spotlight.photoIds=Array.isArray(board.photoIds) ? board.photoIds : [];
+  }
+  state.spotlight.images=[];
+  state.spotlight.index=0;
+  return true;
+}
+
+function updateSpotlightNavigationButtons(){
+  const ids=currentSpotlightCollection();
+  const index=ids.indexOf(currentSpotlightItemId());
+  const prev=document.getElementById('spotPrev');
+  const next=document.getElementById('spotNext');
+  if(!prev || !next) return;
+  prev.disabled=index<=0;
+  next.disabled=index<0 || index>=ids.length-1;
 }
 
 function attrRow(label, value){
@@ -5643,8 +5871,7 @@ async function renderKeycapSpotlight(){
   document.getElementById('spotLarge').onclick=openLargePhoto;
   document.getElementById('spotEdit').onclick=()=>{ closeSpotlight(); editKeycapSet(set.id); };
   document.getElementById('spotDel').onclick=()=>deleteKeycapSet(set.id);
-  document.getElementById('spotPrev').disabled=state.spotlight.index<=0;
-  document.getElementById('spotNext').disabled=state.spotlight.index>=images.length-1;
+  updateSpotlightNavigationButtons();
 }
 
 async function renderArtisanSpotlight(){
@@ -5730,8 +5957,7 @@ async function renderArtisanSpotlight(){
   document.getElementById('spotLarge').onclick=openLargePhoto;
   document.getElementById('spotEdit').onclick=()=>{ closeSpotlight(); editArtisanSet(set.id); };
   document.getElementById('spotDel').onclick=()=>deleteArtisanSet(set.id);
-  document.getElementById('spotPrev').disabled=state.spotlight.index<=0;
-  document.getElementById('spotNext').disabled=state.spotlight.index>=images.length-1;
+  updateSpotlightNavigationButtons();
 }
 
 async function clearSwitchImportWarnings(setId){
@@ -5842,8 +6068,7 @@ async function renderSwitchSpotlight(){
   document.getElementById('spotLarge').onclick=openLargePhoto;
   document.getElementById('spotEdit').onclick=()=>{ closeSpotlight(); editSwitchSet(set.id); };
   document.getElementById('spotDel').onclick=()=>deleteSwitchSet(set.id);
-  document.getElementById('spotPrev').disabled=state.spotlight.index<=0;
-  document.getElementById('spotNext').disabled=state.spotlight.index>=images.length-1;
+  updateSpotlightNavigationButtons();
 }
 
 async function renderSpotlight(){
@@ -5862,6 +6087,7 @@ async function renderSpotlight(){
 
   body.innerHTML='<div class="spotLoading">Spotlight wird geladen…</div>';
   foot.innerHTML='<div class="muted small">Board: <b style="color:var(--txt)">'+esc(b?.name||'')+'</b></div>';
+  document.getElementById('spotTitle').textContent='Spotlight: '+(b?.name||'Board');
 
   if(!ids.length){
     if(renderId!==state.spotlight.renderId || boardId!==state.spotlight.boardId) return;
@@ -5872,10 +6098,9 @@ async function renderSpotlight(){
       '</div><div style=\"margin-top:12px\"><div class=\"muted small\" style=\"margin-bottom:6px\">Bemerkung</div><div class=\"card pad\">'+esc(b?.remark||'—')+'</div></div></div></div>';
     foot.innerHTML = '<div class=\"muted small\">Board: <b style=\"color:var(--txt)\">'+esc(b?.name||'')+'</b></div>'+
       '<div style=\"display:flex;gap:8px\"><button id=\"spotEdit\">Bearbeiten</button><button class=\"danger\" id=\"spotDel\">Löschen</button></div>';
-    document.getElementById('spotEdit').onclick=()=>{closeSpotlight();editExisting(state.spotlight.boardId);};
+    document.getElementById('spotEdit').onclick=()=>{ const id=state.spotlight.boardId; closeSpotlight(); editExisting(id); };
     document.getElementById('spotDel').onclick=()=>deleteBoard(state.spotlight.boardId);
-    document.getElementById('spotPrev').disabled = true;
-    document.getElementById('spotNext').disabled = true;
+    updateSpotlightNavigationButtons();
     return;
   }
 
@@ -5951,18 +6176,19 @@ async function renderSpotlight(){
     '</div>';
 
   document.getElementById('spotLarge').onclick = openLargePhoto;
-  document.getElementById('spotEdit').onclick = ()=>{ closeSpotlight(); editExisting(state.spotlight.boardId); };
+  document.getElementById('spotEdit').onclick = ()=>{ const id=state.spotlight.boardId; closeSpotlight(); editExisting(id); };
   document.getElementById('spotDel').onclick  = ()=>{ deleteBoard(state.spotlight.boardId); };
 
-  document.getElementById('spotPrev').disabled = state.spotlight.index<=0;
-  document.getElementById('spotNext').disabled = state.spotlight.index>=ids.length-1;
+  updateSpotlightNavigationButtons();
 }
 
 function spotStep(dir){
   if(!state.spotlight.open) return;
-  const next=state.spotlight.index + dir;
-  if(next<0 || next>=currentSpotlightImageCount()) return;
-  state.spotlight.index = next;
+  const ids=currentSpotlightCollection();
+  const current=ids.indexOf(currentSpotlightItemId());
+  const next=current + dir;
+  if(current<0 || next<0 || next>=ids.length) return;
+  if(!setCurrentSpotlightItemId(ids[next])) return;
   renderSpotlight();
 }
 

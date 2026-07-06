@@ -27,14 +27,22 @@ app.on('browser-window-created', (_event, window) => {
           let switchRows=Array.from(document.querySelectorAll('#f_switchSetLinks .installRow'));
           switchRows[0].querySelector('[data-a="switchSet"]').value='autofill-switches';
           switchRows[0].querySelector('[data-a="switchSet"]').dispatchEvent(new Event('change'));
+          switchRows=Array.from(document.querySelectorAll('#f_switchSetLinks .installRow'));
+          switchRows[0].querySelector('[data-a="qty"]').value='65';
+          switchRows[0].querySelector('[data-a="qty"]').dispatchEvent(new Event('input'));
           document.getElementById('f_addSwitchSetLink').click();
           switchRows=Array.from(document.querySelectorAll('#f_switchSetLinks .installRow'));
           switchRows[1].querySelector('[data-a="switchSet"]').value='autofill-switches-heavy';
           switchRows[1].querySelector('[data-a="switchSet"]').dispatchEvent(new Event('change'));
+          switchRows=Array.from(document.querySelectorAll('#f_switchSetLinks .installRow'));
+          switchRows[1].querySelector('[data-a="qty"]').value='25';
+          switchRows[1].querySelector('[data-a="qty"]').dispatchEvent(new Event('input'));
           const formKeycaps=document.getElementById('f_keycaps').value;
           const formSwitches=document.getElementById('f_switches').value;
           await saveDraft();
           const saved=state.boards.find(board=>board.name==='Autofill Board');
+          const firstInstall=normalizeSwitchInstallations(state.switchSets.find(set=>set.id==='autofill-switches')).find(item=>item.boardId===saved?.id);
+          const secondInstall=normalizeSwitchInstallations(state.switchSets.find(set=>set.id==='autofill-switches-heavy')).find(item=>item.boardId===saved?.id);
           return {
             formKeycaps,
             formSwitches,
@@ -43,7 +51,10 @@ app.on('browser-window-created', (_event, window) => {
             savedKeycapSetId:saved?.keycapSetId,
             savedSwitchSetId:saved?.switchSetId,
             savedSwitchSetIds:saved?.switchSetIds,
-            switchOptionLabels:boardSwitchOptions
+            switchOptionLabels:boardSwitchOptions,
+            firstInstallQuantity:firstInstall?.quantity,
+            secondInstallQuantity:secondInstall?.quantity,
+            displayedSwitches:displayBoardSwitches(saved)
           };
         })()
       `);
@@ -58,7 +69,11 @@ app.on('browser-window-created', (_event, window) => {
         result.savedSwitchSetIds.length !== 2 ||
         !result.savedSwitchSetIds.includes('autofill-switches-heavy') ||
         !result.switchOptionLabels.includes('Autofill Switches (Linear · 55g · 5 PIN)') ||
-        !result.switchOptionLabels.includes('Autofill Switches (Linear · 60g · 5 PIN)')
+        !result.switchOptionLabels.includes('Autofill Switches (Linear · 60g · 5 PIN)') ||
+        result.firstInstallQuantity !== 65 ||
+        result.secondInstallQuantity !== 25 ||
+        !result.displayedSwitches.includes('Autofill Switches (Linear · 55g · 5 PIN) (65)') ||
+        !result.displayedSwitches.includes('Autofill Switches (Linear · 60g · 5 PIN) (25)')
       ) {
         throw new Error(`Unexpected autofill result: ${JSON.stringify(result)}`);
       }
