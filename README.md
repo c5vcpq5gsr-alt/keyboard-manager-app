@@ -87,3 +87,7 @@ Alternativ kann die Download-Quarantäne nach dem Kopieren im Terminal entfernt 
 ```bash
 xattr -dr com.apple.quarantine "/Applications/Keyboard Manager.app"
 ```
+
+## Lizenz und Credits
+
+Keyboard Manager ist Open Source und steht unter der MIT-Lizenz. Die Idee, Anforderungen und Produktverantwortung liegen bei R3D42. Die Umsetzung erfolgte mit Unterstützung von OpenAI Codex.
