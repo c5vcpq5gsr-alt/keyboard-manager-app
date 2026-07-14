@@ -1466,6 +1466,75 @@ html[data-theme="light"] .contentPane > .topBar h1,
 html[data-theme="light"] .contentPane > .topBar .sub{
   color:#102033;
 }
+
+.overviewHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.exportModal{
+  max-width:680px;
+}
+
+.exportGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.exportField{
+  display:grid;
+  gap:7px;
+}
+
+.exportField .lbl{
+  font-weight:800;
+}
+
+.exportChoice{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+}
+
+.exportChoice input{
+  width:auto;
+  margin-top:2px;
+}
+
+.exportChoiceText{
+  display:grid;
+  gap:3px;
+}
+
+.exportChoiceText span:first-child{
+  font-weight:800;
+}
+
+.exportHint{
+  margin-top:14px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  color:var(--muted);
+  background:rgba(20,127,234,.07);
+}
+
+html[data-theme="light"] .exportChoice{
+  background:rgba(255,255,255,.56);
+}
+
+@media(max-width:680px){
+  .exportGrid{grid-template-columns:1fr}
+  .overviewHead .entityToggle{width:100%}
+}
 </style>
 </head>
 <body>
@@ -1729,11 +1798,14 @@ html[data-theme="light"] .contentPane > .topBar .sub{
     </section>
 
     <section id="viewUeb" style="display:none">
-      <div class="entityToggle" role="tablist" aria-label="Übersichtstyp">
-        <button id="btnOverviewBoards" type="button" class="active">Keyboards</button>
-        <button id="btnOverviewKeycaps" type="button">Keycaps</button>
-        <button id="btnOverviewArtisans" type="button">Artisans</button>
-        <button id="btnOverviewSwitches" type="button">Switches</button>
+      <div class="overviewHead">
+        <div class="entityToggle" role="tablist" aria-label="Übersichtstyp">
+          <button id="btnOverviewBoards" type="button" class="active">Keyboards</button>
+          <button id="btnOverviewKeycaps" type="button">Keycaps</button>
+          <button id="btnOverviewArtisans" type="button">Artisans</button>
+          <button id="btnOverviewSwitches" type="button">Switches</button>
+        </div>
+        <button class="primary" id="btnInventoryExport" type="button">Bestand exportieren</button>
       </div>
 
       <div class="grid" id="boardOverviewPanel" style="grid-template-columns:1fr;gap:12px">
@@ -1861,6 +1933,59 @@ html[data-theme="light"] .contentPane > .topBar .sub{
   </div>
 
 
+
+  <!-- Inventory Export Modal -->
+  <div class="modalBack" id="inventoryExportBack" aria-hidden="true">
+    <div class="modal exportModal" role="dialog" aria-modal="true" aria-labelledby="inventoryExportTitle">
+      <div class="mhead">
+        <div>
+          <div style="font-weight:900" id="inventoryExportTitle">Bestand exportieren</div>
+          <div class="muted small" style="margin-top:4px">PDF zum Weitergeben oder Excel zur weiteren Bearbeitung.</div>
+        </div>
+        <button class="danger" id="inventoryExportClose" type="button" aria-label="Dialog schließen">✕</button>
+      </div>
+      <div class="mbody">
+        <div class="exportGrid">
+          <label class="exportField">
+            <span class="lbl">Format</span>
+            <select id="inventoryExportFormat">
+              <option value="pdf">PDF-Dokument</option>
+              <option value="xlsx">Excel-Arbeitsmappe (.xlsx)</option>
+            </select>
+          </label>
+          <label class="exportField">
+            <span class="lbl">Inhalt</span>
+            <select id="inventoryExportScope">
+              <option value="all">Kompletter Bestand</option>
+              <option value="current">Aktueller Bereich</option>
+            </select>
+          </label>
+          <label class="exportChoice">
+            <input id="inventoryExportFiltered" type="checkbox" checked>
+            <span class="exportChoiceText">
+              <span>Aktuelle Filter berücksichtigen</span>
+              <span class="muted small">Bei komplettem Bestand werden die Filter jeder Bestandsart angewendet.</span>
+            </span>
+          </label>
+          <label class="exportChoice" id="inventoryExportImagesChoice">
+            <input id="inventoryExportImages" type="checkbox">
+            <span class="exportChoiceText">
+              <span>Vorschaubilder in PDF</span>
+              <span class="muted small">Bis zu 200 lokale Hauptfotos werden verkleinert eingebettet.</span>
+            </span>
+          </label>
+        </div>
+        <div class="exportHint" id="inventoryExportHint">PDF erstellt einen druckbaren A4-Bericht im Querformat. Tabellenköpfe und Seitenzahlen werden automatisch eingefügt.</div>
+      </div>
+      <div class="mfoot">
+        <div class="muted small" id="inventoryExportStatus" role="status" aria-live="polite"></div>
+        <div style="display:flex;gap:8px;margin-left:auto">
+          <button id="inventoryExportCancel" type="button">Abbrechen</button>
+          <button class="primary" id="inventoryExportStart" type="button">Exportieren</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Spotlight Modal -->
   <div class="modalBack" id="spotBack" aria-hidden="true">
@@ -2085,6 +2210,23 @@ const GUI_DE_EN={
   'ZIP-Backup erstellen':'Create ZIP backup',
   'Backup importieren':'Import backup',
   'ZIP-Backup gespeichert':'ZIP backup saved',
+  'Bestand exportieren':'Export inventory',
+  'PDF zum Weitergeben oder Excel zur weiteren Bearbeitung.':'PDF for sharing or Excel for further editing.',
+  'PDF-Dokument':'PDF document',
+  'Excel-Arbeitsmappe (.xlsx)':'Excel workbook (.xlsx)',
+  'Kompletter Bestand':'Complete inventory',
+  'Aktueller Bereich':'Current section',
+  'Aktuelle Filter berücksichtigen':'Apply current filters',
+  'Bei komplettem Bestand werden die Filter jeder Bestandsart angewendet.':'For the complete inventory, the filters of each category are applied.',
+  'Vorschaubilder in PDF':'Preview images in PDF',
+  'Bis zu 200 lokale Hauptfotos werden verkleinert eingebettet.':'Up to 200 local main photos are resized and embedded.',
+  'PDF erstellt einen druckbaren A4-Bericht im Querformat. Tabellenköpfe und Seitenzahlen werden automatisch eingefügt.':'PDF creates a printable A4 landscape report. Table headers and page numbers are added automatically.',
+  'Excel erstellt eine Arbeitsmappe mit Übersicht und einem Tabellenblatt je Bestandsart.':'Excel creates a workbook with a summary and one worksheet per inventory category.',
+  'Export wird vorbereitet…':'Preparing export…',
+  'Bestandsexport gespeichert':'Inventory export saved',
+  'Bestandsexport konnte nicht gespeichert werden:':'Could not save inventory export:',
+  'Exportieren':'Export',
+  'Inhalt':'Content',
   'Backup konnte nicht gespeichert werden:':'Could not save backup:',
   'Backup konnte nicht geöffnet werden:':'Could not open backup:',
   'Import nicht möglich:':'Import not possible:',
@@ -2382,6 +2524,7 @@ const state={
   artisanFilters:{q:'', manufacturer:'', profile:'', status:'', sort:'manufacturer_asc'},
   switchFilters:{q:'', switchType:'', operatingForce:'', pins:'', sort:'name_asc'},
   viewEntities:{erf:'boards', ueb:'boards', gal:'boards'},
+  inventoryExport:{open:false, previousFocus:null, busy:false},
   spotlight:{open:false, kind:'board', boardId:'', keycapSetId:'', artisanSetId:'', switchSetId:'', photoIds:[], images:[], index:0, urls:[], previousFocus:null, renderId:0},
   largePhoto:{open:false, url:'', previousFocus:null},
   returnToOverview:null,
@@ -2398,7 +2541,7 @@ function showWarn(html){
 }
 
 function hasDesktopApi(){
-  return !!(window.api?.storage && window.api?.exportBackup && window.api?.openBackup);
+  return !!(window.api?.storage && window.api?.exportBackup && window.api?.exportInventory && window.api?.openBackup);
 }
 
 function enterStaticPreviewMode(){
@@ -2411,7 +2554,7 @@ function enterStaticPreviewMode(){
   document.getElementById('viewUeb').style.display = 'none';
   document.getElementById('viewGal').style.display = 'none';
   document.getElementById('updated').textContent = '—';
-  for(const id of ['btnNew','btnExport','btnImport','btnSave','btnCancel','btnAddPhotos','sideErf','sideUeb','sideGal','btnSaveKeycap','btnCancelKeycap','btnNewKeycap','btnAddKeycapPhotos','btnSaveArtisan','btnCancelArtisan','btnNewArtisan','btnAddArtisanPhotos','btnSaveSwitch','btnCancelSwitch','btnNewSwitch','btnAddSwitchPhotos']){
+  for(const id of ['btnNew','btnExport','btnImport','btnInventoryExport','btnSave','btnCancel','btnAddPhotos','sideErf','sideUeb','sideGal','btnSaveKeycap','btnCancelKeycap','btnNewKeycap','btnAddKeycapPhotos','btnSaveArtisan','btnCancelArtisan','btnNewArtisan','btnAddArtisanPhotos','btnSaveSwitch','btnCancelSwitch','btnNewSwitch','btnAddSwitchPhotos']){
     const el=document.getElementById(id);
     if(el) el.disabled = true;
   }
@@ -2590,9 +2733,14 @@ function switchSetName(id){
   return state.switchSets.find(set=>set.id===id)?.name || '';
 }
 
+function displaySwitchPins(pins){
+  if(!pins) return '';
+  return pins==='HE' ? 'HE' : pins+' PIN';
+}
+
 function switchVariantLabel(set){
   if(!set) return '';
-  const details=[set.switchType,set.operatingForce,set.pins?set.pins+' PIN':''].filter(Boolean).join(' · ');
+  const details=[set.switchType,set.operatingForce,displaySwitchPins(set.pins)].filter(Boolean).join(' · ');
   return (set.name || '(ohne Name)') + (details ? ' ('+details+')' : '');
 }
 
@@ -4060,7 +4208,7 @@ function renderSwitchForm(){
   host.appendChild(fieldSelectPlus('Operating Force','sw_operatingForce','sw_operatingForce_new'));
   host.appendChild(fieldSelectPlus('Bottom-out Force','sw_bottomOutForce','sw_bottomOutForce_new'));
   host.appendChild(fieldText('Anzahl','','sw_quantity','z.B. 90'));
-  host.appendChild(fieldRadioGroup('Pins','sw_pins',[{value:'3',label:'3 PIN'},{value:'5',label:'5 PIN'}]));
+  host.appendChild(fieldRadioGroup('Pins','sw_pins',[{value:'3',label:'3 PIN'},{value:'5',label:'5 PIN'},{value:'HE',label:'HE'}]));
   host.appendChild(fieldRadioGroup('LED Diffusor','sw_ledDiffuser',[{value:'yes',label:'Ja'},{value:'no',label:'Nein'}]));
   host.appendChild(fieldRadioGroup('Factory Lubed','sw_factoryLubed',[{value:'yes',label:'Ja'},{value:'no',label:'Nein'}]));
   const installs=document.createElement('div');
@@ -4250,7 +4398,7 @@ function renderSwitchPreview(){
   document.getElementById('sw_pv_name').textContent=d.name||'(Switch Type)';
   const badges=document.getElementById('sw_pv_badges');
   badges.innerHTML='';
-  if(d.pins) badges.appendChild(pill(d.pins+' PIN'));
+  if(d.pins) badges.appendChild(pill(displaySwitchPins(d.pins)));
   if(d.switchType) badges.appendChild(pill(d.switchType));
   if(d.stemMaterial) badges.appendChild(pill('Stem: '+d.stemMaterial));
   if(d.factoryLubed) badges.appendChild(pill('Factory Lubed'));
@@ -4494,7 +4642,7 @@ function renderSwitchFilters(hostId='switchFilters', prefix='swFilter', renderRe
     '<label><div class="lbl">Suche</div><input id="'+prefix+'_q" value="'+esc(state.switchFilters.q)+'" placeholder="Switches durchsuchen…"></label>'+
     '<label><div class="lbl">Switch Type</div><select id="'+prefix+'_switchType"></select></label>'+
     '<label><div class="lbl">Operating Force</div><select id="'+prefix+'_operatingForce"></select></label>'+
-    '<label><div class="lbl">Pins</div><select id="'+prefix+'_pins"><option value="">Alle</option><option value="3">3 PIN</option><option value="5">5 PIN</option></select></label>'+
+    '<label><div class="lbl">Pins</div><select id="'+prefix+'_pins"><option value="">Alle</option><option value="3">3 PIN</option><option value="5">5 PIN</option><option value="HE">HE</option></select></label>'+
     '<label><div class="lbl">Sortierung</div><select id="'+prefix+'_sort"><option value="name_asc">Name A-Z</option><option value="name_desc">Name Z-A</option><option value="switchType_asc">Switch Type A-Z</option><option value="operatingForce_asc">Operating Force A-Z</option><option value="quantity_desc">Bestand absteigend</option><option value="quantity_asc">Bestand aufsteigend</option></select></label>'+
     '</div>';
   fillSelect(document.getElementById(prefix+'_switchType'), state.lists.switchTypes, 'Alle');
@@ -4551,7 +4699,7 @@ function renderSwitches(renderFilters=true){
     tr.dataset.overviewEntity='switches';
     tr.dataset.id=set.id;
     tr.innerHTML='<td><div class="miniThumb"><span>—</span></div></td>'+
-      '<td><div class="boardName" style="font-weight:900">'+esc(set.name)+'</div><div class="muted small" style="margin-top:6px">'+esc(set.pins||'—')+' PIN</div></td>'+
+      '<td><div class="boardName" style="font-weight:900">'+esc(set.name)+'</div><div class="muted small" style="margin-top:6px">'+esc(displaySwitchPins(set.pins)||'—')+'</div></td>'+
       '<td>'+esc(set.switchType||'—')+'</td><td>'+Number(set.quantity||0)+' / '+Number(set.mountedQuantity||0)+' / '+availableSwitchQuantity(set)+'</td><td>'+esc(displaySwitchBoard(set)||'—')+'</td><td>'+esc(set.operatingForce||'—')+'</td>'+
       '<td style="text-align:right"><div style="display:flex;gap:8px;justify-content:flex-end"><button data-a="spot">Details</button><button data-a="edit">Bearbeiten</button><button data-a="del" class="danger">Löschen</button></div></td>';
     tr.querySelector('[data-a="spot"]').addEventListener('click', ()=>openSwitchSpotlight(set.id));
@@ -5145,7 +5293,7 @@ async function normalizeImport(obj){
       totalTravel:trim(set.totalTravel),
       operatingForce:trim(set.operatingForce),
       bottomOutForce:trim(set.bottomOutForce),
-      pins:['3','5'].includes(String(set.pins)) ? String(set.pins) : '5',
+      pins:['3','5','HE'].includes(String(set.pins).toUpperCase()) ? String(set.pins).toUpperCase() : '5',
       ledDiffuser:Boolean(set.ledDiffuser),
       factoryLubed:Boolean(set.factoryLubed),
       quantity:Math.max(0,parseInt(set.quantity,10)||0),
@@ -6027,7 +6175,7 @@ async function renderSwitchSpotlight(){
       attrRow('Total Travel', set.totalTravel)+
       attrRow('Operating Force', set.operatingForce)+
       attrRow('Bottom-out Force', set.bottomOutForce)+
-      attrRow('Pins', set.pins ? set.pins+' PIN' : '')+
+      attrRow('Pins', displaySwitchPins(set.pins))+
       attrRow('LED Diffusor', set.ledDiffuser?'Ja':'Nein')+
       attrRow('Factory Lubed', set.factoryLubed?'Ja':'Nein')+
       attrRow('Bestand', Number(set.quantity||0))+
@@ -6193,5 +6341,6 @@ function spotStep(dir){
 }
 
 </script>
+<script src="inventory-ui.js"></script>
 </body>
 </html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <title>Keyboard Manager Bestandsbericht</title>
+  <style>
+    :root{color-scheme:light;--navy:#102b46;--blue:#147fea;--pale:#eaf4ff;--line:#d7e0e8;--muted:#667085;--text:#172033}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:#fff;color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:9px;line-height:1.35}
+    body{padding:0}
+    .cover{padding:4mm 2mm 0;min-height:178mm}
+    .brand{display:flex;align-items:center;gap:8px;color:var(--blue);font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+    h1{margin:14mm 0 3mm;font-size:27px;line-height:1.1;color:var(--navy)}
+    .lead{max-width:180mm;margin:0 0 9mm;color:var(--muted);font-size:11px}
+    .meta{display:grid;grid-template-columns:32mm 1fr;gap:2mm 5mm;max-width:190mm;margin-bottom:10mm}
+    .meta dt{font-weight:700;color:var(--muted)}
+    .meta dd{margin:0}
+    .summary{display:grid;grid-template-columns:repeat(4,minmax(32mm,1fr));gap:4mm;max-width:255mm}
+    .summaryCard{border:1px solid var(--line);border-radius:3mm;padding:5mm;background:linear-gradient(135deg,#fff,var(--pale))}
+    .summaryValue{font-size:23px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+    .summaryLabel{margin-top:1mm;color:var(--muted);font-size:9px}
+    .section{break-before:page;padding:1mm 0 0}
+    .sectionHead{display:flex;align-items:flex-end;justify-content:space-between;gap:8mm;margin:0 0 4mm;padding-bottom:2.5mm;border-bottom:2px solid var(--blue)}
+    h2{margin:0;color:var(--navy);font-size:18px}
+    .sectionCount{color:var(--muted);font-weight:700}
+    table{width:100%;border-collapse:collapse;table-layout:fixed}
+    thead{display:table-header-group}
+    tr{break-inside:avoid}
+    th{padding:2mm 1.6mm;text-align:left;vertical-align:bottom;background:var(--navy);color:#fff;font-size:8px;font-weight:700}
+    td{padding:1.2mm 1.6mm;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+    tbody tr:nth-child(even){background:#f7f9fb}
+    td.numeric{text-align:left;font-variant-numeric:tabular-nums}
+    td.boolean{text-align:center}
+    .thumbCol{width:15mm;text-align:center}
+    .thumb{display:block;width:12mm;height:8mm;margin:0 auto;object-fit:contain;border-radius:1.2mm;background:#f4f7fa}
+    .empty{padding:8mm;text-align:center;color:var(--muted);font-style:italic;border:1px solid var(--line)}
+    .notes{margin-top:5mm;color:var(--muted);font-size:8px}
+  </style>
+</head>
+<body>
+  <main id="report"></main>
+  <script>
+    function text(value){return String(value ?? '')}
+    function el(tag,className,value){const node=document.createElement(tag);if(className)node.className=className;if(value!==undefined)node.textContent=text(value);return node}
+    function localeDate(value,language){try{return new Intl.DateTimeFormat(language==='en'?'en-GB':'de-DE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value))}catch(error){return ''}}
+    function labels(language){return language==='en'?{brand:'Inventory report',created:'Created',version:'App version',scope:'Scope',filters:'Filters',entries:'entries',intro:'Printable overview of the inventory stored in Keyboard Manager.',empty:'No entries available.',imageNote:'Preview images are included when available.'}:{brand:'Bestandsbericht',created:'Erstellt',version:'App-Version',scope:'Umfang',filters:'Filter',entries:'Einträge',intro:'Druckbare Übersicht des in Keyboard Manager gespeicherten Bestands.',empty:'Keine Einträge vorhanden.',imageNote:'Vorschaubilder werden eingefügt, soweit sie verfügbar sind.'}}
+    async function waitForImages(root){const images=[...root.querySelectorAll('img')];await Promise.all(images.map(image=>image.complete?Promise.resolve():new Promise(resolve=>{image.onload=resolve;image.onerror=resolve}))) }
+    window.renderInventoryReport=async function(report){
+      const l=labels(report.language);
+      document.documentElement.lang=report.language;
+      document.title=report.title;
+      const root=document.getElementById('report');
+      root.replaceChildren();
+      const cover=el('section','cover');
+      cover.appendChild(el('div','brand','Keyboard Manager · '+l.brand));
+      cover.appendChild(el('h1','',report.title));
+      cover.appendChild(el('p','lead',l.intro));
+      const meta=el('dl','meta');
+      [[l.created,localeDate(report.createdAt,report.language)],[l.version,report.appVersion||'—'],[l.scope,report.scopeLabel||'—'],[l.filters,report.filterLabel||'—']].forEach(([key,value])=>{meta.appendChild(el('dt','',key));meta.appendChild(el('dd','',value))});
+      cover.appendChild(meta);
+      const summary=el('div','summary');
+      report.summary.forEach(item=>{const card=el('div','summaryCard');card.appendChild(el('div','summaryValue',item.count));card.appendChild(el('div','summaryLabel',item.label));summary.appendChild(card)});
+      cover.appendChild(summary);
+      root.appendChild(cover);
+      report.sections.forEach(section=>{
+        const wrapper=el('section','section');
+        const head=el('div','sectionHead');
+        head.appendChild(el('h2','',section.title));
+        head.appendChild(el('div','sectionCount',section.rows.length+' '+l.entries));
+        wrapper.appendChild(head);
+        if(!section.rows.length){wrapper.appendChild(el('div','empty',l.empty));root.appendChild(wrapper);return}
+        const columns=section.columns.filter(column=>column.pdf!==false);
+        const hasImages=report.includeImages&&section.rows.some(row=>row.imageDataUrl);
+        const table=el('table');
+        const colgroup=el('colgroup');
+        if(hasImages){const col=el('col');col.style.width='15mm';colgroup.appendChild(col)}
+        columns.forEach(column=>{const col=el('col');const total=columns.reduce((sum,item)=>sum+Number(item.width||16),0);col.style.width=(Number(column.width||16)/total*100)+'%';colgroup.appendChild(col)});
+        table.appendChild(colgroup);
+        const thead=el('thead');const header=el('tr');if(hasImages)header.appendChild(el('th','thumbCol',report.language==='en'?'Photo':'Foto'));columns.forEach(column=>header.appendChild(el('th','',column.label)));thead.appendChild(header);table.appendChild(thead);
+        const tbody=el('tbody');
+        section.rows.forEach(row=>{const tr=el('tr');if(hasImages){const td=el('td','thumbCol');if(row.imageDataUrl){const image=el('img','thumb');image.src=row.imageDataUrl;image.alt='';td.appendChild(image)}tr.appendChild(td)}columns.forEach(column=>{const type=column.type==='number'?'numeric':column.type==='boolean'?'boolean':'';let value=row.cells[column.key];if(column.type==='boolean')value=value?(report.language==='en'?'Yes':'Ja'):(report.language==='en'?'No':'Nein');if(column.type==='date')value=localeDate(value,report.language);tr.appendChild(el('td',type,value))});tbody.appendChild(tr)});
+        table.appendChild(tbody);wrapper.appendChild(table);if(hasImages)wrapper.appendChild(el('div','notes',l.imageNote));root.appendChild(wrapper)
+      });
+      await waitForImages(root);
+      document.fonts&&await document.fonts.ready;
+      return true;
+    };
+  </script>
+</body>
+</html>

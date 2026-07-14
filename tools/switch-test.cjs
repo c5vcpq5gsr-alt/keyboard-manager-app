@@ -60,7 +60,8 @@ app.on('browser-window-created', (_event, window) => {
           rows[1].querySelector('[data-a="board"]').dispatchEvent(new Event('change'));
           rows[1].querySelector('[data-a="qty"]').value='25';
           rows[1].querySelector('[data-a="qty"]').dispatchEvent(new Event('input'));
-          setRadioValue('sw_pins','5');
+          const hasHeChoice=Array.from(document.querySelectorAll('input[name="sw_pins"]')).some(input=>input.value==='HE');
+          setRadioValue('sw_pins','HE');
           setRadioValue('sw_ledDiffuser','yes');
           setRadioValue('sw_factoryLubed','yes');
           state.switchDraft.importedBoardText='Second Switch Board (25)';
@@ -83,6 +84,7 @@ app.on('browser-window-created', (_event, window) => {
           const hasSwitchTypeFilter=Boolean(document.getElementById('swFilter_switchType'));
           const hasOperatingForceFilter=Boolean(document.getElementById('swFilter_operatingForce'));
           const hasPinsFilter=Boolean(document.getElementById('swFilter_pins'));
+          const hasHeFilter=Array.from(document.getElementById('swFilter_pins').options).some(option=>option.value==='HE' && option.textContent==='HE');
           const hasSearchFilter=Boolean(document.getElementById('swFilter_q'));
           const removedOldFilters=!document.getElementById('swFilter_ledDiffuser') && !document.getElementById('swFilter_factoryLubed');
           state.switchFilters.q='Oil';
@@ -101,14 +103,17 @@ app.on('browser-window-created', (_event, window) => {
           await new Promise(resolve=>setTimeout(resolve,100));
           const afterClear=state.switchSets.find(set=>set.id===saved.id);
           const spotlightText=document.getElementById('spotBody').innerText + ' ' + document.getElementById('spotFoot').innerText;
+          const normalizedHeImport=await normalizeImport({boards:[],lists:{},switchSets:[{name:'Imported HE Switch',pins:'he'}]});
           return {
             hasOldNameDefault,
             hasLinearType,
+            hasHeChoice,
             afterNewBottomOut,
             firstInstallations,
             hasSwitchTypeFilter,
             hasOperatingForceFilter,
             hasPinsFilter,
+            hasHeFilter,
             hasSearchFilter,
             removedOldFilters,
             searchHitText,
@@ -132,16 +137,19 @@ app.on('browser-window-created', (_event, window) => {
             overview: rowText,
             spotlightTextBeforeClear,
             importWarningsAfterClear: afterClear?.importWarnings,
-            spotlightText
+            spotlightText,
+            importedHePins: normalizedHeImport.switchSets[0]?.pins
           };
         })()
       `);
       if (
         result.hasOldNameDefault ||
         !result.hasLinearType ||
+        !result.hasHeChoice ||
         !result.hasSwitchTypeFilter ||
         !result.hasOperatingForceFilter ||
         !result.hasPinsFilter ||
+        !result.hasHeFilter ||
         !result.hasSearchFilter ||
         !result.removedOldFilters ||
         result.afterNewBottomOut.name !== 'Gateron Oil King' ||
@@ -172,7 +180,8 @@ app.on('browser-window-created', (_event, window) => {
         !result.spotlightText.includes('Verfügbar') ||
         !result.spotlightText.includes('25') ||
         !result.spotlightText.includes('Full switch notes') ||
-        result.pins !== '5' ||
+        result.pins !== 'HE' ||
+        result.importedHePins !== 'HE' ||
         result.quantity !== 90 ||
         result.mountedQuantity !== 65 ||
         result.mountedBoardId !== 'switch-board' ||
@@ -195,6 +204,10 @@ app.on('browser-window-created', (_event, window) => {
         !result.overview.includes('Gateron Oil King') ||
         !result.overview.includes('Linear') ||
         !result.overview.includes('55g') ||
+        !result.overview.includes('HE') ||
+        result.overview.includes('HE PIN') ||
+        !result.spotlightText.includes('HE') ||
+        result.spotlightText.includes('HE PIN') ||
         !result.overview.includes('90 / 65 / 25') ||
         !result.overview.includes('Switch Test Board (65)') ||
         result.overview.includes('Second Switch Board (25)') ||

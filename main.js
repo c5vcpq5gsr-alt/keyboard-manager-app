@@ -1,9 +1,10 @@
-const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
 const { pathToFileURL } = require('url');
 const AdmZip = require('adm-zip');
 const { createStorage } = require('./storage');
+const { createInventoryXlsxBuffer, validateInventoryReport } = require('./inventory-export');
 
 const trustedWebContents = new Set();
 let storage;
@@ -11,6 +12,32 @@ let storage;
 function isTrustedSender (event) {
   return event.senderFrame === event.sender.mainFrame &&
     trustedWebContents.has(event.sender.id);
+}
+
+function openContextMenu (win, params) {
+  const editFlags = params.editFlags || {};
+  let template;
+
+  if (params.isEditable) {
+    template = [
+      { label: 'Rückgängig', role: 'undo', enabled: Boolean(editFlags.canUndo) },
+      { label: 'Wiederholen', role: 'redo', enabled: Boolean(editFlags.canRedo) },
+      { type: 'separator' },
+      { label: 'Ausschneiden', role: 'cut', enabled: Boolean(editFlags.canCut) },
+      { label: 'Kopieren', role: 'copy', enabled: Boolean(editFlags.canCopy) },
+      { label: 'Einfügen', role: 'paste', enabled: Boolean(editFlags.canPaste) },
+      { type: 'separator' },
+      { label: 'Alles auswählen', role: 'selectAll', enabled: Boolean(editFlags.canSelectAll) }
+    ];
+  } else if (params.selectionText) {
+    template = [
+      { label: 'Kopieren', role: 'copy', enabled: Boolean(editFlags.canCopy) }
+    ];
+  }
+
+  if (template) {
+    Menu.buildFromTemplate(template).popup({ window: win });
+  }
 }
 
 function createWindow () {
@@ -38,6 +65,9 @@ function createWindow () {
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   win.webContents.on('will-navigate', (event, url) => {
     if (url !== indexUrl) event.preventDefault();
+  });
+  win.webContents.on('context-menu', (_event, params) => {
+    openContextMenu(win, params);
   });
   win.loadFile(indexPath);
 
@@ -85,6 +115,93 @@ trustedHandler('shell:open-external', async url => {
   const parsed = new URL(String(url || ''));
   if (parsed.protocol !== 'https:') throw new Error('Unsupported external URL');
   await shell.openExternal(parsed.toString());
+  return true;
+});
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character]);
+}
+
+function inventoryDialogText(language, format) {
+  const isEnglish = language === 'en';
+  if (format === 'pdf') {
+    return {
+      title: isEnglish ? 'Save inventory report as PDF' : 'Bestandsbericht als PDF speichern',
+      filterName: isEnglish ? 'PDF document' : 'PDF-Dokument'
+    };
+  }
+  return {
+    title: isEnglish ? 'Save inventory list as Excel workbook' : 'Bestandsliste als Excel-Arbeitsmappe speichern',
+    filterName: isEnglish ? 'Excel workbook' : 'Excel-Arbeitsmappe'
+  };
+}
+
+function inventoryDefaultPath(format) {
+  const date = new Date().toISOString().slice(0, 10);
+  return `keyboard-manager-bestand-${date}.${format}`;
+}
+
+function ensureFileExtension(filePath, extension) {
+  return path.extname(filePath).toLowerCase() === `.${extension}` ? filePath : `${filePath}.${extension}`;
+}
+
+async function createInventoryPdfBuffer(report) {
+  const reportWindow = new BrowserWindow({
+    show: false,
+    width: 1280,
+    height: 900,
+    backgroundColor: '#ffffff',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+  reportWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  reportWindow.webContents.on('will-navigate', event => event.preventDefault());
+  try {
+    await reportWindow.loadFile(path.join(__dirname, 'inventory-report.html'));
+    const encoded = Buffer.from(JSON.stringify(report), 'utf8').toString('base64');
+    await reportWindow.webContents.executeJavaScript(`window.renderInventoryReport(JSON.parse(new TextDecoder().decode(Uint8Array.from(atob('${encoded}'), character => character.charCodeAt(0)))))`);
+    const title = escapeHtml(report.title);
+    const created = escapeHtml(new Intl.DateTimeFormat(report.language === 'en' ? 'en-GB' : 'de-DE', { dateStyle: 'medium' }).format(new Date(report.createdAt)));
+    return await reportWindow.webContents.printToPDF({
+      pageSize: 'A4',
+      landscape: true,
+      printBackground: true,
+      displayHeaderFooter: true,
+      margins: { top: 0.48, bottom: 0.48, left: 0.34, right: 0.34 },
+      headerTemplate: `<div style="box-sizing:border-box;width:100%;padding:0 9mm;font:8px Arial,sans-serif;color:#667085"><span>${title}</span></div>`,
+      footerTemplate: `<div style="box-sizing:border-box;width:100%;padding:0 9mm;display:flex;justify-content:space-between;font:8px Arial,sans-serif;color:#667085"><span>Keyboard Manager · ${created}</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`,
+      generateTaggedPDF: true,
+      generateDocumentOutline: true
+    });
+  } finally {
+    if (!reportWindow.isDestroyed()) reportWindow.destroy();
+  }
+}
+
+trustedHandler('inventory:export', async payload => {
+  const report = validateInventoryReport(payload);
+  const format = report.format;
+  const dialogText = inventoryDialogText(report.language, format);
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    title: dialogText.title,
+    defaultPath: inventoryDefaultPath(format),
+    filters: [{ name: dialogText.filterName, extensions: [format] }]
+  });
+  if (canceled || !filePath) return false;
+  const outputPath = ensureFileExtension(filePath, format);
+  const buffer = format === 'pdf'
+    ? await createInventoryPdfBuffer(report)
+    : await createInventoryXlsxBuffer(report);
+  await fs.writeFile(outputPath, buffer);
   return true;
 });
 

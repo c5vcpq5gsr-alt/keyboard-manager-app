@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
   exportBackup: (data) => ipcRenderer.invoke('backup:export', data),
+  exportInventory: (data) => ipcRenderer.invoke('inventory:export', data),
   openBackup: () => ipcRenderer.invoke('backup:open'),
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
   storage: {

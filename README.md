@@ -8,6 +8,7 @@ Desktop-Anwendung zur Verwaltung einer Keyboard-Sammlung mit Boards, Komponenten
 - Spotlight und Foto-Großansicht
 - SQLite-Datenbank mit verwaltetem Fotoordner
 - Automatische Begrenzung importierter Fotos auf maximal 1920 x 1080
+- Bestandsberichte als PDF und bearbeitbare Bestandslisten als Excel-Arbeitsmappe
 - Plattformübergreifende ZIP-Backups mit Manifest und Bilddateien
 - Automatische Migration älterer IndexedDB-Daten
 
@@ -42,6 +43,7 @@ npm run test:storage
 npm run test:close
 npm run test:photos
 npm run test:export
+npm run test:inventory-export
 npm run test:spotlight
 npm run test:keycaps
 npm run test:switches
