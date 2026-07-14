@@ -4,10 +4,6 @@ const { app, Menu } = require('electron');
 app.setPath('userData', path.join(app.getPath('temp'), `keyboard-manager-context-menu-test-${Date.now()}`));
 
 const capturedTemplates = [];
-Menu.buildFromTemplate = template => {
-  capturedTemplates.push(template);
-  return { popup: () => {} };
-};
 
 function params (overrides = {}) {
   return {
@@ -26,6 +22,10 @@ function params (overrides = {}) {
 }
 
 app.on('browser-window-created', (_event, window) => {
+  Menu.buildFromTemplate = template => {
+    capturedTemplates.push(template);
+    return { popup: () => {} };
+  };
   window.webContents.once('did-finish-load', () => {
     try {
       capturedTemplates.length = 0;

@@ -974,7 +974,8 @@ html[data-theme="light"] .modalBack{
 
 .staticPreview .tabs button,
 .staticPreview .sideNav button,
-.staticPreview .topActions button:not(#btnTheme){
+.staticPreview .topActions button:not(#btnTheme),
+.staticPreview #btnUpdateCheck{
   opacity:.46;
   cursor:not-allowed;
   transform:none;
@@ -1035,6 +1036,168 @@ html[data-theme="light"] .modalBack{
   padding:0 16px;
   color:#AFC0D1;
   font-size:12px;
+}
+
+.sideUpdateButton{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:32px;
+  padding:0 10px;
+  border-radius:11px;
+  border-color:rgba(110,215,255,.24);
+  background:rgba(88,166,226,.12);
+  box-shadow:none;
+  color:#D9EEFF;
+  font-size:12px;
+}
+
+.sideUpdateButton:hover{
+  transform:none;
+  border-color:rgba(110,215,255,.48);
+  background:rgba(88,166,226,.22);
+}
+
+.sideUpdateButton.available{
+  border-color:rgba(110,231,183,.42);
+  background:rgba(16,185,129,.16);
+  color:#D7FFF1;
+}
+
+.sideUpdateIcon{
+  display:inline-block;
+  font-size:15px;
+  line-height:1;
+}
+
+.sideUpdateButton.checking .sideUpdateIcon{
+  animation:updateSpin .8s linear infinite;
+}
+
+@keyframes updateSpin{to{transform:rotate(360deg)}}
+
+.updateModal{
+  max-width:680px;
+}
+
+.updateBody{
+  display:grid;
+  gap:18px;
+}
+
+.updateStatus{
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr);
+  gap:14px;
+  align-items:center;
+}
+
+.updateStatusIcon{
+  display:grid;
+  place-items:center;
+  width:52px;
+  height:52px;
+  border:1px solid rgba(110,215,255,.30);
+  border-radius:17px;
+  background:rgba(73,159,221,.14);
+  color:#BDEBFF;
+  font-size:25px;
+}
+
+.updateStatusIcon.available{
+  border-color:rgba(110,231,183,.38);
+  background:rgba(16,185,129,.14);
+  color:#B9F8DE;
+}
+
+.updateStatusIcon.error{
+  border-color:rgba(251,113,133,.34);
+  background:rgba(251,113,133,.10);
+  color:#FECDD3;
+}
+
+.updateMessage{
+  margin:0;
+  color:#E7F1FC;
+  font-size:15px;
+  line-height:1.5;
+}
+
+.updateVersions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+
+.updateVersionCard{
+  padding:13px 15px;
+  border:1px solid var(--border);
+  border-radius:15px;
+  background:rgba(255,255,255,.035);
+}
+
+.updateVersionCard span{
+  display:block;
+  margin-bottom:5px;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.updateVersionCard strong{
+  color:#F2F7FD;
+  font-size:18px;
+}
+
+.updateNotesWrap{
+  padding:13px 15px;
+  border:1px solid var(--border);
+  border-radius:15px;
+  background:rgba(0,0,0,.12);
+}
+
+.updateNotesTitle{
+  margin-bottom:7px;
+  color:#DCE9F6;
+  font-size:12px;
+  font-weight:800;
+}
+
+.updateNotes{
+  max-height:150px;
+  overflow:auto;
+  margin:0;
+  color:#AFC0D1;
+  font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+  white-space:pre-wrap;
+}
+
+.updateChecked{
+  color:var(--muted);
+  font-size:11px;
+}
+
+html[data-theme="light"] .sideUpdateButton{
+  border-color:rgba(20,127,234,.20);
+  background:rgba(20,127,234,.08);
+  color:#245F91;
+}
+
+html[data-theme="light"] .updateMessage,
+html[data-theme="light"] .updateVersionCard strong,
+html[data-theme="light"] .updateNotesTitle{
+  color:#17304A;
+}
+
+html[data-theme="light"] .updateNotesWrap{
+  background:rgba(31,80,122,.035);
+}
+
+@media(max-width:520px){
+  .updateVersions{grid-template-columns:1fr}
+  .updateStatus{grid-template-columns:42px minmax(0,1fr)}
+  .updateStatusIcon{width:42px;height:42px;border-radius:14px;font-size:20px}
 }
 
 .contentPane{
@@ -1572,8 +1735,10 @@ html[data-theme="light"] .exportChoice{
         </div>
 
         <div class="sideVersion">
-          <span>v<span id="sideVersion">1.3.0</span></span>
-          <span aria-hidden="true">⚙</span>
+          <span>v<span id="sideVersion">…</span></span>
+          <button id="btnUpdateCheck" class="sideUpdateButton" type="button" title="Nach Updates suchen" aria-label="Nach Updates suchen">
+            <span class="sideUpdateIcon" aria-hidden="true">↻</span><span id="sideUpdateLabel">Updates</span>
+          </button>
         </div>
       </aside>
 
@@ -1581,7 +1746,7 @@ html[data-theme="light"] .exportChoice{
         <div class="topBar">
           <div class="topIdentity">
             <h1>Keyboard Manager</h1>
-            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">1.3.0</span></div>
+            <div class="sub">Erfassen • Übersicht • Galerie — Speicher: <b id="storeMode">…</b> • Version <span id="ver">…</span></div>
           </div>
           <div class="topSpacer" aria-hidden="true"></div>
           <div class="actions topActions" role="toolbar" aria-label="Hauptaktionen">
@@ -1934,6 +2099,40 @@ html[data-theme="light"] .exportChoice{
 
 
 
+  <!-- Software Update Modal -->
+  <div class="modalBack" id="updateBack" aria-hidden="true">
+    <div class="modal updateModal" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
+      <div class="mhead">
+        <div>
+          <div style="font-weight:900" id="updateTitle">Softwareaktualisierung</div>
+          <div class="muted small" style="margin-top:4px">Keyboard Manager sicher über GitHub aktualisieren.</div>
+        </div>
+        <button class="danger" id="updateClose" type="button" aria-label="Dialog schließen">✕</button>
+      </div>
+      <div class="mbody updateBody">
+        <div class="updateStatus">
+          <div class="updateStatusIcon" id="updateStatusIcon" aria-hidden="true">↻</div>
+          <p class="updateMessage" id="updateMessage">Die neueste Softwareversion wird geprüft…</p>
+        </div>
+        <div class="updateVersions">
+          <div class="updateVersionCard"><span>Installiert</span><strong id="updateCurrentVersion">v…</strong></div>
+          <div class="updateVersionCard"><span>Neueste Version</span><strong id="updateLatestVersion">v…</strong></div>
+        </div>
+        <div class="updateNotesWrap" id="updateNotesWrap" hidden>
+          <div class="updateNotesTitle">Versionshinweise</div>
+          <pre class="updateNotes" id="updateNotes"></pre>
+        </div>
+      </div>
+      <div class="mfoot">
+        <span class="updateChecked" id="updateChecked"></span>
+        <div style="display:flex;gap:8px;margin-left:auto">
+          <button id="updateLater" type="button">Schließen</button>
+          <button class="primary" id="updateDownload" type="button" hidden>Neueste Version herunterladen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Inventory Export Modal -->
   <div class="modalBack" id="inventoryExportBack" aria-hidden="true">
     <div class="modal exportModal" role="dialog" aria-modal="true" aria-labelledby="inventoryExportTitle">
@@ -2138,7 +2337,8 @@ async function storeGetAllByOwner(ownerType, ownerId){
 }
 
 // ====== App ======
-const VERSION='1.3.0';
+let VERSION='';
+let APP_IS_PACKAGED=false;
 const FORMAT_DEFAULTS=["40%", "60%", "65%", "FRL TKL", "TKL", "98%", "Sonstige", "NumPads", "Makro Pads"];
 const PLATE_DEFAULTS=["Aluminium", "PC", "POM", "FR4", "Carbon", "Copper", "Stahl", "n/a"];
 const PCB_DEFAULTS=["Hotswap", "Solder", "MillMax"];
@@ -2197,6 +2397,18 @@ const GUI_DE_EN={
   'Letzte Änderung':'Last change',
   'Speicher':'Storage',
   'Version':'Version',
+  'Updates':'Updates',
+  'Nach Updates suchen':'Check for updates',
+  'Softwareaktualisierung':'Software update',
+  'Keyboard Manager sicher über GitHub aktualisieren.':'Update Keyboard Manager securely through GitHub.',
+  'Die neueste Softwareversion wird geprüft…':'Checking for the latest software version…',
+  'Installiert':'Installed',
+  'Neueste Version':'Latest version',
+  'Versionshinweise':'Release notes',
+  'Schließen':'Close',
+  'Neueste Version herunterladen':'Download latest version',
+  'Release-Seite öffnen':'Open release page',
+  'Update verfügbar':'Update available',
   'Hauptaktionen':'Main actions',
   '+ Neues Board':'+ New Board',
   'Neues Board':'New Board',
@@ -2525,6 +2737,7 @@ const state={
   switchFilters:{q:'', switchType:'', operatingForce:'', pins:'', sort:'name_asc'},
   viewEntities:{erf:'boards', ueb:'boards', gal:'boards'},
   inventoryExport:{open:false, previousFocus:null, busy:false},
+  update:{open:false, busy:false, mode:'idle', result:null, previousFocus:null},
   spotlight:{open:false, kind:'board', boardId:'', keycapSetId:'', artisanSetId:'', switchSetId:'', photoIds:[], images:[], index:0, urls:[], previousFocus:null, renderId:0},
   largePhoto:{open:false, url:'', previousFocus:null},
   returnToOverview:null,
@@ -2544,6 +2757,182 @@ function hasDesktopApi(){
   return !!(window.api?.storage && window.api?.exportBackup && window.api?.exportInventory && window.api?.openBackup);
 }
 
+function hasUpdateApi(){
+  return !!(window.api?.getAppInfo && window.api?.updates?.check && window.api?.updates?.download);
+}
+
+function localized(de, en){
+  return currentLanguage()==='en' ? en : de;
+}
+
+async function loadRuntimeVersion(){
+  try{
+    const info=hasUpdateApi() ? await window.api.getAppInfo() : null;
+    VERSION=String(info?.version||'');
+    APP_IS_PACKAGED=Boolean(info?.isPackaged);
+  }catch(e){
+    VERSION='';
+    APP_IS_PACKAGED=false;
+  }
+  const visibleVersion=VERSION||'—';
+  document.title='Keyboard Manager'+(VERSION?' – '+VERSION:'');
+  document.getElementById('ver').textContent=visibleVersion;
+  document.getElementById('sideVersion').textContent=visibleVersion;
+  state.meta.version=VERSION||state.meta.version;
+}
+
+function openUpdateDialog(){
+  if(!state.update.open) state.update.previousFocus=document.activeElement;
+  state.update.open=true;
+  const back=document.getElementById('updateBack');
+  back.classList.add('open');
+  back.setAttribute('aria-hidden','false');
+  document.getElementById('updateClose').focus();
+}
+
+function closeUpdateDialog(){
+  if(!state.update.open) return;
+  state.update.open=false;
+  const back=document.getElementById('updateBack');
+  back.classList.remove('open');
+  back.setAttribute('aria-hidden','true');
+  if(state.update.previousFocus?.focus) state.update.previousFocus.focus();
+  state.update.previousFocus=null;
+}
+
+function renderUpdateButton(){
+  const button=document.getElementById('btnUpdateCheck');
+  const label=document.getElementById('sideUpdateLabel');
+  if(!button||!label) return;
+  button.disabled=state.update.busy||!hasUpdateApi();
+  button.classList.toggle('checking',state.update.busy);
+  button.classList.toggle('available',Boolean(state.update.result?.updateAvailable));
+  const text=state.update.busy
+    ? localized('Prüfe…','Checking…')
+    : state.update.result?.updateAvailable
+      ? localized('Update verfügbar','Update available')
+      : localized('Updates','Updates');
+  label.textContent=text;
+  const accessible=state.update.result?.updateAvailable
+    ? localized('Update verfügbar. Nach Updates suchen','Update available. Check for updates')
+    : localized('Nach Updates suchen','Check for updates');
+  button.title=accessible;
+  button.setAttribute('aria-label',accessible);
+}
+
+function renderUpdateDialog(){
+  const result=state.update.result;
+  const icon=document.getElementById('updateStatusIcon');
+  const message=document.getElementById('updateMessage');
+  const current=document.getElementById('updateCurrentVersion');
+  const latest=document.getElementById('updateLatestVersion');
+  const notesWrap=document.getElementById('updateNotesWrap');
+  const notes=document.getElementById('updateNotes');
+  const checked=document.getElementById('updateChecked');
+  const download=document.getElementById('updateDownload');
+
+  icon.className='updateStatusIcon';
+  current.textContent='v'+(result?.currentVersion||VERSION||'—');
+  latest.textContent=result?.latestVersion ? 'v'+result.latestVersion : 'v…';
+  notesWrap.hidden=true;
+  notes.textContent='';
+  checked.textContent='';
+  download.hidden=true;
+
+  if(state.update.mode==='checking'){
+    icon.textContent='↻';
+    icon.classList.add('sideUpdateIcon');
+    message.textContent=localized('Die neueste Softwareversion wird geprüft…','Checking for the latest software version…');
+    return;
+  }
+
+  if(state.update.mode==='error'){
+    icon.textContent='!';
+    icon.classList.add('error');
+    latest.textContent='—';
+    message.textContent=localized(
+      'Die Update-Prüfung ist derzeit nicht möglich. Bitte prüfe deine Internetverbindung und versuche es später erneut.',
+      'The update check is currently unavailable. Check your internet connection and try again later.'
+    );
+    return;
+  }
+
+  if(!result) return;
+  if(result.updateAvailable){
+    icon.textContent='↓';
+    icon.classList.add('available');
+    message.textContent=localized(
+      `Version ${result.latestVersion} ist verfügbar. Deine gespeicherten Daten bleiben bei der Installation erhalten.`,
+      `Version ${result.latestVersion} is available. Your saved data will be preserved during installation.`
+    );
+    download.hidden=false;
+    download.textContent=result.downloadAvailable
+      ? localized('Neueste Version herunterladen','Download latest version')
+      : localized('Release-Seite öffnen','Open release page');
+  }else{
+    icon.textContent='✓';
+    message.textContent=localized(
+      'Du verwendest bereits die neueste Version des Keyboard Managers.',
+      'You are already using the latest version of Keyboard Manager.'
+    );
+  }
+
+  if(result.releaseNotes){
+    notesWrap.hidden=false;
+    notes.textContent=result.releaseNotes;
+  }
+  if(result.checkedAt){
+    const locale=currentLanguage()==='en'?'en-GB':'de-DE';
+    checked.textContent=localized('Geprüft: ','Checked: ')+new Date(result.checkedAt).toLocaleString(locale,{dateStyle:'medium',timeStyle:'short'});
+  }
+}
+
+async function checkForUpdates(force=false, showDialog=false){
+  if(!hasUpdateApi()||state.update.busy) return;
+  state.update.busy=true;
+  state.update.mode='checking';
+  renderUpdateButton();
+  if(showDialog){
+    openUpdateDialog();
+    renderUpdateDialog();
+  }
+  try{
+    const result=await window.api.updates.check({force});
+    state.update.result=result;
+    state.update.mode='result';
+    renderUpdateButton();
+    if(showDialog||result.updateAvailable){
+      openUpdateDialog();
+      renderUpdateDialog();
+    }
+  }catch(e){
+    state.update.mode='error';
+    if(showDialog){
+      openUpdateDialog();
+      renderUpdateDialog();
+    }
+  }finally{
+    state.update.busy=false;
+    renderUpdateButton();
+  }
+}
+
+async function downloadLatestUpdate(){
+  const button=document.getElementById('updateDownload');
+  button.disabled=true;
+  const oldText=button.textContent;
+  button.textContent=localized('Download wird geöffnet…','Opening download…');
+  try{
+    await window.api.updates.download();
+    toast(localized('Download im Browser geöffnet','Download opened in browser'));
+  }catch(e){
+    toast(localized('Download konnte nicht geöffnet werden','Could not open download'));
+  }finally{
+    button.disabled=false;
+    button.textContent=oldText;
+  }
+}
+
 function enterStaticPreviewMode(){
   document.body.classList.add('staticPreview');
   document.getElementById('storeMode').textContent = 'Electron erforderlich';
@@ -2554,7 +2943,7 @@ function enterStaticPreviewMode(){
   document.getElementById('viewUeb').style.display = 'none';
   document.getElementById('viewGal').style.display = 'none';
   document.getElementById('updated').textContent = '—';
-  for(const id of ['btnNew','btnExport','btnImport','btnInventoryExport','btnSave','btnCancel','btnAddPhotos','sideErf','sideUeb','sideGal','btnSaveKeycap','btnCancelKeycap','btnNewKeycap','btnAddKeycapPhotos','btnSaveArtisan','btnCancelArtisan','btnNewArtisan','btnAddArtisanPhotos','btnSaveSwitch','btnCancelSwitch','btnNewSwitch','btnAddSwitchPhotos']){
+  for(const id of ['btnNew','btnExport','btnImport','btnInventoryExport','btnUpdateCheck','btnSave','btnCancel','btnAddPhotos','sideErf','sideUeb','sideGal','btnSaveKeycap','btnCancelKeycap','btnNewKeycap','btnAddKeycapPhotos','btnSaveArtisan','btnCancelArtisan','btnNewArtisan','btnAddArtisanPhotos','btnSaveSwitch','btnCancelSwitch','btnNewSwitch','btnAddSwitchPhotos']){
     const el=document.getElementById(id);
     if(el) el.disabled = true;
   }
@@ -2674,6 +3063,8 @@ async function setLanguage(lang, persist=true){
   if(state.tab==='gal') renderGallery();
   if(state.spotlight.open) await renderSpotlight();
   applyLanguage();
+  renderUpdateButton();
+  if(state.update.open) renderUpdateDialog();
   if(persist && hasDesktopApi()) await persistMeta();
 }
 
@@ -5535,6 +5926,7 @@ async function loadAll(){
   const metaRec = await storeGet('meta','app');
   if(metaRec && metaRec.value){
     state.meta = metaRec.value.meta || state.meta;
+    state.meta.version = VERSION||state.meta.version;
     state.language = state.meta.language === 'en' ? 'en' : 'de';
     state.lists = metaRec.value.lists || state.lists;
     ensureDefaultLists();
@@ -5575,8 +5967,6 @@ async function loadAll(){
 }
 
 function wireStatic(){
-  document.title='Keyboard Manager – '+VERSION;
-  document.getElementById('ver').textContent=VERSION;
   initLanguageObserver();
   document.getElementById('btnNew').addEventListener('click', async ()=>{
     if(!hasDesktopApi()) return;
@@ -5592,6 +5982,11 @@ function wireStatic(){
   document.getElementById('btnLanguage').addEventListener('click', ()=>{ setLanguage(currentLanguage()==='en'?'de':'en'); });
   const tbtn=document.getElementById('btnTheme');
   if(tbtn) tbtn.addEventListener('click', toggleTheme);
+  document.getElementById('btnUpdateCheck').addEventListener('click', ()=>checkForUpdates(true,true));
+  document.getElementById('updateClose').addEventListener('click', closeUpdateDialog);
+  document.getElementById('updateLater').addEventListener('click', closeUpdateDialog);
+  document.getElementById('updateDownload').addEventListener('click', downloadLatestUpdate);
+  document.getElementById('updateBack').addEventListener('click', e=>{ if(e.target.id==='updateBack') closeUpdateDialog(); });
   document.getElementById('btnAddPhotos').addEventListener('click', ()=>{ if(hasDesktopApi()) document.getElementById('filePhotos').click(); });
   document.getElementById('filePhotos').addEventListener('change', e=>{ if(hasDesktopApi()) addPhotos(e.target.files); e.target.value=''; });
   document.getElementById('btnNewKeycap').addEventListener('click', async ()=>{
@@ -5664,6 +6059,10 @@ function wireStatic(){
   document.getElementById('largeNext').addEventListener('click', ()=>largeStep(1));
 
   window.addEventListener('keydown', (e)=>{
+    if(state.update.open && e.key==='Escape'){
+      closeUpdateDialog();
+      return;
+    }
     if(state.largePhoto.open){
       if(e.key==='Escape') closeLargePhoto();
       if(e.key==='ArrowLeft') largeStep(-1);
@@ -5684,7 +6083,14 @@ function wireStatic(){
 
 initTheme();
 wireStatic();
-loadAll();
+initializeApp();
+
+async function initializeApp(){
+  await loadRuntimeVersion();
+  await loadAll();
+  renderUpdateButton();
+  if(hasUpdateApi()&&APP_IS_PACKAGED) setTimeout(()=>checkForUpdates(false,false),1500);
+}
 
 
 // ===== Spotlight (Galerie + Übersicht) =====

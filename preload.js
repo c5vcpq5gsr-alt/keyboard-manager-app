@@ -1,6 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
+  getAppInfo: () => ipcRenderer.invoke('app:info'),
+  updates: {
+    check: (options) => ipcRenderer.invoke('updates:check', options),
+    download: () => ipcRenderer.invoke('updates:download')
+  },
   exportBackup: (data) => ipcRenderer.invoke('backup:export', data),
   exportInventory: (data) => ipcRenderer.invoke('inventory:export', data),
   openBackup: () => ipcRenderer.invoke('backup:open'),

@@ -1,13 +1,116 @@
-const { app, BrowserWindow, dialog, ipcMain, Menu, shell } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Menu, net, shell } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
 const { pathToFileURL } = require('url');
 const AdmZip = require('adm-zip');
 const { createStorage } = require('./storage');
 const { createInventoryXlsxBuffer, validateInventoryReport } = require('./inventory-export');
+const {
+  buildUpdateResult,
+  compareVersions,
+  fetchLatestRelease,
+  isTrustedReleaseUrl,
+  parseVersion,
+  publicUpdateResult
+} = require('./update-service');
 
 const trustedWebContents = new Set();
+const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const UPDATE_REQUEST_TIMEOUT_MS = 12 * 1000;
 let storage;
+let latestUpdateResult = null;
+let updateCheckPromise = null;
+
+function updateCachePath() {
+  return path.join(app.getPath('userData'), 'update-check.json');
+}
+
+function runtimeUpdateInfo() {
+  return {
+    currentVersion: app.getVersion(),
+    platform: process.platform,
+    portable: process.platform === 'win32' && Boolean(process.env.PORTABLE_EXECUTABLE_FILE)
+  };
+}
+
+function validateCachedUpdateResult(value) {
+  return Boolean(
+    value &&
+    parseVersion(value.latestVersion) &&
+    isTrustedReleaseUrl(value.downloadUrl) &&
+    isTrustedReleaseUrl(value.releaseUrl)
+  );
+}
+
+async function readUpdateCache() {
+  try {
+    const cache = JSON.parse(await fs.readFile(updateCachePath(), 'utf8'));
+    if (!Number.isFinite(cache.checkedAt) || !validateCachedUpdateResult(cache.result)) return null;
+    return cache;
+  } catch (_error) {
+    return null;
+  }
+}
+
+async function writeUpdateCache(checkedAt, result) {
+  try {
+    await fs.writeFile(updateCachePath(), JSON.stringify({ checkedAt, result }), { encoding: 'utf8', mode: 0o600 });
+  } catch (_error) {
+    // A failed cache write must not turn a successful update check into an error.
+  }
+}
+
+function refreshCachedResultForRuntime(result) {
+  const currentVersion = app.getVersion();
+  return {
+    ...result,
+    currentVersion,
+    updateAvailable: compareVersions(result.latestVersion, currentVersion) > 0
+  };
+}
+
+async function performUpdateCheck(force = false) {
+  if (updateCheckPromise) return updateCheckPromise;
+
+  updateCheckPromise = (async () => {
+    const cached = await readUpdateCache();
+    const now = Date.now();
+    if (!force && cached && now - cached.checkedAt < UPDATE_CHECK_INTERVAL_MS) {
+      latestUpdateResult = refreshCachedResultForRuntime(cached.result);
+      return publicUpdateResult(latestUpdateResult, cached.checkedAt, true);
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), UPDATE_REQUEST_TIMEOUT_MS);
+    try {
+      const release = await fetchLatestRelease((...args) => net.fetch(...args), { signal: controller.signal });
+      latestUpdateResult = buildUpdateResult(release, runtimeUpdateInfo());
+      await writeUpdateCache(now, latestUpdateResult);
+      return publicUpdateResult(latestUpdateResult, now, false);
+    } finally {
+      clearTimeout(timeout);
+    }
+  })();
+
+  try {
+    return await updateCheckPromise;
+  } finally {
+    updateCheckPromise = null;
+  }
+}
+
+async function openLatestUpdateDownload() {
+  if (!latestUpdateResult) {
+    const cached = await readUpdateCache();
+    if (cached) latestUpdateResult = refreshCachedResultForRuntime(cached.result);
+  }
+  if (!latestUpdateResult) await performUpdateCheck(true);
+
+  const target = latestUpdateResult?.downloadUrl;
+  if (!isTrustedReleaseUrl(target)) throw new Error('No trusted update download is available');
+  await shell.openExternal(target);
+  return { opened: true, assetName: latestUpdateResult.assetName || '' };
+}
 
 function isTrustedSender (event) {
   return event.senderFrame === event.sender.mainFrame &&
@@ -103,6 +206,9 @@ function trustedHandler(channel, handler) {
   });
 }
 
+trustedHandler('app:info', () => ({ version: app.getVersion(), isPackaged: app.isPackaged }));
+trustedHandler('updates:check', options => performUpdateCheck(Boolean(options?.force)));
+trustedHandler('updates:download', () => openLatestUpdateDownload());
 trustedHandler('storage:get', (store, key) => storage.get(store, key));
 trustedHandler('storage:put', (store, value) => storage.put(store, value));
 trustedHandler('storage:delete', (store, key) => storage.remove(store, key));
