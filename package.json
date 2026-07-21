@@ -9,7 +9,7 @@
     "start": "electron .",
     "icons:mac": "CLANG_MODULE_CACHE_PATH=/private/tmp/keyboard-manager-swift-cache swift tools/generate-icons.swift assets/app-icon-source.png . && node tools/write-icns.cjs assets/app-icon.iconset icon.icns",
     "build": "electron-builder",
-    "build:mac": "APPLE_KEYCHAIN_PROFILE=keyboard-manager-notary electron-builder --mac dmg --arm64 --x64 --publish never --config.forceCodeSigning=true && node tools/notarize-dmgs.cjs",
+    "build:mac": "APPLE_KEYCHAIN_PROFILE=keyboard-manager-notary electron-builder --mac dmg --arm64 --x64 --publish never --config.forceCodeSigning=true",
     "build:mac:adhoc": "MAC_ADHOC_SIGN=1 electron-builder --mac dmg --arm64 --publish never --config.mac.notarize=false --config.mac.hardenedRuntime=false",
     "build:win": "electron-builder --win nsis portable --x64 --publish never",
     "postinstall": "electron-builder install-app-deps",
@@ -33,6 +33,7 @@
     "electron-builder": "^26.15.3"
   },
   "build": {
+    "artifactBuildCompleted": "tools/notarize-dmgs.cjs",
     "appId": "com.keyboard.manager",
     "productName": "Keyboard Manager",
     "files": [
