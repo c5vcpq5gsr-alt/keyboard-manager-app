@@ -56,12 +56,23 @@ npm run test:editor-return
 ```bash
 npm run build
 npm run build:mac
+npm run build:mac:adhoc
 npm run build:win
 ```
 
-Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag wie `v1.3.0` erzeugt automatisch ein GitHub Release mit ARM-macOS-DMG, Windows-Installer und portabler Windows-App.
+`npm run build:mac` erzeugt mit der lokalen Developer-ID und dem Keychain-Profil `keyboard-manager-notary` signierte und von Apple notarisierte DMGs für Apple Silicon und Intel. `npm run build:mac:adhoc` bleibt als rein lokaler ARM-Testbuild ohne Notarisierung verfügbar.
 
-Da die Builds nicht signiert sind, können macOS Gatekeeper beziehungsweise Windows SmartScreen beim ersten Start eine Warnung anzeigen.
+Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag erzeugt automatisch ein GitHub Release mit macOS-DMGs, Windows-Installer und portabler Windows-App. Windows SmartScreen kann bei einem noch nicht signierten Windows-Build weiterhin eine Warnung anzeigen.
+
+Für signierte und notarisierte macOS-Builds in GitHub Actions müssen diese Repository-Secrets eingerichtet sein:
+
+- `MACOS_CERTIFICATE_P12`: base64-kodierter Export des Developer-ID-Zertifikats samt privatem Schlüssel
+- `MACOS_CERTIFICATE_PASSWORD`: Exportpasswort der `.p12`-Datei
+- `APPLE_API_KEY_P8`: Inhalt des privaten App-Store-Connect-API-Keys
+- `APPLE_API_KEY_ID`: Key-ID aus App Store Connect
+- `APPLE_API_ISSUER`: Issuer-ID aus App Store Connect
+
+Die privaten Dateien und Passwörter dürfen niemals in das Repository eingecheckt werden.
 
 Der Quellcode und die fertigen Downloads sollen im öffentlichen GitHub-Repository zusammenliegen. Dadurch können Tester die App direkt herunterladen und bei Bedarf den Code, die Build-Konfiguration und die verwendeten Abhängigkeiten prüfen.
 
@@ -78,17 +89,10 @@ Die Deinstallation entfernt diese Nutzerdaten nicht. Vor größeren Updates empf
 
 ### Installation auf macOS
 
-Die macOS-App besitzt keine kostenpflichtige Apple-Developer-ID-Signatur. Deshalb blockiert Gatekeeper den ersten Start nach einem Download.
+Die macOS-Release-Builds sind mit einer Apple Developer ID signiert und von Apple notarisiert. Gatekeeper kann dadurch Herkunft und Unversehrtheit der App regulär prüfen.
 
 1. App aus dem DMG in den Programme-Ordner ziehen.
-2. Im Programme-Ordner mit der rechten Maustaste auf `Keyboard Manager` klicken und `Öffnen` wählen.
-3. Falls macOS die App weiterhin blockiert: `Systemeinstellungen` → `Datenschutz & Sicherheit` öffnen und bei Keyboard Manager `Dennoch öffnen` wählen.
-
-Alternativ kann die Download-Quarantäne nach dem Kopieren im Terminal entfernt werden:
-
-```bash
-xattr -dr com.apple.quarantine "/Applications/Keyboard Manager.app"
-```
+2. `Keyboard Manager` im Programme-Ordner normal öffnen.
 
 ## Lizenz und Credits
 

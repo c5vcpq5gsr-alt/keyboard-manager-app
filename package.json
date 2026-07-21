@@ -9,7 +9,8 @@
     "start": "electron .",
     "icons:mac": "CLANG_MODULE_CACHE_PATH=/private/tmp/keyboard-manager-swift-cache swift tools/generate-icons.swift assets/app-icon-source.png . && node tools/write-icns.cjs assets/app-icon.iconset icon.icns",
     "build": "electron-builder",
-    "build:mac": "MAC_ADHOC_SIGN=1 electron-builder --mac dmg --arm64 --publish never",
+    "build:mac": "APPLE_KEYCHAIN_PROFILE=keyboard-manager-notary electron-builder --mac dmg --arm64 --x64 --publish never --config.forceCodeSigning=true",
+    "build:mac:adhoc": "MAC_ADHOC_SIGN=1 electron-builder --mac dmg --arm64 --publish never --config.mac.notarize=false --config.mac.hardenedRuntime=false",
     "build:win": "electron-builder --win nsis portable --x64 --publish never",
     "postinstall": "electron-builder install-app-deps",
     "test": "npm run test:close && npm run test:update && npm run test:export && npm run test:inventory-export && npm run test:photos && npm run test:storage && npm run test:migration && npm run test:spotlight && npm run test:keycaps && npm run test:switches && npm run test:board-links && npm run test:editor-return && npm run test:context-menu",
@@ -32,6 +33,7 @@
     "electron-builder": "^26.15.3"
   },
   "build": {
+    "artifactBuildCompleted": "tools/notarize-dmgs.cjs",
     "appId": "com.keyboard.manager",
     "productName": "Keyboard Manager",
     "files": [
@@ -51,7 +53,13 @@
     ],
     "mac": {
       "target": "dmg",
-      "icon": "icon.icns"
+      "icon": "icon.icns",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "type": "distribution",
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
+      "notarize": true
     },
     "dmg": {
       "contents": [
