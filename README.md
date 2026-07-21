@@ -56,13 +56,12 @@ npm run test:editor-return
 ```bash
 npm run build
 npm run build:mac
-npm run build:mac:adhoc
 npm run build:win
 ```
 
-`npm run build:mac` erzeugt mit der lokalen Developer-ID und dem Keychain-Profil `keyboard-manager-notary` signierte und von Apple notarisierte DMGs für Apple Silicon und Intel. `npm run build:mac:adhoc` bleibt als rein lokaler ARM-Testbuild ohne Notarisierung verfügbar.
+`npm run build:mac` erzeugt mit der lokalen Developer-ID und dem Keychain-Profil `keyboard-manager-notary` signierte und von Apple notarisierte DMGs für Apple Silicon und Intel.
 
-Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag erzeugt automatisch ein GitHub Release mit macOS-DMGs, Windows-Installer und portabler Windows-App. Windows SmartScreen kann bei einem noch nicht signierten Windows-Build weiterhin eine Warnung anzeigen.
+Windows-Builds werden zusätzlich über GitHub Actions erstellt. Ein Versions-Tag erzeugt automatisch ein GitHub Release mit macOS-DMGs, Windows-Installer und portabler Windows-App.
 
 Für signierte und notarisierte macOS-Builds in GitHub Actions müssen diese Repository-Secrets eingerichtet sein:
 
